@@ -16,12 +16,14 @@ create extension if not exists pgcrypto;
 -- ------------------------------------------------------------
 create or replace function public.get_current_role()
 returns text
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public
 as $$
-  select role from public.profiles where id = auth.uid();
+begin
+  return (select role from public.profiles where id = auth.uid());
+end;
 $$;
 
 -- ------------------------------------------------------------
@@ -763,6 +765,482 @@ create index if not exists idx_ticket_messages_ticket on public.ticket_messages(
 create index if not exists idx_services_active_platform on public.services(active, platform);
 
 -- ============================================================
+-- update_profile extended (language)
+-- ============================================================
+create or replace function public.update_profile(p_username text default null, p_theme text default null, p_language text default null)
+returns void
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+begin
+  if p_username is not null then
+    update public.profiles set username = p_username where id = auth.uid();
+  end if;
+  if p_theme is not null then
+    update public.profiles set theme = p_theme where id = auth.uid();
+  end if;
+  if p_language is not null then
+    update public.profiles set language = p_language where id = auth.uid();
+  end if;
+end;
+$$;
+
+grant execute on function public.update_profile(text, text, text) to authenticated;
+
+-- ============================================================
 -- End of ALL_IN_ONE
 -- ============================================================
 
+
+-- ============================================================
+-- Wazeo - schema_v4 (advanced features)
+-- Safe to re-run: IF NOT EXISTS / create or replace.
+-- ============================================================
+
+alter table public.profiles add column if not exists language text not null default 'en';
+alter table public.profiles add column if not exists permissions jsonb not null default '{}'::jsonb;
+
+create table if not exists public.translation_overrides (
+  lang text not null,
+  key text not null,
+  value text not null,
+  updated_at timestamptz not null default now(),
+  primary key (lang, key)
+);
+alter table public.translation_overrides enable row level security;
+
+create table if not exists public.audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.profiles(id) on delete set null,
+  action text not null,
+  details jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_audit_created on public.audit_logs(created_at desc);
+alter table public.audit_logs enable row level security;
+
+create table if not exists public.providers (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  api_url text,
+  api_key text,
+  active boolean not null default true,
+  priority integer not null default 0,
+  mode text not null default 'mock' check (mode in ('mock','live')),
+  meta jsonb,
+  created_at timestamptz not null default now()
+);
+alter table public.providers enable row level security;
+
+create table if not exists public.coupons (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  type text not null check (type in ('percent','fixed')),
+  value numeric not null default 0,
+  min_order numeric not null default 0,
+  max_uses integer,
+  uses integer not null default 0,
+  expires_at timestamptz,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+alter table public.coupons enable row level security;
+
+create table if not exists public.loyalty_levels (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  min_spent numeric not null default 0,
+  discount_percent numeric not null default 0,
+  sort integer not null default 0
+);
+alter table public.loyalty_levels enable row level security;
+
+create table if not exists public.api_keys (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  name text not null,
+  prefix text not null,
+  key_hash text not null,
+  created_at timestamptz not null default now(),
+  last_used_at timestamptz
+);
+create index if not exists idx_apikeys_user on public.api_keys(user_id);
+alter table public.api_keys enable row level security;
+
+create table if not exists public.daily_checkin (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  day date not null,
+  reward numeric not null default 0,
+  created_at timestamptz not null default now(),
+  unique (user_id, day)
+);
+alter table public.daily_checkin enable row level security;
+create table if not exists public.cms_pages (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null,
+  lang text not null default 'en',
+  title text not null,
+  content text not null,
+  updated_at timestamptz not null default now(),
+  unique (slug, lang)
+);
+alter table public.cms_pages enable row level security;
+
+create table if not exists public.faqs (
+  id uuid primary key default gen_random_uuid(),
+  lang text not null default 'en',
+  question text not null,
+  answer text not null,
+  sort integer not null default 0,
+  active boolean not null default true
+);
+alter table public.faqs enable row level security;
+
+create table if not exists public.testimonials (
+  id uuid primary key default gen_random_uuid(),
+  author text not null,
+  rating integer not null default 5,
+  text text not null,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+alter table public.testimonials enable row level security;
+
+create table if not exists public.popups (
+  id uuid primary key default gen_random_uuid(),
+  title text,
+  message text not null,
+  active boolean not null default true,
+  starts_at timestamptz,
+  ends_at timestamptz,
+  created_at timestamptz not null default now()
+);
+alter table public.popups enable row level security;
+
+create table if not exists public.error_logs (
+  id uuid primary key default gen_random_uuid(),
+  level text not null default 'error',
+  source text,
+  message text not null,
+  stack text,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_errorlogs_created on public.error_logs(created_at desc);
+alter table public.error_logs enable row level security;
+-- ============================================================
+-- RLS policies (schema_v4)
+-- ============================================================
+
+drop policy if exists "TrOverrides read" on public.translation_overrides;
+create policy "TrOverrides read" on public.translation_overrides
+  for select using (true);
+drop policy if exists "TrOverrides admin" on public.translation_overrides;
+create policy "TrOverrides admin" on public.translation_overrides
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Audit admin" on public.audit_logs;
+create policy "Audit admin" on public.audit_logs
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Providers admin" on public.providers;
+create policy "Providers admin" on public.providers
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Coupons read active" on public.coupons;
+create policy "Coupons read active" on public.coupons
+  for select using (active = true or public.get_current_role() = 'admin');
+drop policy if exists "Coupons admin" on public.coupons;
+create policy "Coupons admin" on public.coupons
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Loyalty read" on public.loyalty_levels;
+create policy "Loyalty read" on public.loyalty_levels
+  for select using (true);
+drop policy if exists "Loyalty admin" on public.loyalty_levels;
+create policy "Loyalty admin" on public.loyalty_levels
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "ApiKeys own select" on public.api_keys;
+create policy "ApiKeys own select" on public.api_keys
+  for select using (user_id = auth.uid());
+drop policy if exists "ApiKeys own insert" on public.api_keys;
+create policy "ApiKeys own insert" on public.api_keys
+  for insert with check (user_id = auth.uid());
+drop policy if exists "ApiKeys own delete" on public.api_keys;
+create policy "ApiKeys own delete" on public.api_keys
+  for delete using (user_id = auth.uid());
+drop policy if exists "ApiKeys admin" on public.api_keys;
+create policy "ApiKeys admin" on public.api_keys
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Checkin own select" on public.daily_checkin;
+create policy "Checkin own select" on public.daily_checkin
+  for select using (user_id = auth.uid());
+drop policy if exists "Checkin own insert" on public.daily_checkin;
+create policy "Checkin own insert" on public.daily_checkin
+  for insert with check (user_id = auth.uid());
+drop policy if exists "Checkin admin" on public.daily_checkin;
+create policy "Checkin admin" on public.daily_checkin
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Cms read" on public.cms_pages;
+create policy "Cms read" on public.cms_pages
+  for select using (true);
+drop policy if exists "Cms admin" on public.cms_pages;
+create policy "Cms admin" on public.cms_pages
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Faqs read active" on public.faqs;
+create policy "Faqs read active" on public.faqs
+  for select using (active = true or public.get_current_role() = 'admin');
+drop policy if exists "Faqs admin" on public.faqs;
+create policy "Faqs admin" on public.faqs
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Testimonials read active" on public.testimonials;
+create policy "Testimonials read active" on public.testimonials
+  for select using (active = true or public.get_current_role() = 'admin');
+drop policy if exists "Testimonials admin" on public.testimonials;
+create policy "Testimonials admin" on public.testimonials
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Popups read active" on public.popups;
+create policy "Popups read active" on public.popups
+  for select using (active = true or public.get_current_role() = 'admin');
+drop policy if exists "Popups admin" on public.popups;
+create policy "Popups admin" on public.popups
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "ErrorLogs admin" on public.error_logs;
+create policy "ErrorLogs admin" on public.error_logs
+  for all using (public.get_current_role() = 'admin');
+-- ============================================================
+-- Audit writes inside key admin functions
+-- ============================================================
+create or replace function public.approve_payment(p_payment_id uuid, p_approve boolean)
+returns void
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+declare
+  v_payment public.payments%rowtype;
+  v_first_deposit boolean;
+  v_referral public.referrals%rowtype;
+  v_bonus numeric;
+begin
+  if public.get_current_role() <> 'admin' then
+    raise exception 'Only admins can approve payments';
+  end if;
+  select * into v_payment from public.payments where id = p_payment_id for update;
+  if not found then raise exception 'Payment not found'; end if;
+  if v_payment.status <> 'pending' then raise exception 'Payment already processed'; end if;
+
+  if p_approve then
+    update public.payments set status = 'approved' where id = v_payment.id;
+    update public.profiles set balance = balance + v_payment.amount where id = v_payment.user_id;
+    insert into public.transactions (user_id, type, amount, note)
+    values (v_payment.user_id, 'deposit', v_payment.amount, 'Payment approved ' || v_payment.id::text);
+
+    select not exists (
+      select 1 from public.payments p
+      where p.user_id = v_payment.user_id and p.status = 'approved' and p.id <> v_payment.id
+    ) into v_first_deposit;
+
+    if v_first_deposit then
+      select * into v_referral from public.referrals where referred_id = v_payment.user_id and bonus_paid = false;
+      if found then
+        v_bonus := round(v_payment.amount * (v_referral.bonus_percent / 100), 2);
+        if v_bonus > 0 then
+          update public.profiles set balance = balance + v_bonus where id = v_referral.referrer_id;
+          insert into public.transactions (user_id, type, amount, note)
+          values (v_referral.referrer_id, 'deposit', v_bonus, 'Referral bonus ' || v_referral.referred_id::text);
+          update public.referrals set bonus_paid = true where id = v_referral.id;
+          perform public.send_notification(v_referral.referrer_id, 'You earned a referral bonus of $' || v_bonus::text);
+        end if;
+      end if;
+    end if;
+  else
+    update public.payments set status = 'rejected' where id = v_payment.id;
+  end if;
+
+  insert into public.audit_logs (user_id, action, details)
+  values (auth.uid(), 'payment_' || case when p_approve then 'approved' else 'rejected' end,
+          jsonb_build_object('payment_id', v_payment.id));
+end;
+$$;
+
+create or replace function public.admin_adjust_balance(p_user_id uuid, p_amount numeric, p_note text default null)
+returns void
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+begin
+  if public.get_current_role() <> 'admin' then
+    raise exception 'Only admins can adjust balances';
+  end if;
+  if p_amount = 0 then return; end if;
+  update public.profiles set balance = balance + p_amount where id = p_user_id;
+  insert into public.transactions (user_id, type, amount, note)
+  values (p_user_id, case when p_amount > 0 then 'deposit' else 'refund' end, p_amount, coalesce(p_note, 'Admin adjustment'));
+  insert into public.audit_logs (user_id, action, details)
+  values (auth.uid(), 'balance_adjust', jsonb_build_object('user_id', p_user_id, 'amount', p_amount));
+end;
+$$;
+
+grant execute on function public.approve_payment(uuid, boolean) to authenticated;
+grant execute on function public.admin_adjust_balance(uuid, numeric, text) to authenticated;
+
+-- ============================================================
+-- End of schema_v4
+-- ============================================================
+
+-- ============================================================
+-- Wazeo - schema_v5
+-- ============================================================
+
+alter table public.profiles add column if not exists discount_percent numeric not null default 0;
+alter table public.profiles add column if not exists custom_rates jsonb not null default '{}'::jsonb;
+alter table public.profiles add column if not exists notes text;
+
+create table if not exists public.package_presets (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  platform text not null default 'instagram',
+  views_qty numeric not null default 0,
+  likes_qty numeric not null default 0,
+  comments_qty numeric not null default 0,
+  duration_minutes integer not null default 60,
+  curve text not null default 'steady',
+  discount_percent numeric not null default 0,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+alter table public.package_presets enable row level security;
+
+create table if not exists public.comment_sets (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  comments text[] not null default '{}',
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+alter table public.comment_sets enable row level security;
+
+alter table public.orders add column if not exists package_id uuid references public.package_presets(id) on delete set null;
+alter table public.orders add column if not exists scheduled_for timestamptz;
+alter table public.orders add column if not exists growth_json jsonb;
+
+create table if not exists public.webhook_configs (
+  id uuid primary key default gen_random_uuid(),
+  event text not null,
+  url text not null,
+  active boolean not null default true,
+  last_status integer,
+  last_sent_at timestamptz,
+  created_at timestamptz not null default now()
+);
+alter table public.webhook_configs enable row level security;
+-- ============================================================
+-- RLS policies (schema_v5)
+-- ============================================================
+
+drop policy if exists "Presets read active" on public.package_presets;
+create policy "Presets read active" on public.package_presets
+  for select using (active = true or public.get_current_role() = 'admin');
+drop policy if exists "Presets admin" on public.package_presets;
+create policy "Presets admin" on public.package_presets
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "CommentSets read active" on public.comment_sets;
+create policy "CommentSets read active" on public.comment_sets
+  for select using (active = true or public.get_current_role() = 'admin');
+drop policy if exists "CommentSets admin" on public.comment_sets;
+create policy "CommentSets admin" on public.comment_sets
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Webhook admin" on public.webhook_configs;
+create policy "Webhook admin" on public.webhook_configs
+  for all using (public.get_current_role() = 'admin');
+
+-- ============================================================
+-- Seed settings
+-- ============================================================
+insert into public.settings (key, value) values
+  ('daily_checkin_reward', '0.25'),
+  ('drip_default_curve', 'steady'),
+  ('growth_default_likes', '10'),
+  ('growth_default_views', '10'),
+  ('growth_default_comments', '10'),
+  ('likes_lag_percent', '10'),
+  ('refund_guarantee', 'Delivery depends on the platform. No hard guarantee.'),
+  ('maintenance_mode', 'false'),
+  ('registration_enabled', 'true'),
+  ('min_deposit', '5')
+on conflict (key) do nothing;
+
+-- ============================================================
+-- End of schema_v5
+-- ============================================================
+
+-- ============================================================
+-- Wazeo - schema_v6
+-- ============================================================
+
+alter table public.profiles add column if not exists phone text;
+alter table public.profiles add column if not exists last_login_at timestamptz;
+alter table public.profiles add column if not exists signup_ip_hash text;
+
+create index if not exists idx_profiles_phone on public.profiles(phone) where phone is not null;
+
+-- handle_new_user extended: store phone + signup ip hash from auth meta
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_referral text;
+  v_referrer uuid;
+  v_percent numeric;
+begin
+  insert into public.profiles (id, username, phone, signup_ip_hash, referral_code)
+  values (
+    new.id,
+    coalesce(nullif(new.raw_user_meta_data->>'username', ''), 'user_' || left(new.id::text, 8)),
+    nullif(new.raw_user_meta_data->>'phone', ''),
+    nullif(new.raw_user_meta_data->>'ip_hash', ''),
+    public.gen_referral_code()
+  )
+  on conflict (id) do update set phone = excluded.phone where profiles.phone is null;
+
+  v_referral := new.raw_user_meta_data->>'referral';
+  if v_referral is not null and v_referral <> '' then
+    select id into v_referrer from public.profiles where referral_code = upper(btrim(v_referral));
+    if v_referrer is not null and v_referrer <> new.id then
+      select coalesce(nullif(value,'')::numeric, 5) into v_percent from public.settings where key='referral_percent';
+      insert into public.referrals (referrer_id, referred_id, bonus_percent)
+      values (v_referrer, new.id, coalesce(v_percent, 5))
+      on conflict (referred_id) do nothing;
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function public.handle_new_user();
+
+-- ============================================================
+-- End of schema_v6
+-- ============================================================

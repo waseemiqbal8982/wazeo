@@ -5,7 +5,7 @@ export function isValidEmail(email: string): boolean {
 export function authErrorMessage(error: { message?: string; code?: string }): string {
   const msg = (error.message || "").toLowerCase();
   if (error.code === "user_already_exists" || msg.includes("already registered"))
-    return "An account with this email already exists.";
+    return "This email already exists. Please sign in.";
   if (msg.includes("invalid login credentials")) return "Incorrect email or password.";
   if (msg.includes("email not confirmed")) return "Please verify your email first (check your inbox).";
   if (msg.includes("password should be")) return "Password is too weak. Use at least 8 characters.";

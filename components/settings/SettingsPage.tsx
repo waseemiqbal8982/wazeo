@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
 import { NotificationsSection } from "./NotificationsSection";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 
 export function SettingsPage() {
@@ -102,6 +103,10 @@ export function SettingsPage() {
             <button onClick={() => setReduceMotion(!reduceMotion)} className={cn("relative h-6 w-11 rounded-full transition-colors duration-200", reduceMotion ? "bg-[var(--accent)]" : "bg-white/[0.12]")} aria-label="Toggle reduce animations">
               <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200", reduceMotion ? "translate-x-5" : "translate-x-0.5")} />
             </button>
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-[var(--text-muted)]">Language</p>
+            <LanguageSwitcher />
           </div>
         </Card>
       </div>

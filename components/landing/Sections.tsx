@@ -1,15 +1,19 @@
+"use client";
+
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Logo } from "@/components/Logo";
+import { useI18n } from "@/lib/i18n";
 
 export function Sections() {
+  const { t } = useI18n();
   return (
     <main className="relative z-10 mx-auto max-w-5xl px-5 pb-16">
       <section className="mt-16 grid gap-4 sm:grid-cols-3">
         {[
-          { title: "Drip-feed", desc: "Spread delivery over hours with smart curves. Natural growth, no suspicious spikes." },
-          { title: "Fast start", desc: "Most orders start within minutes. Real-time status and order tracking." },
-          { title: "24/7 support", desc: "Ticket system with real staff. Help whenever you need it." },
+          { title: t("features.drip.title"), desc: t("features.drip.desc") },
+          { title: t("features.fast.title"), desc: t("features.fast.desc") },
+          { title: t("features.support.title"), desc: t("features.support.desc") },
         ].map((f) => (
           <Card key={f.title} glow interactive className="p-6">
             <h3 className="text-base font-semibold">{f.title}</h3>
@@ -19,18 +23,18 @@ export function Sections() {
       </section>
 
       <section className="mt-16">
-        <h2 className="text-center text-2xl font-bold">How it works</h2>
+        <h2 className="text-center text-2xl font-bold">{t("landing.hero.title").split(" ")[0]} · 3 steps</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
-            { n: "1", t: "Create an account", d: "Sign up with your email in 30 seconds." },
-            { n: "2", t: "Add funds", d: "Send a payment and upload your proof." },
-            { n: "3", t: "Place an order", d: "Paste a link, choose a service, and go." },
+            { n: "1", tt: t("how.step1.t"), d: t("how.step1.d") },
+            { n: "2", tt: t("how.step2.t"), d: t("how.step2.d") },
+            { n: "3", tt: t("how.step3.t"), d: t("how.step3.d") },
           ].map((s) => (
             <div key={s.n} className="glass rounded-2xl p-5">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold text-white">
                 {s.n}
               </span>
-              <h3 className="mt-3 text-sm font-semibold">{s.t}</h3>
+              <h3 className="mt-3 text-sm font-semibold">{s.tt}</h3>
               <p className="mt-1 text-sm text-[var(--text-muted)]">{s.d}</p>
             </div>
           ))}
@@ -40,15 +44,10 @@ export function Sections() {
       <section className="mt-16">
         <h2 className="text-center text-2xl font-bold">FAQ</h2>
         <div className="mx-auto mt-6 max-w-2xl space-y-3">
-          {[
-            { q: "How fast are orders delivered?", a: "Most orders start within minutes. Delivery time depends on the service and the provider." },
-            { q: "Do you guarantee retention?", a: "No. Retention depends on the platform and the target account. We can't guarantee results." },
-            { q: "What is drip-feed?", a: "It spreads your order over a set duration using natural growth curves." },
-            { q: "How do I add funds?", a: "Go to Add Funds, send the payment, and upload a screenshot. An admin approves it." },
-          ].map((f) => (
-            <details key={f.q} className="glass rounded-xl px-4 py-3">
-              <summary className="cursor-pointer text-sm font-semibold">{f.q}</summary>
-              <p className="mt-2 text-sm text-[var(--text-muted)]">{f.a}</p>
+          {[1, 2, 3].map((i) => (
+            <details key={i} className="glass rounded-xl px-4 py-3">
+              <summary className="cursor-pointer text-sm font-semibold">{t(`faq.q${i}`)}</summary>
+              <p className="mt-2 text-sm text-[var(--text-muted)]">{t(`faq.a${i}`)}</p>
             </details>
           ))}
         </div>
@@ -58,12 +57,12 @@ export function Sections() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-5 py-6 sm:flex-row">
           <div className="flex items-center gap-2">
             <Logo size={24} />
-            <span className="text-sm text-[var(--text-muted)]">© {new Date().getFullYear()} Wazeo</span>
+            <span className="text-sm text-[var(--text-muted)]">© {new Date().getFullYear()} {t("app.name")}</span>
           </div>
           <div className="flex items-center gap-5 text-sm">
-            <Link href="/terms" className="text-[var(--text-muted)] hover:text-[var(--accent)]">Terms</Link>
-            <Link href="/refund-policy" className="text-[var(--text-muted)] hover:text-[var(--accent)]">Refund policy</Link>
-            <Link href="/sign-in" className="text-[var(--text-muted)] hover:text-[var(--accent)]">Sign in</Link>
+            <Link href="/terms" className="text-[var(--text-muted)] hover:text-[var(--accent)]">{t("footer.terms")}</Link>
+            <Link href="/refund-policy" className="text-[var(--text-muted)] hover:text-[var(--accent)]">{t("footer.refund")}</Link>
+            <Link href="/sign-in" className="text-[var(--text-muted)] hover:text-[var(--accent)]">{t("footer.signin")}</Link>
           </div>
         </div>
       </footer>

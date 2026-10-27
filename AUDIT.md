@@ -61,4 +61,33 @@ Ye report project ka sach-cha checking hai. Kuch cheezein poori hain, kuch aadhi
 8. **No automated tests** (unit/e2e) — sirf lint/build + mock testing.
 9. **29 lint warnings** — unused imports + exhaustive-deps (errors nahi).
 
-> 📌 Most important: **`SUPABASE_SERVICE_ROLE_KEY` aur `SUPABASE_DB_URL` daalo** — baaki sab green ho jayega. (AUDIT end)
+
+
+---
+
+## Latest audit run (results)
+- `npm run lint` → 0 errors (warnings only).
+- `npm run build` → pass (Compiled successfully).
+- `npm run check` → env OK, sab tables exist, RLS ON (29 tables), build passes. Provider = MOCK; Mercury unconfigured (fallback).
+- Dev server running: http://localhost:3000 → HTTP 200 (page contains "Wazeo").
+- Known non-blocking: middleware deprecation warning (Next suggests proxy.ts); 35 lint warnings (unused imports / exhaustive-deps) — no errors.
+
+
+---
+
+## Login redirect-loop fix (critical)
+- Root cause: sign-in session cookie was created inside the Route Handler via a server Supabase client, which does not reliably persist the session cookie in Next.js App Router → after redirect, middleware saw no session and bounced back to /sign-in (loop).
+- Fix: sign-in now authenticates in the **browser** with `createBrowserClient` (`@supabase/ssr`), which sets the session cookie correctly. `/api/auth/signin` was changed to a thin "record last_login_at" endpoint (no session creation). Admin/customer redirect and banned-check kept.
+
+
+---
+
+## Sign-in fix (round 2 — server action)
+- Moved sign-in to a **Server Action** (`app/(auth)/actions.ts`), which is the officially supported place to set Supabase auth cookies in Next.js App Router. Browser-side attempt didn't persist for the user; server action sets cookies reliably.
+- `/api/auth/signin` remains a thin "record last_login_at" endpoint (no session creation).
+- Sign-in page now uses `useActionState` with the server action; shows clear error box; admin/customer redirect + banned-check preserved.
+- Duplicate-email message updated to "This email already exists. Please sign in." (sign-in link already present on signup page).
+- Verified: `npm run lint` (0 errors), `npm run build` (pass), dev server serves `/sign-in` → HTTP 200.
+
+
+

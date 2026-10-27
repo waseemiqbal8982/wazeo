@@ -16,12 +16,14 @@ create extension if not exists pgcrypto;
 -- ------------------------------------------------------------
 create or replace function public.get_current_role()
 returns text
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public
 as $$
-  select role from public.profiles where id = auth.uid();
+begin
+  return (select role from public.profiles where id = auth.uid());
+end;
 $$;
 
 -- ------------------------------------------------------------

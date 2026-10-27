@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Logo } from "@/components/Logo";
+import { signIn } from "../actions";
 
 export default function SignInPage() {
   const router = useRouter();
   const [next, setNext] = useState("/dashboard");
   const [banned, setBanned] = useState(false);
+  const [state, formAction, pending] = useActionState(signIn, undefined);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -19,35 +22,12 @@ export default function SignInPage() {
     setBanned(p.get("error") === "banned");
   }, []);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    if (!email || !password) return setError("Email and password are required.");
-    setLoading(true);
-    try {
-      const res = await fetch("/api/auth/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Sign in failed.");
-        return;
-      }
-      router.replace(next);
+  useEffect(() => {
+    if (state?.ok && state?.dest) {
+      router.replace(state.dest);
       router.refresh();
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
     }
-  }
+  }, [state, router]);
 
   return (
     <Card className="glass-glow p-6 sm:p-8">
@@ -56,32 +36,32 @@ export default function SignInPage() {
         <p className="mt-2 text-sm text-[var(--text-muted)]">Welcome back — sign in to continue</p>
       </div>
 
-      {banned && (
+      {(banned || state?.error) && (
         <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
-          Your account has been banned. Contact support.
+          {state?.error || "Your account has been banned. Contact support."}
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form action={formAction} className="space-y-4">
+        <input type="hidden" name="next" value={next} />
         <Input
+          name="email"
           label="Email"
           type="email"
           placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
+          required
         />
         <Input
+          name="password"
           label="Password"
           type="password"
           placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
+          required
         />
-        {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
-        <Button full loading={loading} type="submit">
-          Sign in
+        <Button full loading={pending} type="submit">
+          {pending ? "Signing in…" : "Sign in"}
         </Button>
       </form>
 

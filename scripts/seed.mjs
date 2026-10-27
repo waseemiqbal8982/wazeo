@@ -52,4 +52,46 @@ if (!existingAnn || existingAnn.length === 0) {
   console.log("ℹ️ Welcome announcement already exists.");
 }
 
+// ---- extras for new tables ----
+const { count: lvlCount } = await sb.from("loyalty_levels").select("id", { count: "exact", head: true });
+if (!lvlCount) {
+  await sb.from("loyalty_levels").insert([
+    { name: "Bronze", min_spent: 0, discount_percent: 0, sort: 1 },
+    { name: "Silver", min_spent: 100, discount_percent: 3, sort: 2 },
+    { name: "Gold", min_spent: 500, discount_percent: 5, sort: 3 },
+    { name: "Platinum", min_spent: 2000, discount_percent: 8, sort: 4 },
+  ]);
+  console.log("✅ Loyalty levels added.");
+}
+
+const { count: coupCount } = await sb.from("coupons").select("id", { count: "exact", head: true });
+if (!coupCount) {
+  await sb.from("coupons").insert({ code: "WELCOME10", type: "percent", value: 10, min_order: 5, active: true });
+  console.log("✅ Demo coupon added.");
+}
+
+const { data: existingFaq } = await sb.from("faqs").select("id").limit(1);
+if (!existingFaq?.length) {
+  await sb.from("faqs").insert([
+    { lang: "en", question: "How fast are orders delivered?", answer: "Most orders start within minutes.", sort: 1, active: true },
+    { lang: "en", question: "What is drip-feed?", answer: "It spreads your order over time using natural curves.", sort: 2, active: true },
+  ]);
+  console.log("✅ FAQ added.");
+}
+
+const { data: existingTesti } = await sb.from("testimonials").select("id").limit(1);
+if (!existingTesti?.length) {
+  await sb.from("testimonials").insert([{ author: "Ali", rating: 5, text: "Bohot fast delivery!", active: true }]);
+  console.log("✅ Testimonial added.");
+}
+
+const { count: presetCount } = await sb.from("package_presets").select("id", { count: "exact", head: true });
+if (!presetCount) {
+  await sb.from("package_presets").insert([
+    { name: "Instagram Basics", platform: "instagram", views_qty: 1000, likes_qty: 100, comments_qty: 10, duration_minutes: 120, curve: "steady", discount_percent: 5, active: true },
+    { name: "TikTok Viral", platform: "tiktok", views_qty: 5000, likes_qty: 300, comments_qty: 20, duration_minutes: 240, curve: "bell_peak", discount_percent: 8, active: true },
+  ]);
+  console.log("✅ Package presets added.");
+}
+
 console.log("🎉 Seed complete.");

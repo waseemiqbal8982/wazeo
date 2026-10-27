@@ -36,6 +36,9 @@ yarn-error.log*
 .env*.local
 !.env.example
 
+# local diagnostics folder (from our work, not needed in repo)
+_desktop_logs/
+
 # vercel
 .vercel
 
