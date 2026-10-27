@@ -30,6 +30,16 @@ export async function signIn(_prevState: unknown, formData: FormData) {
 
   let dest = next;
   if (data.user) {
+    // Ensure a profile row exists (root-cause fix for the sign-in loop).
+    try {
+      const admin = createAdminClient();
+      const { data: existing } = await admin.from("profiles").select("id").eq("id", data.user.id).maybeSingle();
+      if (!existing) {
+        const { data: au } = await admin.auth.admin.getUserById(data.user.id);
+        const username = au?.user?.user_metadata?.username || `user_${data.user.id.slice(0, 8)}`;
+        await admin.from("profiles").upsert({ id: data.user.id, username }, { onConflict: "id" });
+      }
+    } catch {}
     try {
       const { data: prof } = await supabase.from("profiles").select("role, banned").eq("id", data.user.id).single();
       if (prof?.banned) {

@@ -1,0 +1,80 @@
+
+> wazeo@0.1.0 build
+> next build
+
+Gû¦ Next.js 16.4.3 (Turbopack)
+- Environments: .env.local
+G£ô Running next.config.ts took 35ms
+
+node.exe : GÜá The "middleware" file convention is deprecated. Please use "proxy" instead.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (GÜá The "middle...proxy" instead.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+G£ô Compiled successfully in 6.4s
+  Running TypeScript ...
+  Finished TypeScript in 3.4s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/15) ...
+  Generating static pages using 7 workers (3/15) 
+  Generating static pages using 7 workers (7/15) 
+  Generating static pages using 7 workers (11/15) 
+G£ô Generating static pages using 7 workers (15/15) in 510ms
+  Finalizing page optimization ...
+
+Route (app)
+Göî ¦Æ /
+Gö£ ¦Æ /_not-found
+Gö£ ¦Æ /admin
+Gö£ ¦Æ /admin/announcements
+Gö£ ¦Æ /admin/coupons
+Gö£ ¦Æ /admin/orders
+Gö£ ¦Æ /admin/payments
+Gö£ ¦Æ /admin/providers
+Gö£ ¦Æ /admin/services
+Gö£ ¦Æ /admin/settings
+Gö£ ¦Æ /admin/system
+Gö£ ¦Æ /admin/tickets
+Gö£ ¦Æ /admin/translations
+Gö£ ¦Æ /admin/users
+Gö£ ¦Æ /api/ai/support
+Gö£ ¦Æ /api/auth/forgot
+Gö£ ¦Æ /api/auth/reset
+Gö£ ¦Æ /api/auth/signin
+Gö£ ¦Æ /api/auth/signup
+Gö£ ¦Æ /api/cron/process
+Gö£ ¦Æ /api/orders/place
+Gö£ ¦Æ /api/orders/refresh
+Gö£ ¦Æ /api/provider/sync
+Gö£ ¦Æ /dashboard
+Gö£ ¦Æ /dashboard/add-funds
+Gö£ ¦Æ /dashboard/new-order
+Gö£ ¦Æ /dashboard/orders
+Gö£ ¦Æ /dashboard/orders/[id]
+Gö£ ¦Æ /dashboard/services
+Gö£ ¦Æ /dashboard/settings
+Gö£ ¦Æ /dashboard/tickets
+Gö£ ¦Æ /dashboard/tickets/[id]
+Gö£ ¦Æ /forgot-password
+Gö£ Gùï /icon.svg
+Gö£ ¦Æ /refund-policy
+Gö£ ¦Æ /reset-password
+Gö£ ¦Æ /sign-in
+Gö£ ¦Æ /sign-up
+Göö ¦Æ /terms
+
+
+¦Æ Proxy (Middleware)
+
+Gùï  (Static)   prerendered as static content
+¦Æ  (Dynamic)  server-rendered on demand
+
+

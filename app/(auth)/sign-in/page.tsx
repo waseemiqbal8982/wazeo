@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Logo } from "@/components/Logo";
+import { createClient } from "@/lib/supabase/client";
 import { signIn } from "../actions";
 
 export default function SignInPage() {
@@ -21,6 +22,22 @@ export default function SignInPage() {
     setNext(p.get("next") || "/dashboard");
     setBanned(p.get("error") === "banned");
   }, []);
+
+  // If a session already exists (e.g. after a middleware bounce), go straight
+  // to the app instead of being stuck on the login page.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const sb = createClient();
+        const { data } = await sb.auth.getUser();
+        if (!alive || !data?.user) return;
+        const { data: prof } = await sb.from("profiles").select("role").eq("id", data.user.id).single();
+        router.replace(prof?.role === "admin" ? "/admin" : next);
+      } catch {}
+    })();
+    return () => { alive = false; };
+  }, [router, next]);
 
   useEffect(() => {
     if (state?.ok && state?.dest) {
@@ -44,22 +61,8 @@ export default function SignInPage() {
 
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="next" value={next} />
-        <Input
-          name="email"
-          label="Email"
-          type="email"
-          placeholder="you@example.com"
-          autoComplete="email"
-          required
-        />
-        <Input
-          name="password"
-          label="Password"
-          type="password"
-          placeholder="••••••••"
-          autoComplete="current-password"
-          required
-        />
+        <Input name="email" label="Email" type="email" placeholder="you@example.com" autoComplete="email" required />
+        <Input name="password" label="Password" type="password" placeholder="••••••••" autoComplete="current-password" required />
         <Button full loading={pending} type="submit">
           {pending ? "Signing in…" : "Sign in"}
         </Button>

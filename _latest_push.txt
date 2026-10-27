@@ -1,0 +1,10 @@
+branch 'master' set up to track 'origin/master'.
+git : To https://github.com/waseemiqbal8982/wazeo.git
+At line:1 char:417
++ ...  4; Write-Host '--- PUSH ---'; git push -u origin master 2>&1 | Out-S ...
++                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (To https://gith...l8982/wazeo.git:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ * [new branch]      master -> master
+

@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   if (path.startsWith("/admin")) {
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
       .from("profiles")
       .select("role, banned")
       .eq("id", user.id)
@@ -54,7 +54,9 @@ export async function middleware(request: NextRequest) {
       url.searchParams.set("error", "banned");
       return NextResponse.redirect(url);
     }
-    if (profile?.role !== "admin") {
+    // Only force customers away from /admin when we can clearly confirm the
+    // role. If the role lookup fails temporarily, let the admin layout decide.
+    if (!error && profile && profile.role !== "admin") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }

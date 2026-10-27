@@ -1,0 +1,30 @@
+[master 7510283] Wazeo: auth fixes, admin shell, i18n, schema v1-v6
+ 42 files changed, 2395 insertions(+), 128 deletions(-)
+ create mode 100644 FEATURES.md
+ create mode 100644 STATUS.md
+ create mode 100644 TEST_CHECKLIST.md
+ create mode 100644 app/(auth)/actions.ts
+ create mode 100644 app/admin/coupons/page.tsx
+ create mode 100644 app/admin/providers/page.tsx
+ create mode 100644 app/admin/system/page.tsx
+ create mode 100644 app/admin/translations/page.tsx
+ create mode 100644 components/LanguageSwitcher.tsx
+ create mode 100644 components/admin/AdminCoupons.tsx
+ create mode 100644 components/admin/AdminProviders.tsx
+ create mode 100644 components/admin/AdminShell.tsx
+ create mode 100644 components/admin/AdminSidebar.tsx
+ create mode 100644 components/admin/AdminSystem.tsx
+ create mode 100644 components/admin/AdminTranslations.tsx
+ create mode 100644 components/admin/LoyaltyLevels.tsx
+ create mode 100644 lib/audit.ts
+ create mode 100644 lib/i18n.ts
+ create mode 100644 locales/en.json
+ create mode 100644 locales/fr.json
+ create mode 100644 locales/hi.json
+ create mode 100644 locales/ur.json
+ create mode 100644 locales/zh.json
+ create mode 100644 scripts/i18n-check.mjs
+ create mode 100644 supabase/schema_v4.sql
+ create mode 100644 supabase/schema_v5.sql
+ create mode 100644 supabase/schema_v6.sql
+

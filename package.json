@@ -10,7 +10,8 @@
                     "make-admin":  "node scripts/make-admin.mjs",
                     "seed":  "node scripts/seed.mjs",
                     "check":  "node scripts/check.mjs",
-                    "i18n:check":  "node scripts/i18n-check.mjs"
+                    "i18n:check":  "node scripts/i18n-check.mjs",
+                    "test:login":  "node scripts/test-login.mjs"
                 },
     "devDependencies":  {
                             "@tailwindcss/turbopack":  "^4",
