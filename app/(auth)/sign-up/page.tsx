@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { COUNTRIES, countryName } from "@/lib/countries";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -16,6 +17,20 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [referral, setReferral] = useState("");
+  const [country, setCountry] = useState("");
+  const [detected, setDetected] = useState("");
+
+  useEffect(() => {
+    fetch("/api/meta/country")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.country) {
+          setDetected(d.country);
+          setCountry((c) => c || d.country);
+        }
+      })
+      .catch(() => {});
+  }, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
@@ -35,7 +50,7 @@ export default function SignUpPage() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password, referral: referral || undefined }),
+        body: JSON.stringify({ username, email, password, referral: referral || undefined, country: country || undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -83,6 +98,20 @@ export default function SignUpPage() {
           onChange={(e) => setUsername(e.target.value)} />
         <Input label="Email" type="email" placeholder="you@example.com" value={email}
           onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+        <div>
+          <Input label="Country" list="countries" placeholder="Select your country" value={country}
+            onChange={(e) => setCountry(e.target.value.toUpperCase().slice(0, 2))} />
+          {detected && (
+            <p className="-mt-1 mb-1 text-xs text-[var(--text-muted)]">
+              Detected: {countryName(detected)}. Change if wrong.
+            </p>
+          )}
+          <datalist id="countries">
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>{c.name}</option>
+            ))}
+          </datalist>
+        </div>
         <div>
           <Input label="Password" type="password" placeholder="Min 8 characters" value={password}
             onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />

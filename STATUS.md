@@ -107,3 +107,9 @@
 ## Latest: schema_v10 (profiles.country) + signup country auto-detect (x-vercel-ip-country / cf-ipcountry) stored on profile. db:setup OK, lint 0, build pass.
 ### Not built (context ended): full signup country UI, currencies system, deposit page/methods, support hub, starter services seed, dropdown bottom-sheet refactor, service orderability enforcement, presets, graphs/motion, translations + final push.
 
+
+---
+
+## Latest: Country picker on signup completed (searchable datalist, PK/IN/BD pinned, server detection hint, body.country override). lib/countries.ts + /api/meta/country route added. lint 0, build pass.
+### Not built (context ended): split auth layout + canvas animation, logo spin/draw-in states, charts/motion polish, translations + final checks (Parts 2-5).
+

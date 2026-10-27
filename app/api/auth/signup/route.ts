@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Too many attempts. Please wait a moment." }, { status: 429 });
   }
 
-  let body: { username?: string; email?: string; password?: string; referral?: string; phone?: string; website?: string; code?: string };
+  let body: { username?: string; email?: string; password?: string; referral?: string; phone?: string; website?: string; code?: string; country?: string };
   try {
     body = await req.json();
   } catch {
@@ -60,7 +60,8 @@ export async function POST(req: Request) {
   } catch {}
 
   const ipHash = createHash("sha256").update(getClientIp(req)).digest("hex").slice(0, 24);
-  const country = (req.headers.get("x-vercel-ip-country") || req.headers.get("cf-ipcountry") || "").toUpperCase().slice(0, 2) || null;
+  const headerCountry = (req.headers.get("x-vercel-ip-country") || req.headers.get("cf-ipcountry") || "").toUpperCase().slice(0, 2);
+  const country = /^[A-Z]{2}$/.test(body.country || "") ? (body.country || "").toUpperCase() : headerCountry || null;
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
