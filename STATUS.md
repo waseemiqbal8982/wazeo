@@ -113,3 +113,9 @@
 ## Latest: Country picker on signup completed (searchable datalist, PK/IN/BD pinned, server detection hint, body.country override). lib/countries.ts + /api/meta/country route added. lint 0, build pass.
 ### Not built (context ended): split auth layout + canvas animation, logo spin/draw-in states, charts/motion polish, translations + final checks (Parts 2-5).
 
+
+---
+
+## Latest: country -> default language on signup (PK->ur, IN->hi, CN->zh, else en) stored on profile. lint 0, build pass.
+### Not built (context ended): Parts 2-5 (split auth layout + canvas animation, logo motion states, charts/mobile polish, translations + final checks).
+

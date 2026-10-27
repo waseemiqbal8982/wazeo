@@ -63,12 +63,16 @@ export async function POST(req: Request) {
   const headerCountry = (req.headers.get("x-vercel-ip-country") || req.headers.get("cf-ipcountry") || "").toUpperCase().slice(0, 2);
   const country = /^[A-Z]{2}$/.test(body.country || "") ? (body.country || "").toUpperCase() : headerCountry || null;
 
+  // Default language from country (only existing Wazeo languages)
+  const langByCountry: Record<string, string> = { PK: "ur", IN: "hi", CN: "zh" };
+  const defaultLang = langByCountry[country || ""] || "en";
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { username, referral: referral || undefined, phone: phone || undefined, ip_hash: ipHash, country: country || undefined },
+      data: { username, referral: referral || undefined, phone: phone || undefined, ip_hash: ipHash, country: country || undefined, language: defaultLang },
     },
   });
 
@@ -80,7 +84,7 @@ export async function POST(req: Request) {
     try {
       const admin = createAdminClient();
       await admin.from("profiles").upsert(
-        { id: data.user.id, username, phone: phone || null, signup_ip_hash: ipHash, country },
+        { id: data.user.id, username, phone: phone || null, signup_ip_hash: ipHash, country, language: defaultLang },
         { onConflict: "id" }
       );
     } catch {}
