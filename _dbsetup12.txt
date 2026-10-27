@@ -1,0 +1,13 @@
+
+> wazeo@0.1.0 db:setup
+> node scripts/db-setup.mjs
+
+node.exe : Gùç injected env (10) from .env.local
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Gùç injected env (10) from .env.local:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+G£à DB setup complete. All tables, triggers and functions are ready.
+

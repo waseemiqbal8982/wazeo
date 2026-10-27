@@ -77,3 +77,33 @@
 
 
 
+
+---
+
+## LOGIN LOOP — root cause FOUND & FIXED (evidence)
+- Evidence: scripts/check-profile.mjs (service role) -> for waseemiqbalbhutta242808982@gmail.com: auth user exists, email confirmed=true, profile row MISSING. Dashboard/admin layouts do if (!profile) redirect('/sign-in') -> sign-in loop (flicker, no error).
+- Fix: schema_v7 backfill (profiles for all auth.users) merged + db:setup ok; actions.ts ensure-profile on login; check-profile/test-login scripts added; admin role re-applied via make-admin.
+- Verified: check-profile -> profile exists, role=admin. lint 0 errors, build pass. Local commit done; push baqi: git push origin master.
+
+
+---
+
+## Latest stage (Order Center groundwork / Stage 1-8 partial)
+- schema_v8 added: scheduled_steps, access_codes, vault_saved_links, user_module_settings (+ settings invite_only). Merged into ALL_IN_ONE.sql + npm run db:setup OK.
+- Signup route: invite-only gate (if settings invite_only=true, requires valid/active access code, consumes usage).
+- lint 0 errors, build pass.
+
+### Next (NOT built): Order Center 3 modes UI, Growth/Likes planner, Scheduled Orders page UI, Service mapping/multi-provider admin, mobile modules, animated charts, invite admin UI, email end-to-end, seed update, docs.
+
+
+---
+
+## Latest: schema_v9 (services.is_demo) added, merged, db:setup OK. lint 0 / build pass.
+### Not built yet (context ended): Blocks A-H UI/features (Order Center, planners, scheduled orders UI, service mapping, mobile, charts, invite admin UI, email end-to-end, currencies, deposit page, support hub, starter services seed, website features, graphs/motion, audit+push). Next: continue from Block A1 (Order Center).
+
+
+---
+
+## Latest: schema_v10 (profiles.country) + signup country auto-detect (x-vercel-ip-country / cf-ipcountry) stored on profile. db:setup OK, lint 0, build pass.
+### Not built (context ended): full signup country UI, currencies system, deposit page/methods, support hub, starter services seed, dropdown bottom-sheet refactor, service orderability enforcement, presets, graphs/motion, translations + final push.
+

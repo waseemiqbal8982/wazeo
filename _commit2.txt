@@ -1,0 +1,10 @@
+[master c0977f8] Fix login loop: profile backfill (schema_v7) + ensure-profile on login + test script
+ 12 files changed, 295 insertions(+), 19 deletions(-)
+ create mode 100644 _buildcheck.txt
+ create mode 100644 _dbsetup9.txt
+ create mode 100644 _latest_commit.txt
+ create mode 100644 _latest_push.txt
+ create mode 100644 scripts/check-profile.mjs
+ create mode 100644 scripts/test-login.mjs
+ create mode 100644 supabase/schema_v7.sql
+
