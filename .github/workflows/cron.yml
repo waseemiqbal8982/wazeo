@@ -1,0 +1,20 @@
+name: Wazeo cron
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger drip-feed worker
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DEPLOY_URL: ${{ vars.DEPLOYMENT_URL }}
+        run: |
+          if [ -z "$CRON_SECRET" ] || [ -z "$DEPLOY_URL" ]; then
+            echo "Skipping: CRON_SECRET / DEPLOYMENT_URL not set"
+            exit 0
+          fi
+          curl -fsS -H "x-cron-secret: $CRON_SECRET" "$DEPLOY_URL/api/cron/process" || true

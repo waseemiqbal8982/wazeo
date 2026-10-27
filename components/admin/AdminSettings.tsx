@@ -1,0 +1,71 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
+
+export function AdminSettings() {
+  const supabase = createClient();
+  const { toast } = useToast();
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("settings").select("*");
+      const map: Record<string, string> = {};
+      (data || []).forEach((s) => { map[s.key] = s.value; });
+      setValues(map);
+    })();
+  }, []);
+
+  const fields = [
+    { key: "site_name", label: "Site name" },
+    { key: "markup_percent", label: "Default markup %" },
+    { key: "referral_percent", label: "Referral bonus %" },
+  ];
+
+  async function save() {
+    setBusy(true);
+    const rows = Object.entries(values).map(([key, value]) => ({ key, value }));
+    const { error } = await supabase.from("settings").upsert(rows);
+    setBusy(false);
+    if (error) return toast({ title: error.message, variant: "danger" });
+    toast({ title: "Settings saved", variant: "success" });
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold">Settings</h1>
+
+      <Card className="max-w-xl space-y-4">
+        {fields.map((f) => (
+          <Input
+            key={f.key}
+            label={f.label}
+            value={values[f.key] ?? ""}
+            onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+          />
+        ))}
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">
+            Payment methods (JSON array)
+          </label>
+          <textarea
+            value={values.payment_methods ?? "[]"}
+            onChange={(e) => setValues((v) => ({ ...v, payment_methods: e.target.value }))}
+            rows={6}
+            className="w-full rounded-xl border border-[var(--border)] bg-white/[0.03] p-3 font-mono text-xs text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
+          />
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            {"Example: [{\"name\":\"JazzCash\",\"account\":\"0300-0000000\",\"instructions\":\"Send payment and upload proof\"}]"}
+          </p>
+        </div>
+        <Button loading={busy} onClick={save}>Save settings</Button>
+      </Card>
+    </div>
+  );
+}
