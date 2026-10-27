@@ -119,3 +119,15 @@
 ## Latest: country -> default language on signup (PK->ur, IN->hi, CN->zh, else en) stored on profile. lint 0, build pass.
 ### Not built (context ended): Parts 2-5 (split auth layout + canvas animation, logo motion states, charts/mobile polish, translations + final checks).
 
+
+---
+
+## Latest: Interactive auth pages (split layout + canvas visual + form polish) ✅
+- Split layout for /sign-in & /sign-up (form ek side, interactive visual doosri side — phone pe visual upar, chota). `/forgot-password` & `/reset-password` abhi bhi centered hain.
+- `components/auth/AuthVisual.tsx`: lightweight canvas animation (koi extra library nahi) — glowing nodes + flowing growth/drip curves, accent color me. Nodes mouse/finger follow karte hain, tap se ripple banta hai, colors accent theme ke saath change. 3 floating cards (Views delivered / Orders today / Platforms) count-up stats ke saath drift + rotating tagline.
+- Performance: tab hidden pe canvas pause, ~30fps cap, devicePixelRatio ≤2, `prefers-reduced-motion` / `[data-reduce-motion=true]` / slow device (cores≤2 ya memory≤2GB) pe static gradient fallback. Form loading kabhi block nahi hota.
+- Form polish: animated focus, password strength bar, show/hide icon (`components/auth/PasswordInput.tsx`), signup success checkmark, error pe shake + clear message, submit sirf loading pe disabled (visible reason).
+- Naye visible text ke keys 5 locale files (en/ur/hi/fr/zh) me add kiye; `npm run i18n:check` ✅.
+- `npm run lint` → 0 errors (35 pre-existing warnings). `npm run build` → pass.
+- E2E test (scripts/auth-e2e-test.mjs): signup HTTP → admin confirm → signin client-SDK → signin-touch endpoint → invalid password reject. Sab ✅.
+

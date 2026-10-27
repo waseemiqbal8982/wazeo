@@ -141,6 +141,63 @@ body {
   transition-duration: 0.01ms !important;
 }
 
+/* ---------- auth visual / form polish ---------- */
+@keyframes auth-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+.animate-shake {
+  animation: auth-shake 0.4s ease;
+}
+
+@keyframes auth-drift-1 {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-12px) rotate(2deg); }
+}
+@keyframes auth-drift-2 {
+  0%, 100% { transform: translateY(0) rotate(2deg); }
+  50% { transform: translateY(-9px) rotate(-2deg); }
+}
+@keyframes auth-drift-3 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+.auth-float-1 { animation: auth-drift-1 7s ease-in-out infinite; }
+.auth-float-2 { animation: auth-drift-2 8.5s ease-in-out infinite; }
+.auth-float-3 { animation: auth-drift-3 9.5s ease-in-out infinite; }
+
+@keyframes auth-check-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.auth-check-pop {
+  animation: auth-check-pop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+
+@keyframes auth-tagline {
+  0% { opacity: 0; transform: translateY(6px); }
+  15% { opacity: 1; transform: translateY(0); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.auth-tagline {
+  animation: auth-tagline 3.5s ease both;
+}
+
+@keyframes auth-checkmark-stroke {
+  from { stroke-dashoffset: 48; }
+  to { stroke-dashoffset: 0; }
+}
+.auth-checkmark-stroke {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: auth-checkmark-stroke 0.5s 0.15s ease forwards;
+}
+
 /* ---------- scrollbar (subtle) ---------- */
 * {
   scrollbar-width: thin;
