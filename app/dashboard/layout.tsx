@@ -12,6 +12,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
+  if (!user.email_confirmed_at) redirect("/verify-email");
+
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")

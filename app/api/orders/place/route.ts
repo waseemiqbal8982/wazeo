@@ -36,6 +36,7 @@ export async function POST(req: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  if (!user.email_confirmed_at) return NextResponse.json({ error: "Please verify your email first." }, { status: 403 });
 
   const { data: service } = await supabase
     .from("services")

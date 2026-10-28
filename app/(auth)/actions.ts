@@ -30,6 +30,10 @@ export async function signIn(_prevState: unknown, formData: FormData) {
 
   let dest = next;
   if (data.user) {
+    // ENFORCE verification: unverified users get sent to verification.
+    if (!data.user.email_confirmed_at) {
+      return { verify: true, email };
+    }
     // Ensure a profile row exists (root-cause fix for the sign-in loop).
     try {
       const admin = createAdminClient();

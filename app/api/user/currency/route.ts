@@ -19,6 +19,9 @@ export async function POST(req: Request) {
   if (!user) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
+  if (!user.email_confirmed_at) {
+    return NextResponse.json({ error: "Please verify your email first." }, { status: 403 });
+  }
 
   await supabase.rpc("update_profile", { p_currency: currency });
 

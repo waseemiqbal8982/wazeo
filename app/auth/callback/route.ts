@@ -17,7 +17,10 @@ export async function GET(request: Request) {
   const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
 
   if (error || !data.user) {
-    return NextResponse.redirect(new URL("/sign-in?error=verification_failed", request.url));
+    const u = new URL("/verify-email", request.url);
+    u.searchParams.set("error", "link_used_or_expired");
+    if (next && next !== "/dashboard") u.searchParams.set("next", next);
+    return NextResponse.redirect(u);
   }
 
   // Best-effort: ensure a profile row exists.

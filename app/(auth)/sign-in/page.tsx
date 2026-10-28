@@ -50,7 +50,9 @@ export default function SignInPage() {
   }, [state]);
 
   useEffect(() => {
-    if (state?.ok && state?.dest) {
+    if (state?.verify) {
+      router.replace(`/verify-email?email=${encodeURIComponent(state.email || "")}`);
+    } else if (state?.ok && state?.dest) {
       router.replace(state.dest);
       router.refresh();
     }

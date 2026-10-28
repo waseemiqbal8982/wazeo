@@ -233,4 +233,14 @@
 
 ## Task 2 — Status @ context end
 - ✅ Parts 1, 2, 3 committed (mobile pill nav/header, WazeoSelect everywhere, New Order redesign).
+
+## Task 3 — Part 1 (Mandatory email verification) ✅
+- ENFORCE verification: middleware + dashboard layout ab unconfirmed users (email_confirmed_at empty) ko /verify-email par redc karte hain. API gates add: orders/place, support/ticket, user/currency (403 unverified).
+- `/verify-email` page: OTP panel (auto-focus/paste/backspace/shake/checkmark), resend 60s countdown, "wrong email? change it" (inline email update + resend), sign-out, aur link-expired friendly message.
+- `/auth/callback` failure ab /verify-email?error=link_used_or_expired par le jaata hai ("Enter the code instead" + resend available).
+- Sign-in server action: unverified user → `{verify:true}` → page /verify-email par le jaati hai; no usable session for protected pages.
+- make-admin already auto-confirms email. Admin Users: Verified badge + filter (All/Verified/Unverified) + "Mark verified" & "Resend" actions (audit-logged via new /api/admin/users/verify). Admin Overview: verification funnel card (signups/verified/first order/first deposit).
+- docs/EMAIL_SETUP.md updated: Confirm email ON + OTP most-reliable note.
+- lint 0 errors, build pass.
+
 - ⏭ NEXT (not built yet): Part 4 currency refresh everywhere, Part 5 support logos SVG, Part 6 deposit by country + demo safety, Part 7 starter services seed, Part 8 graphs everywhere, Part 9 admin panel power, Part 10 finish (locales/seeds/docs/push).

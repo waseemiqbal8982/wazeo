@@ -50,6 +50,8 @@ export function AdminUsers() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [q, setQ] = useState("");
   const [viewUser, setViewUser] = useState<UserRow | null>(null);
+  const [verifiedMap, setVerifiedMap] = useState<Record<string, boolean>>({});
+  const [vFilter, setVFilter] = useState("all");
   const [adjustUser, setAdjustUser] = useState<UserRow | null>(null);
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
@@ -60,11 +62,35 @@ export function AdminUsers() {
   }
   useEffect(() => { load(); }, []);
 
-  const filtered = users.filter((u) =>
-    !q ||
-    u.username.toLowerCase().includes(q.toLowerCase()) ||
-    (u.email || "").toLowerCase().includes(q.toLowerCase())
-  );
+  useEffect(() => {
+    fetch("/api/admin/users/verified")
+      .then((r) => r.json())
+      .then((d) => { if (d?.verified) setVerifiedMap(d.verified); })
+      .catch(() => {});
+  }, []);
+
+  const filtered = users.filter((u) => {
+    if (q && !u.username.toLowerCase().includes(q.toLowerCase()) && !(u.email || "").toLowerCase().includes(q.toLowerCase())) return false;
+    const v = !!verifiedMap[u.id];
+    if (vFilter === "verified" && !v) return false;
+    if (vFilter === "unverified" && v) return false;
+    return true;
+  });
+
+  async function runVerify(id: string, action: string) {
+    const res = await fetch("/api/admin/users/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: id, action }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) return toast({ title: d.error || "Failed", variant: "danger" });
+    toast({ title: action === "mark_verified" ? "Marked verified" : "Resend sent", variant: "success" });
+    fetch("/api/admin/users/verified")
+      .then((r) => r.json())
+      .then((x) => { if (x?.verified) setVerifiedMap(x.verified); })
+      .catch(() => {});
+  }
 
   async function toggleBan(u: UserRow) {
     await supabase.from("profiles").update({ banned: !u.banned }).eq("id", u.id);
@@ -90,7 +116,16 @@ export function AdminUsers() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Users</h1>
-        <Input placeholder="Search by username" value={q} onChange={(e) => setQ(e.target.value)} className="sm:max-w-xs" />
+        <div className="flex flex-wrap items-center gap-2">
+          <Input placeholder="Search by username or email" value={q} onChange={(e) => setQ(e.target.value)} className="sm:max-w-xs" />
+          <div className="flex items-center gap-1 rounded-full border border-[var(--border)] bg-white/[0.03] p-0.5 text-xs">
+            {[["all", "All"], ["verified", "Verified"], ["unverified", "Unverified"]].map(([val, label]) => (
+              <button key={val} onClick={() => setVFilter(val)} className={cn("rounded-full px-3 py-1 font-medium transition-colors", vFilter === val ? "bg-[var(--accent)] text-white" : "text-[var(--text-muted)] hover:text-[var(--text)]")}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="glass overflow-x-auto rounded-2xl">
@@ -104,6 +139,7 @@ export function AdminUsers() {
               <th className="px-4 py-2 font-medium">Balance</th>
               <th className="px-4 py-2 font-medium">Signup</th>
               <th className="px-4 py-2 font-medium">Last login</th>
+              <th className="px-4 py-2 font-medium">Verified</th>
               <th className="px-4 py-2 font-medium">Status</th>
               <th className="px-4 py-2 font-medium">Actions</th>
             </tr>
@@ -124,11 +160,20 @@ export function AdminUsers() {
                 <td className="px-4 py-2.5 text-xs">{formatDateTime(u.created_at)}</td>
                 <td className="px-4 py-2.5 text-xs">{u.last_login_at ? formatDateTime(u.last_login_at) : "—"}</td>
                 <td className="px-4 py-2.5">
+                  <Badge tone={verifiedMap[u.id] ? "success" : "warning"}>{verifiedMap[u.id] ? "Verified" : "Not verified"}</Badge>
+                </td>
+                <td className="px-4 py-2.5">
                   <Badge tone={u.banned ? "danger" : "success"}>{u.banned ? "Banned" : "Active"}</Badge>
                 </td>
                 <td className="px-4 py-2.5">
                   <div className="flex flex-wrap gap-1.5">
                     <Button size="sm" variant="outline" onClick={() => setViewUser(u)}>View</Button>
+                    {!verifiedMap[u.id] && (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => runVerify(u.id, "mark_verified")}>Mark verified</Button>
+                        <Button size="sm" variant="ghost" onClick={() => runVerify(u.id, "resend")}>Resend</Button>
+                      </>
+                    )}
                     <Button size="sm" variant="outline" onClick={() => { setAdjustUser(u); setAmount(""); }}>Adjust</Button>
                     <Button size="sm" variant={u.banned ? "outline" : "danger"} onClick={() => toggleBan(u)}>{u.banned ? "Unban" : "Ban"}</Button>
                   </div>

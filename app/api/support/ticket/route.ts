@@ -32,6 +32,9 @@ export async function POST(req: Request) {
   if (!user) {
     return NextResponse.json({ error: "Please sign in to open a ticket." }, { status: 401 });
   }
+  if (!user.email_confirmed_at) {
+    return NextResponse.json({ error: "Please verify your email first." }, { status: 403 });
+  }
 
   const admin = createAdminClient();
   const { data: ticket, error } = await admin

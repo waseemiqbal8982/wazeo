@@ -113,3 +113,12 @@ Resend do tareeqe deta hai — dono chalenge:
 | "Pending" DNS | 24 ghante tak wait karein, DNS records dobara check karein |
 | Code expired | OTP expiration 600 set karein, resend button use karein |
 | Link kaam nahi karta | `NEXT_PUBLIC_SITE_URL` Vercel me sahi set karein (auth/callback route par le jaata hai) |
+
+---
+
+## ⚠️ Zaroori (mandatory verification)
+
+- **Confirm email ON hona chahiye:** Supabase → **Authentication** → **Providers** → **Email** → **Confirm email** ka toggle **ON** rakhein. Is ke baghair users bina verify kiye login kar sakte hain (jo hum allow nahi karte).
+- **OTP sab se reliable tareeqa hai** kyunke kuch email apps links ko pre-open kar lete hain (link "already used" ho jata hai). Is liye hamari template me `{{ .Token }}` (6-digit code) primary hai, aur link secondary.
+- Agar kisi user ka link expire ho jaye to wo **/verify-email** page par "Enter the code instead" aur resend options dekhta hai.
+

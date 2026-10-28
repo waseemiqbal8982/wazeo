@@ -39,6 +39,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // ENFORCE email verification: unconfirmed users cannot open any protected page.
+  if (!user.email_confirmed_at) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/verify-email";
+    url.searchParams.set("next", request.nextUrl.pathname);
+    return NextResponse.redirect(url);
+  }
+
   const path = request.nextUrl.pathname;
   if (path.startsWith("/admin")) {
     const { data: profile, error } = await supabase

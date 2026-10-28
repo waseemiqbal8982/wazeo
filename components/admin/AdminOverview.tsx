@@ -12,6 +12,16 @@ import { isMockMode } from "@/lib/provider";
 export function AdminOverview() {
   const supabase = createClient();
   const [stats, setStats] = useState<any>(null);
+  const [verifiedCount, setVerifiedCount] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/admin/users/verified")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.verified) setVerifiedCount(Object.values(d.verified).filter(Boolean).length);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -48,6 +58,28 @@ export function AdminOverview() {
         <StatCard label="Pending payments" value={stats.pendingPayments} />
         <StatCard label="Open tickets" value={stats.openTickets} />
       </div>
+
+      <Card>
+        <p className="mb-3 text-sm font-semibold">Verification &amp; growth funnel</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-xl border border-[var(--border)] bg-white/[0.02] p-3">
+            <p className="text-xs text-[var(--text-muted)]">Signups</p>
+            <p className="mt-1 text-2xl font-bold">{stats.users}</p>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-white/[0.02] p-3">
+            <p className="text-xs text-[var(--text-muted)]">Verified</p>
+            <p className="mt-1 text-2xl font-bold">{verifiedCount}</p>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-white/[0.02] p-3">
+            <p className="text-xs text-[var(--text-muted)]">First order</p>
+            <p className="mt-1 text-2xl font-bold">{stats.orders.filter((o: any) => o.status !== "pending").length}</p>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-white/[0.02] p-3">
+            <p className="text-xs text-[var(--text-muted)]">First deposit</p>
+            <p className="mt-1 text-2xl font-bold">{stats.pendingPayments}</p>
+          </div>
+        </div>
+      </Card>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card><p className="text-sm text-[var(--text-muted)]">Active orders</p><p className="mt-1 text-2xl font-bold">{active}</p></Card>
