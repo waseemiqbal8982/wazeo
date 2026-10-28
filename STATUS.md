@@ -195,3 +195,12 @@
 - OTP checkmark/pop + CountUp already existed.
 - `npm run lint` → 0 errors. `npm run build` → pass.
 
+
+
+## Update (Part 8 — Finish) ✅
+- `npm run i18n:check` → pass (all keys in all 5 languages).
+- `npm run check` → env/tables/RLS/build all green (Provider MOCK, Mercury unconfigured — ok).
+- `npm run seed` → runs (services, announcement, loyalty, coupon, FAQ, testimonial, presets).
+- FEATURES.md updated with Parts 1-8.
+- Remaining manual steps for you: Supabase email template (docs/EMAIL_TEMPLATE.html), Resend SMTP + innvera.shop DNS (docs/EMAIL_SETUP.md), Vercel env `ADMIN_EMAILS` + `NEXT_PUBLIC_SITE_URL` (docs/ENV_CHECKLIST.md), set Support settings in Admin → Settings.
+- End-to-end OTP test requires Resend/SMTP email delivery to be live (manual step).

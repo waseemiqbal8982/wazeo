@@ -53,3 +53,12 @@ Marking: ✅ WORKING · 🟡 PARTIAL (mock/limited) · ❌ NOT BUILT
 - ✅ `npm run i18n:check` → pass
 - ✅ `npm run check` → env/tables/RLS/build all green (provider MOCK, Mercury unconfigured)
 - ✅ `npm run db:setup` → pass (schema_v1..v5 merged)
+
+## Latest updates (Parts 1-8)
+- ✅ Email OTP verification: signup → animated "Check your email" panel with 6-box OTP (auto-focus/advance/paste/backspace, shake on wrong), 60s resend countdown, "wrong email?" link, 5 wrong per 10-min limit, expiry message, success checkmark + redirect. Verification link via `/auth/callback` also works. `docs/EMAIL_TEMPLATE.html` + `docs/EMAIL_SETUP.md` (Resend/Hostinger/forabase SMTP).
+- ✅ Save ALL signup data: profiles me username, email, phone, country (+flag), language, currency, referral_used, signup time, last login. schema_v11 backfill; Admin Users table + profile drawer show every field.
+- ✅ Admin gating: `/admin` + admin APIs only for emails in `ADMIN_EMAILS` AND role admin; others get 404, no admin nav shown. Signup can't set role; make-admin script only.
+- ✅ Support Hub: DB-backed settings (WhatsApp/Telegram/email/working hours/welcome), floating contact button on every page with online/offline badge, public `/support` page with FAQ + contact form → ticket.
+- ✅ Currencies: USD/INR/PKR/CNY (symbol+flag), Intl formatting (4 decimals for tiny), editable rates in Admin (auto-refresh via free API), switcher in header + landing, wallet chip shows chosen currency.
+- ✅ Mobile/animations: modal/nav safe-area, overflow-x guard, touch tap targets, glow-trail buttons, desktop card tilt, animated sidebar indicator, sliding page transitions (reduce-motion honored).
+
