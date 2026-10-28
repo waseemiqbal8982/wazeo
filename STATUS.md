@@ -204,3 +204,12 @@
 - FEATURES.md updated with Parts 1-8.
 - Remaining manual steps for you: Supabase email template (docs/EMAIL_TEMPLATE.html), Resend SMTP + innvera.shop DNS (docs/EMAIL_SETUP.md), Vercel env `ADMIN_EMAILS` + `NEXT_PUBLIC_SITE_URL` (docs/ENV_CHECKLIST.md), set Support settings in Admin → Settings.
 - End-to-end OTP test requires Resend/SMTP email delivery to be live (manual step).
+
+## Task 2 — Part 1 (Mobile header + navigation) ✅ (tablet collapsible partial)
+- `MobileNav.tsx` rebuilt as floating pill bar: role-aware (customer: Home/New Order/Orders/Wallet/More; admin: Overview/Orders/Users/Payments/More), safe-area, glass blur, glowing `layoutId` active indicator, press animation (whileTap), hide while an input is focused (translate-y), and a "More" bottom sheet (spring) with remaining items.
+- AppShell passes user to MobileNav; content bottom padding already clear the bar.
+- ContactFab raised above the mobile bar (bottom-24 on mobile, bottom-5 desktop).
+- TopBar: added language switcher button + notifications bell; theme button hidden on very small screens; desktop user chip (flag/country/username/email) stays.
+- NOTE: tablet "collapsible sidebar" (768-1024) not fully wired — phones use bottom bar, desktop full sidebar; tablet currently uses bottom bar.
+- lint 0 errors, build pass.
+

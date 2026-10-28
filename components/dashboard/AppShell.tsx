@@ -21,7 +21,7 @@ export function AppShell({ user, children }: { user: User; children: React.React
             {children}
           </main>
         </div>
-        <MobileNav pathname={pathname} />
+        <MobileNav pathname={pathname} user={user} />
       </div>
     </ShellCtx.Provider>
   );

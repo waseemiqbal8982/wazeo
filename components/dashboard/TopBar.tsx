@@ -12,6 +12,8 @@ import { useShell, User } from "./shell-context";
 import { useCurrency } from "@/lib/currency-store";
 import { CURRENCIES, currencyInfo, formatLocalized } from "@/lib/currencies";
 import { countryFlag, countryName } from "@/lib/countries";
+import { useI18n, LANGS } from "@/lib/i18n";
+import type { Lang } from "@/lib/i18n";
 
 export function TopBar({ user }: { user: User }) {
   const router = useRouter();
@@ -20,9 +22,11 @@ export function TopBar({ user }: { user: User }) {
   const [themeOpen, setThemeOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const [hasAdmin, setHasAdmin] = useState(false);
 
   const { currency, rates, setCurrency, fmt } = useCurrency();
+  const { lang, setLang } = useI18n();
 
   useEffect(() => {
     fetch("/api/meta/admin-access")
@@ -75,6 +79,40 @@ export function TopBar({ user }: { user: User }) {
           )}
         </div>
 
+        <div className="relative">
+          <button
+            onClick={() => { setLangOpen((v) => !v); setThemeOpen(false); setMenuOpen(false); setWalletOpen(false); }}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-white/[0.03] text-xs font-bold transition-colors hover:bg-white/[0.06]"
+            aria-label="Language"
+          >
+            {lang.toUpperCase()}
+          </button>
+          {langOpen && (
+            <div className="absolute right-0 top-11 w-36 rounded-xl border border-[var(--border)] bg-[#12121f] p-2 shadow-xl">
+              {Object.keys(LANGS).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => { setLang(l as Lang); setLangOpen(false); }}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors",
+                    lang === l ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "hover:bg-white/[0.05]"
+                  )}
+                >
+                  <span>{LANGS[l as Lang].label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <Link
+          href="/dashboard"
+          aria-label="Notifications"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-white/[0.03] transition-colors hover:bg-white/[0.06]"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" /></svg>
+        </Link>
+
         <div className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-white/[0.03] py-1 pl-1 pr-3 lg:flex">
           {user.country ? (
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06] text-base">{countryFlag(user.country)}</span>
@@ -87,9 +125,9 @@ export function TopBar({ user }: { user: User }) {
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative hidden sm:block">
           <button
-            onClick={() => { setThemeOpen((v) => !v); setMenuOpen(false); }}
+            onClick={() => { setThemeOpen((v) => !v); setMenuOpen(false); setLangOpen(false); setWalletOpen(false); }}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-white/[0.03] transition-colors hover:bg-white/[0.06]"
             aria-label="Theme"
           >
