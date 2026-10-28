@@ -33,6 +33,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         role: profile.role,
         balance: Number(profile.balance || 0),
         theme: profile.theme,
+        email: profile.email,
+        country: profile.country,
+        currency: profile.currency,
       }}
     >
       {children}

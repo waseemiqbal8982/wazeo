@@ -9,6 +9,9 @@ import { useTheme } from "@/components/ThemeProvider";
 import { THEMES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useShell, User } from "./shell-context";
+import { useCurrency } from "@/lib/currency-store";
+import { CURRENCIES, currencyInfo, formatLocalized } from "@/lib/currencies";
+import { countryFlag, countryName } from "@/lib/countries";
 
 export function TopBar({ user }: { user: User }) {
   const router = useRouter();
@@ -16,7 +19,10 @@ export function TopBar({ user }: { user: User }) {
   const { theme, setTheme } = useTheme();
   const [themeOpen, setThemeOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
   const [hasAdmin, setHasAdmin] = useState(false);
+
+  const { currency, rates, setCurrency, fmt } = useCurrency();
 
   useEffect(() => {
     fetch("/api/meta/admin-access")
@@ -40,9 +46,45 @@ export function TopBar({ user }: { user: User }) {
         </Link>
       </div>
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-white/[0.03] px-3 py-1 text-sm font-semibold">
-          <span className="text-[var(--accent)]">$</span>
-          {balance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+        <div className="relative">
+          <button
+            onClick={() => { setWalletOpen((v) => !v); setThemeOpen(false); setMenuOpen(false); }}
+            className="flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-white/[0.03] px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-white/[0.06]"
+            aria-label="Currency / wallet"
+          >
+            <span className="text-[var(--accent)]">{currencyInfo(currency).symbol}</span>
+            <span>{fmt(balance)}</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6" /></svg>
+          </button>
+          {walletOpen && (
+            <div className="absolute right-0 top-11 w-56 rounded-xl border border-[var(--border)] bg-[#12121f] p-2 shadow-xl">
+              {Object.values(CURRENCIES).map((c) => (
+                <button
+                  key={c.code}
+                  onClick={() => { setCurrency(c.code); setWalletOpen(false); }}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-lg px-2 py-2 text-sm transition-colors",
+                    currency === c.code ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "hover:bg-white/[0.05]"
+                  )}
+                >
+                  <span className="flex items-center gap-2"><span>{c.flag}</span>{c.code}</span>
+                  <span className="text-xs text-[var(--text-muted)]">{formatLocalized(balance, c.code, rates)}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-white/[0.03] py-1 pl-1 pr-3 lg:flex">
+          {user.country ? (
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06] text-base">{countryFlag(user.country)}</span>
+          ) : (
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent)] text-xs font-bold text-white">{(user.username || "U").slice(0, 1).toUpperCase()}</span>
+          )}
+          <div className="leading-tight">
+            <p className="text-xs font-medium">{user.country ? `${countryName(user.country)} · ${user.username}` : user.username}</p>
+            <p className="max-w-[140px] truncate text-[11px] text-[var(--text-muted)]">{user.email || ""}</p>
+          </div>
         </div>
 
         <div className="relative">
@@ -81,6 +123,9 @@ export function TopBar({ user }: { user: User }) {
           </button>
           {menuOpen && (
             <div className="absolute right-0 top-11 w-52 rounded-xl border border-[var(--border)] bg-[#12121f] p-2 shadow-xl">
+              {user.email && (
+                <p className="mb-1 truncate border-b border-[var(--border)] px-3 py-2 text-xs text-[var(--text-muted)]">{user.email}</p>
+              )}
               {hasAdmin && (
                 <Link href="/admin" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm hover:bg-white/[0.05]">Admin</Link>
               )}

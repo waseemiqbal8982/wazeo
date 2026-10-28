@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { SplashLoader } from "@/components/SplashLoader";
 import { ContactFab } from "@/components/support/ContactFab";
+import { CurrencyProvider } from "@/lib/currency-store";
 
 export const metadata: Metadata = {
   title: {
@@ -30,9 +31,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-full">
         <ToastProvider>
           <ThemeProvider>
-            <SplashLoader />
-            {children}
-            <ContactFab />
+            <CurrencyProvider>
+              <SplashLoader />
+              {children}
+              <ContactFab />
+            </CurrencyProvider>
           </ThemeProvider>
         </ToastProvider>
       </body>

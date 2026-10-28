@@ -26,3 +26,39 @@ export function currencyInfo(code?: string | null): CurrencyInfo {
 export function convertUsd(usd: number, code?: string | null): number {
   return usd * currencyInfo(code).rate;
 }
+
+// Load display rates from a settings key->value map (keys: rate_INR, rate_PKR, rate_CNY).
+export function parseRates(map: Record<string, string | number>): Record<string, number> {
+  const out: Record<string, number> = { USD: 1 };
+  for (const code of ["INR", "PKR", "CNY"]) {
+    const raw = Number(map[`rate_${code}`]);
+    const fallback = CURRENCIES[code]?.rate ?? 1;
+    out[code] = Number.isFinite(raw) && raw > 0 ? raw : fallback;
+  }
+  return out;
+}
+
+// Format a USD amount in the chosen display currency using Intl.
+// Tiny amounts are never rounded to zero (min 4 decimals for values < 1 cent).
+export function formatLocalized(
+  usd: number,
+  currency?: string | null,
+  rates?: Record<string, number> | null
+): string {
+  const info = currencyInfo(currency);
+  const rate = (rates && rates[info.code]) || info.rate;
+  const val = (Number(usd) || 0) * rate;
+  const abs = Math.abs(val);
+  const tiny = abs > 0 && abs < 0.01;
+  const frac = tiny ? 4 : 2;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: info.code,
+      minimumFractionDigits: frac,
+      maximumFractionDigits: frac,
+    }).format(val);
+  } catch {
+    return `${info.symbol}${val.toFixed(frac)}`;
+  }
+}

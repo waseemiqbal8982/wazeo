@@ -8,6 +8,9 @@ export interface User {
   role: string | null;
   balance: number;
   theme: string | null;
+  email?: string | null;
+  country?: string | null;
+  currency?: string | null;
 }
 
 export const NAV = [

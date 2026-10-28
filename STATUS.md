@@ -167,3 +167,14 @@
 - Support links: landing footer + dashboard sidebar (NAV) me add.
 - `npm run lint` → 0 errors. `npm run build` → pass (includes /support).
 
+
+## Update (Part 5 — Currencies + header) ✅ (partial conversion)
+- Currency engine: USD/INR/PKR/CNY (symbol, flag, rate) in `lib/currencies.ts` — `formatLocalized` Intl formatting, up to 4 decimals for tiny amounts (never rounds to zero). Rates editable (schema_v13 seeds rate_INR/PKR/CNY; merged + db:setup ✅).
+- `lib/currency-store.tsx` provider (selected currency from cookie + profile, rates from `/api/meta/currencies`); set via `/api/user/currency` (persists via update_profile).
+- Wallet chip in header ab chosen currency me balance dikhata hai + sab 4 currencies list (tap/hover) se switch.
+- Currency switcher on landing (fixed top-right) via `components/CurrencySwitcher.tsx`.
+- Header user area: country flag + country name + username + email (email hidden on small screens, shown in mobile menu). User type extended (email/country).
+- Admin > Settings ab Currencies editor (manual rates + auto-refresh via `/api/admin/currencies/refresh` — free open.er-api.com, server-side, gated admin, manual fallback).
+- NOTE: full page-by-page price conversion (orders, add-funds, services) abhi partial hai — currency framework ready, core header/wallet/landing wired.
+- `npm run lint` → 0 errors. `npm run build` → pass.
+

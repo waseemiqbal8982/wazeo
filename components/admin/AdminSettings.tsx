@@ -12,6 +12,7 @@ export function AdminSettings() {
   const { toast } = useToast();
   const [values, setValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [refreshBusy, setRefreshBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -43,6 +44,24 @@ export function AdminSettings() {
     toast({ title: "Settings saved", variant: "success" });
   }
 
+  async function refreshRates() {
+    setRefreshBusy(true);
+    try {
+      const res = await fetch("/api/admin/currencies/refresh", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) return toast({ title: data.error || "Refresh failed", variant: "danger" });
+      toast({ title: "Rates refreshed", variant: "success" });
+      const { data: rows } = await supabase.from("settings").select("*");
+      const map: Record<string, string> = {};
+      (rows || []).forEach((s) => { map[s.key] = s.value; });
+      setValues((v) => ({ ...v, ...map }));
+    } catch {
+      toast({ title: "Network error", variant: "danger" });
+    } finally {
+      setRefreshBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Settings</h1>
@@ -69,6 +88,27 @@ export function AdminSettings() {
           <p className="mt-1 text-xs text-[var(--text-muted)]">
             {"Example: [{\"name\":\"JazzCash\",\"account\":\"0300-0000000\",\"instructions\":\"Send payment and upload proof\"}]"}
           </p>
+        </div>
+        <div className="border-t border-[var(--border)] pt-4">
+          <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">
+            Currencies — rate per 1 USD (editable manually, optional auto-refresh)
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {["INR", "PKR", "CNY"].map((c) => (
+              <Input
+                key={c}
+                label={`${c} rate`}
+                type="number"
+                step="0.0001"
+                min="0.0001"
+                value={values[`rate_${c}`] ?? ""}
+                onChange={(e) => setValues((v) => ({ ...v, [`rate_${c}`]: e.target.value }))}
+              />
+            ))}
+          </div>
+          <Button variant="outline" size="sm" loading={refreshBusy} className="mt-2" onClick={refreshRates}>
+            Refresh rates (auto)
+          </Button>
         </div>
         <Button loading={busy} onClick={save}>Save settings</Button>
       </Card>
