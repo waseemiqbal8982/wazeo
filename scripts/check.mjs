@@ -39,6 +39,13 @@ for (const [k, fix] of Object.entries(where)) {
   }
 }
 
+// 1.5) Admin allowlist
+if (!process.env.ADMIN_EMAILS) {
+  warn("ADMIN_EMAILS missing - add comma-separated admin emails in .env.local (and Vercel). /admin stays locked.");
+} else {
+  ok("ADMIN_EMAILS present");
+}
+
 // 2) Supabase reachable + keys
 const admin = url && role ? createClient(url, role, { auth: { persistSession: false } }) : null;
 

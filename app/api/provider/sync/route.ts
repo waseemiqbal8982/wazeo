@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isAdminUser } from "@/lib/adminAuth";
 import { providerGetServices, isMockMode } from "@/lib/provider";
 import { heuristicServiceScore } from "@/lib/ai";
 
@@ -35,14 +35,8 @@ function detectCategory(name: string): string {
 }
 
 export async function POST(req: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
-
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") {
+  const adminOk = await isAdminUser();
+  if (adminOk !== true) {
     return NextResponse.json({ error: "Admins only." }, { status: 403 });
   }
 

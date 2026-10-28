@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { createClient } from "@/lib/supabase/client";
@@ -9,7 +10,14 @@ import { NAV, User } from "./shell-context";
 
 export function Sidebar({ user, pathname }: { user: User; pathname: string }) {
   const router = useRouter();
-  const isAdmin = user.role === "admin";
+  const [hasAdmin, setHasAdmin] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/meta/admin-access")
+      .then((r) => r.json())
+      .then((d) => setHasAdmin(!!d?.admin))
+      .catch(() => {});
+  }, []);
 
   async function signOut() {
     await createClient().auth.signOut();
@@ -44,7 +52,7 @@ export function Sidebar({ user, pathname }: { user: User; pathname: string }) {
             </Link>
           );
         })}
-        {isAdmin && (
+        {hasAdmin && (
           <Link
             href="/admin"
             className={cn(

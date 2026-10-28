@@ -54,11 +54,9 @@ export async function middleware(request: NextRequest) {
       url.searchParams.set("error", "banned");
       return NextResponse.redirect(url);
     }
-    // Only force customers away from /admin when we can clearly confirm the
-    // role. If the role lookup fails temporarily, let the admin layout decide.
-    if (!error && profile && profile.role !== "admin") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
+    // Access control (email allowlist + role) is enforced in the admin layout,
+    // which renders a 404 for anyone not on the ADMIN_EMAILS allowlist.
+    void path; void error;
   }
 
   return response;

@@ -149,3 +149,12 @@
 - Admin Users table ab sab fields dikhata hai (username, email, country+flag, language, currency, balance, signup date, last login, status) + profile drawer modal with all fields. "Make admin" button UI se hata diya (ab sirf make-admin script).
 - `npm run lint` → 0 errors. `npm run build` → pass.
 
+
+## Update (Part 3 — Admin only for ADMIN_EMAILS) ✅
+- `lib/adminAuth.ts`: server helper — admin access requires email in `ADMIN_EMAILS` AND profile role=admin.
+- `/admin` layout ab `notFound()` (404) deta hai for anyone not on the allowlist (unauthenticated → /sign-in). Middleware role-redirect hata diya (layout handle karta hai).
+- `app/api/meta/admin-access` route (server-side boolean) — Sidebar aur TopBar admin link/sadh ab isi se gate hote hain, is liye non-allowed users ko admin link kabhi nahi dikhta.
+- Provider sync API route ab `isAdminUser()` se gated hai. Signup kabhi role set nahi karta; make-admin script hi admin banane ka zariya.
+- `.env.example` me `ADMIN_EMAILS` add; `npm run check` ab ise verify karta hai; `docs/ENV_CHECKLIST.md` (names only, Vercel reminder included).
+- `npm run lint` → 0 errors. `npm run build` → pass.
+

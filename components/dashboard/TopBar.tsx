@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
@@ -16,7 +16,14 @@ export function TopBar({ user }: { user: User }) {
   const { theme, setTheme } = useTheme();
   const [themeOpen, setThemeOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const isAdmin = user.role === "admin";
+  const [hasAdmin, setHasAdmin] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/meta/admin-access")
+      .then((r) => r.json())
+      .then((d) => setHasAdmin(!!d?.admin))
+      .catch(() => {});
+  }, []);
 
   async function signOut() {
     await createClient().auth.signOut();
@@ -74,7 +81,7 @@ export function TopBar({ user }: { user: User }) {
           </button>
           {menuOpen && (
             <div className="absolute right-0 top-11 w-52 rounded-xl border border-[var(--border)] bg-[#12121f] p-2 shadow-xl">
-              {isAdmin && (
+              {hasAdmin && (
                 <Link href="/admin" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm hover:bg-white/[0.05]">Admin</Link>
               )}
               <Link href="/dashboard/settings" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm hover:bg-white/[0.05]">Settings</Link>
