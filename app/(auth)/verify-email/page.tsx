@@ -9,6 +9,8 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Logo } from "@/components/Logo";
 
+const OTP_LENGTH = Math.max(4, Math.min(10, Number(process.env.NEXT_PUBLIC_OTP_LENGTH || 6)));
+
 export default function VerifyEmailPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -40,9 +42,8 @@ export default function VerifyEmailPage() {
     const id = setInterval(() => setResendIn((s) => (s > 0 ? s - 1 : 0)), 1000);
     return () => clearInterval(id);
   }, []);
-
   const verify = useCallback(async () => {
-    if (otp.length < 6 || busy) return;
+    if (otp.length < OTP_LENGTH || busy) return;
     setBusy(true);
     setErr("");
     try {
@@ -73,7 +74,7 @@ export default function VerifyEmailPage() {
   }, [otp, busy, email, router]);
 
   useEffect(() => {
-    if (otp.length === 6 && !busy) void verify();
+    if (otp.length === OTP_LENGTH && !busy) void verify();
   }, [otp, busy, verify]);
 
   async function resend() {
@@ -141,7 +142,7 @@ export default function VerifyEmailPage() {
           <p className="mb-5 mt-2 text-sm text-[var(--text-muted)]">
             {linkExpired
               ? "Enter the code below, or resend a new one."
-              : `We sent a 6-digit code to ${email}. Enter it below to continue.`}
+              : `We sent a ${OTP_LENGTH}-digit code to ${email}. Enter it below to continue.`}
           </p>
 
           {editingEmail ? (
@@ -155,13 +156,14 @@ export default function VerifyEmailPage() {
           ) : (
             <>
               <div key={tick} className={err ? "animate-shake" : ""}>
-                <OtpInput value={otp} onChange={(v) => { setOtp(v); if (err) setErr(""); }} disabled={busy} error={!!err} autoFocus />
+                <OtpInput length={OTP_LENGTH} value={otp} onChange={(v) => { setOtp(v); if (err) setErr(""); }} disabled={busy} error={!!err} autoFocus />
                 {err && <p role="alert" className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</p>}
               </div>
               <div className="mt-5 flex flex-col items-center gap-2">
                 <Button variant="ghost" size="sm" disabled={resendIn > 0 || busy} onClick={resend}>
                   {resendIn > 0 ? `Resend in ${resendIn}s` : "Resend code"}
                 </Button>
+                <p className="text-[11px] text-[var(--text-muted)]">Use the newest code — a new code cancels the old one.</p>
                 <button type="button" onClick={() => setEditingEmail(true)} className="text-xs text-[var(--text-muted)] underline-offset-2 hover:text-[var(--accent)] hover:underline">
                   Wrong email? Change it
                 </button>
@@ -177,3 +179,4 @@ export default function VerifyEmailPage() {
     </Card>
   );
 }
+

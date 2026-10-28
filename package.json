@@ -14,7 +14,8 @@
                     "check:layout":  "node scripts/check-layout.mjs",
                     "test:login":  "node scripts/test-login.mjs",
                     "test:infra":  "node scripts/test-infra.mjs",
-                    "test:acceptance":  "tsx scripts/test-acceptance.ts"
+                    "test:acceptance":  "tsx scripts/test-acceptance.ts",
+                    "test:otp":  "node scripts/test-otp.mjs"
                 },
     "devDependencies":  {
                             "@tailwindcss/turbopack":  "^4",

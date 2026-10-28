@@ -302,3 +302,15 @@ Remaining for Item 1 (PARTIAL): admin page tables→cards on phones, filters bot
 
 **Checks:** `npm run lint` → 0 errors; `npm run build` → pass.
 
+
+---
+
+## Item 1 — Sign-up & OTP reliability (DONE)
+
+- **Per-email limits in DB:** 5 wrong attempts / 10 min per email (via `email_otps.locked_until`), friendly wait message. Correct codes are never rejected because of other users.
+- **Generous IP limit:** 60 / 10 min; correct codes never count against it (`rateLimitCheck` vs `rateLimitHit`).
+- **Removed local expiry check:** let Supabase `verifyOtp` decide; errors mapped to clear messages (expired / invalid / already used). Resend area shows "Use the newest code — a new code cancels the old one."
+- **OTP length from `NEXT_PUBLIC_OTP_LENGTH`** (default 6, allowed 4–10); spaces/non-digits stripped on paste; email trimmed + lowercased; type "signup" with fallback to "email".
+- **`npm run test:otp`** added (`scripts/test-otp.mjs`): creates a temp user, uses `admin.generateLink` to obtain a token, calls the verification route, reports OK/FAIL, then deletes the test user. Structured 4xx (invalid/expired) proves the route is alive; live OTP delivery needs real SMTP.
+- **Checks:** `npm run lint` → 0 errors; `npm run build` → pass.
+
