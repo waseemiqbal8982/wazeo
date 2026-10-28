@@ -6,7 +6,6 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Tabs } from "@/components/ui/Tabs";
-import { formatMoney } from "@/lib/currency";
 import { useCurrency } from "@/lib/currency-store";
 import { SchedulePreview } from "./SchedulePreview";
 import type { ScheduleChunk } from "@/lib/schedule";

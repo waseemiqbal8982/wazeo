@@ -6,7 +6,7 @@ export const config = {
   matcher: ["/dashboard/:path*", "/admin/:path*"],
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -48,8 +48,31 @@ export async function middleware(request: NextRequest) {
   }
 
   const path = request.nextUrl.pathname;
+
+  // Admin 2FA enforcement (server-side). Only applies once an admin has opted in.
+  if (path.startsWith("/admin") && !path.startsWith("/admin/2fa")) {
+    try {
+      const { data: tf } = await supabase
+        .from("admin_2fa")
+        .select("enabled")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (tf?.enabled) {
+        const ok2fa = request.cookies.get(`wazeo-2fa-ok-${user.id}`)?.value === "1";
+        if (!ok2fa) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/admin/2fa";
+          url.searchParams.set("next", path);
+          return NextResponse.redirect(url);
+        }
+      }
+    } catch {
+      // never block access on a 2FA lookup error
+    }
+  }
+
   if (path.startsWith("/admin")) {
-    const { data: profile, error } = await supabase
+    const { data: profile } = await supabase
       .from("profiles")
       .select("role, banned")
       .eq("id", user.id)
@@ -62,9 +85,7 @@ export async function middleware(request: NextRequest) {
       url.searchParams.set("error", "banned");
       return NextResponse.redirect(url);
     }
-    // Access control (email allowlist + role) is enforced in the admin layout,
-    // which renders a 404 for anyone not on the ADMIN_EMAILS allowlist.
-    void path; void error;
+    void profile;
   }
 
   return response;

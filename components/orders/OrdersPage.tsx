@@ -11,7 +11,6 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatMoney, formatDateTime } from "@/lib/currency";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 
 interface Order {
   id: string;

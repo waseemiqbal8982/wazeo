@@ -32,3 +32,36 @@ export async function isAdminUser(): Promise<boolean | null> {
     .maybeSingle();
   return prof?.role === "admin";
 }
+
+// Admin OR support. Used to open the /admin area for both roles, while
+// sensitive actions still call isAdminUser() (admin-only).
+export async function isAdminOrSupport(): Promise<boolean | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) return null;
+  if (!isAllowedAdminEmail(user.email)) return false;
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  return prof?.role === "admin" || prof?.role === "support";
+}
+
+// Returns the caller's admin-listed role, or null.
+export async function getAdminRole(): Promise<"admin" | "support" | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) return null;
+  if (!isAllowedAdminEmail(user.email)) return null;
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  return prof?.role === "support" ? "support" : prof?.role === "admin" ? "admin" : null;
+}

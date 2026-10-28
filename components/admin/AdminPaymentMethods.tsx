@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
@@ -68,6 +70,17 @@ export function AdminPaymentMethods() {
   function openEdit(m: PaymentMethod) {
     setDraft({ ...m });
     setEditing(m);
+  }
+
+  async function uploadLogo(file: File) {
+    if (!file) return;
+    const ext = (file.name.split(".").pop() || "png").toLowerCase();
+    const path = `logos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage.from("payment-logos").upload(path, file, { upsert: false });
+    if (error) return toast({ title: error.message, variant: "danger" });
+    const { data: pub } = supabase.storage.from("payment-logos").getPublicUrl(path);
+    setDraft((d) => ({ ...d, logo_url: pub.publicUrl }));
+    toast({ title: "Logo uploaded", variant: "success" });
   }
 
   async function save() {
@@ -185,7 +198,21 @@ export function AdminPaymentMethods() {
                 <option value="GLOBAL">Global</option>
               </select>
             </div>
-            <Input label="Logo URL (optional)" value={draft.logo_url || ""} onChange={(e) => setDraft({ ...draft, logo_url: e.target.value })} />
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Logo</label>
+              <div className="flex items-center gap-3">
+                {draft.logo_url ? (
+                  <img src={draft.logo_url} alt="logo" className="h-10 w-10 rounded-lg border border-[var(--border)] object-cover" />
+                ) : (
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border)] bg-white/[0.04] text-sm font-bold">{draft.name.slice(0, 1) || "?"}</span>
+                )}
+                <label className="cursor-pointer rounded-lg border border-[var(--border)] bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-[var(--text)] hover:border-[var(--accent)]">
+                  Upload logo
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadLogo(f); }} />
+                </label>
+              </div>
+              <Input label="Or logo URL (optional)" value={draft.logo_url || ""} onChange={(e) => setDraft({ ...draft, logo_url: e.target.value })} className="mt-2" />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Input label="Account name" value={draft.account_name || ""} onChange={(e) => setDraft({ ...draft, account_name: e.target.value })} />

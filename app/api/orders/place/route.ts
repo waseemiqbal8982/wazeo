@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { providerAddOrder, providerGetServices } from "@/lib/provider";
 import { buildSchedule } from "@/lib/schedule";
 import { validateLink } from "@/lib/validation";
+import { runHooks } from "@/lib/hooks";
+import { logProviderCall } from "@/lib/providerLog";
 
 export const dynamic = "force-dynamic";
 
@@ -107,13 +109,16 @@ export async function POST(req: Request) {
       const providerServices = await providerGetServices();
       const match = providerServices.find((s) => s.provider_service_id === service.provider_service_id);
       const providerId = match ? match.provider_service_id : service.provider_service_id;
+      const t0 = Date.now();
       const { orderId: providerOrderId } = await providerAddOrder({
         service: providerId,
         link,
         quantity,
       });
       await admin.from("orders").update({ provider_order_id: providerOrderId, status: "processing" }).eq("id", orderId);
+      await logProviderCall({ action: "add", ok: true, duration_ms: Date.now() - t0, response_masked: JSON.stringify({ order: providerOrderId }) });
     } catch (e) {
+      await logProviderCall({ action: "add", ok: false, error: String(e) });
       // refund automatically
       try { await admin.rpc("cancel_and_refund", { p_order_id: orderId }); } catch {}
       return NextResponse.json(
@@ -132,6 +137,8 @@ export async function POST(req: Request) {
     await admin.from("order_chunks").insert(rows);
     await admin.from("orders").update({ status: "pending" }).eq("id", orderId);
   }
+
+  await runHooks("order.created", { orderId, quantity, serviceName: service.name, userId: user.id });
 
   return NextResponse.json({ ok: true, orderId, balance: placed.balance });
 }

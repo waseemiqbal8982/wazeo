@@ -6,6 +6,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { SplashLoader } from "@/components/SplashLoader";
 import { MaintenanceGate } from "@/components/MaintenanceGate";
 import { ContactFab } from "@/components/support/ContactFab";
+import { ImpersonateBanner } from "@/components/ImpersonateBanner";
 import { CurrencyProvider } from "@/lib/currency-store";
 
 export const metadata: Metadata = {
@@ -37,6 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <MaintenanceGate>
                 {children}
               </MaintenanceGate>
+              <ImpersonateBanner />
               <ContactFab />
             </CurrencyProvider>
           </ThemeProvider>

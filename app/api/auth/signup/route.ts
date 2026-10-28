@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 import { authErrorMessage, isValidEmail } from "@/lib/authMessages";
 import { createHash } from "node:crypto";
+import { runHooks } from "@/lib/hooks";
 
 export async function POST(req: Request) {
   const rl = rateLimit(`signup:${getClientIp(req)}`, 6, 60_000);
@@ -74,6 +75,9 @@ export async function POST(req: Request) {
   }
 
   if (data.user && data.user.id) {
+    try {
+      await runHooks("user.signup", { userId: data.user.id, referralCode: referral || undefined });
+    } catch {}
     try {
       const admin = createAdminClient();
       await admin.from("profiles").upsert(

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { audit } from "@/lib/audit";
+import { formatDateTime } from "@/lib/currency";
 
 interface Provider {
   id: string;
@@ -32,12 +33,18 @@ export function AdminProviders() {
   const [syncing, setSyncing] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string>("");
+  const [providerLogs, setProviderLogs] = useState<any[]>([]);
+  const [logAction, setLogAction] = useState("");
 
   async function load() {
     const { data } = await sb.from("providers").select("*").order("priority");
     setList(data || []);
   }
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    sb.from("provider_logs").select("*").order("created_at", { ascending: false }).limit(60).then(({ data }) => setProviderLogs(data || []));
+  }, []);
 
   function mask(k?: string | null) {
     if (!k) return "—";
@@ -151,6 +158,47 @@ export function AdminProviders() {
           </div>
         ))}
       </div>
+
+      <Card className="p-0">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 pb-2">
+          <p className="text-sm font-semibold">Provider API logs</p>
+          <select value={logAction} onChange={(e) => setLogAction(e.target.value)} className="h-8 rounded-lg border border-[var(--border)] bg-white/[0.03] px-2 text-xs">
+            <option value="">All actions</option>
+            <option value="add">add</option>
+            <option value="status">status</option>
+            <option value="services">services</option>
+          </select>
+        </div>
+        <div className="max-h-72 overflow-y-auto">
+          <table className="w-full text-xs">
+            <thead className="sticky top-0 bg-[#12121f]">
+              <tr className="text-left text-[var(--text-muted)]">
+                <th className="px-4 py-2 font-medium">When</th>
+                <th className="px-2 py-2 font-medium">Action</th>
+                <th className="px-2 py-2 font-medium">Result</th>
+                <th className="px-2 py-2 font-medium">Retries</th>
+                <th className="px-2 py-2 font-medium">ms</th>
+                <th className="px-4 py-2 font-medium">Error / response</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--border)]">
+              {providerLogs.filter((l) => !logAction || l.action === logAction).map((l) => (
+                <tr key={l.id}>
+                  <td className="px-4 py-1.5 text-[var(--text-muted)]">{formatDateTime(l.created_at)}</td>
+                  <td className="px-2 py-1.5"><Badge tone="muted">{l.action}</Badge></td>
+                  <td className="px-2 py-1.5"><Badge tone={l.ok ? "success" : "danger"}>{l.ok ? "ok" : "error"}</Badge></td>
+                  <td className="px-2 py-1.5">{l.retries}</td>
+                  <td className="px-2 py-1.5">{l.duration_ms ?? "—"}</td>
+                  <td className="px-4 py-1.5 font-mono text-[var(--text-muted)]">{l.error || l.response_masked || "—"}</td>
+                </tr>
+              ))}
+              {providerLogs.length === 0 && (
+                <tr><td colSpan={6} className="px-4 py-6 text-center text-[var(--text-muted)]">No provider calls logged yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }

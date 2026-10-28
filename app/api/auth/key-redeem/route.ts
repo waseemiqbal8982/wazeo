@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 import { createHash, timingSafeEqual } from "node:crypto";
+import { runHooks } from "@/lib/hooks";
 
 const GENERIC = "This key is invalid, expired or not for this email";
 const hashKey = (k: string) => createHash("sha256").update(k).digest("hex");
@@ -94,6 +95,9 @@ export async function POST(req: Request) {
       }
     }
     await admin.from("access_codes").update({ used_by: uid }).eq("id", ac.id);
+    try {
+      await runHooks("user.signup", { userId: uid });
+    } catch {}
     return NextResponse.json({ ok: true, needsVerify: true });
   }
 

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { PLATFORMS, CATEGORIES } from "@/lib/constants";
+import { PLATFORMS } from "@/lib/constants";
+import { PlatformIcon } from "@/lib/platformIcons";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -90,8 +91,8 @@ export function ServicesPage() {
                 : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--text)]"
             )}
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.06] text-lg">
-              {p.id === "instagram" ? "📸" : p.id === "tiktok" ? "🎵" : "▶️"}
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.06] text-lg text-[var(--accent)]">
+              <PlatformIcon id={p.id} size={20} />
             </span>
             {p.label}
           </button>

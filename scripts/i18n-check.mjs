@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 
 const langs = ["en", "ur", "hi", "fr", "zh"];
 const load = (l) =>

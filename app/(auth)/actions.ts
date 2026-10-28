@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { authErrorMessage } from "@/lib/authMessages";
 import { rateLimit } from "@/lib/rateLimit";
 import { headers } from "next/headers";
+import { createHash } from "node:crypto";
 
 export async function signIn(_prevState: unknown, formData: FormData) {
   const h = await headers();
@@ -55,6 +56,15 @@ export async function signIn(_prevState: unknown, formData: FormData) {
     try {
       const admin = createAdminClient();
       await admin.from("profiles").update({ last_login_at: new Date().toISOString() }).eq("id", data.user.id);
+      // Record login history (time, IP hash, user agent, method).
+      const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+      const ua = h.get("user-agent") || "";
+      await admin.from("login_history").insert({
+        user_id: data.user.id,
+        method: "password",
+        ip_hash: createHash("sha256").update(ip).digest("hex").slice(0, 24),
+        user_agent: ua.slice(0, 300),
+      });
     } catch {}
   }
 

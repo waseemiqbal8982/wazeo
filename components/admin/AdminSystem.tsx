@@ -16,6 +16,10 @@ export function AdminSystem() {
   const [errors, setErrors] = useState<any[]>([]);
   const [filter, setFilter] = useState("");
   const [status, setStatus] = useState({ db: "check", provider: isMockMode() ? "mock" : "live", ai: isMercuryConfigured() ? "green" : "off" });
+  const [twofa, setTwofa] = useState<{ enabled: boolean; method?: string }>({ enabled: false });
+  const [pluginExecs, setPluginExecs] = useState<any[]>([]);
+  const [twofaBusy, setTwofaBusy] = useState(false);
+  const [twofaResult, setTwofaResult] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -29,6 +33,32 @@ export function AdminSystem() {
       setErrors(e || []);
     })();
   }, []);
+
+  useEffect(() => {
+    fetch("/api/admin/2fa").then((r) => r.json()).then((d) => { if (typeof d.enabled === "boolean") setTwofa({ enabled: d.enabled, method: d.method }); }).catch(() => {});
+    sb.from("plugin_executions").select("*").order("created_at", { ascending: false }).limit(30).then(({ data }) => setPluginExecs(data || []));
+  }, []);
+
+  async function toggle2fa() {
+    setTwofaBusy(true);
+    setTwofaResult("");
+    const res = await fetch("/api/admin/2fa", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(twofa.enabled ? { enable: false } : { enable: true, method: "email" }),
+    });
+    const d = await res.json().catch(() => ({}));
+    setTwofaBusy(false);
+    if (!res.ok) { setTwofaResult(`❌ ${d.error || "Failed"}`); return; }
+    setTwofa({ enabled: d.enabled, method: d.method });
+    if (d.enabled) {
+      setTwofaResult(`✅ 2FA enabled.`);
+      if (d.devCode) setTwofaResult(`✅ 2FA enabled. Demo code (no SMTP configured): ${d.devCode}`);
+      if (d.recovery) setTwofaResult((prev) => `${prev} Save recovery code: ${d.recovery}`);
+    } else {
+      setTwofaResult("2FA disabled.");
+    }
+  }
 
   const filteredAudits = audits.filter((x) => !filter || x.action.includes(filter));
 
@@ -96,6 +126,44 @@ export function AdminSystem() {
                 <li key={e.id}>[{formatDateTime(e.created_at)}] {e.message}</li>
               ))}
             </ul>
+          )}
+        </div>
+      </Card>
+
+      <Card className="space-y-3">
+        <p className="text-sm font-semibold">Admin security — two-factor authentication</p>
+        <p className="text-sm text-[var(--text-muted)]">
+          Status: <Badge tone={twofa.enabled ? "success" : "muted"}>{twofa.enabled ? "Enabled" : "Disabled"}</Badge>
+          {twofa.enabled && twofa.method ? ` · method: ${twofa.method}` : ""}
+        </p>
+        <Button size="sm" variant={twofa.enabled ? "danger" : "soft"} loading={twofaBusy} onClick={toggle2fa}>
+          {twofa.enabled ? "Disable 2FA" : "Enable 2FA (email OTP)"}
+        </Button>
+        {twofaResult && <p className="text-xs text-[var(--text-muted)]">{twofaResult}</p>}
+        <p className="text-xs text-[var(--text-muted)]">
+          After enabling, you will be asked for a code on your next admin page load. A recovery code is shown once — save it.
+        </p>
+      </Card>
+
+      <Card className="p-0">
+        <p className="p-4 pb-2 text-sm font-semibold">Plugin executions (hook log)</p>
+        <div className="max-h-64 overflow-y-auto">
+          {pluginExecs.length === 0 ? (
+            <p className="px-4 pb-4 text-sm text-[var(--text-muted)]">No plugin executions yet.</p>
+          ) : (
+            <table className="w-full text-xs">
+              <tbody className="divide-y divide-[var(--border)]">
+                {pluginExecs.map((e) => (
+                  <tr key={e.id}>
+                    <td className="px-4 py-1.5 font-medium">{e.plugin_id}</td>
+                    <td className="px-2 py-1.5 text-[var(--text-muted)]">{e.hook}</td>
+                    <td className="px-2 py-1.5"><Badge tone={e.ok ? "success" : "danger"}>{e.ok ? "ok" : "error"}</Badge></td>
+                    <td className="px-2 py-1.5 text-[var(--text-muted)]">{e.error || ""}</td>
+                    <td className="px-4 py-1.5 text-[var(--text-muted)]">{formatDateTime(e.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </Card>

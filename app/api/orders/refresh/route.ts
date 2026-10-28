@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { providerGetStatus } from "@/lib/provider";
+import { runHooks } from "@/lib/hooks";
+import { logProviderCall } from "@/lib/providerLog";
 
 export const dynamic = "force-dynamic";
 
@@ -35,15 +37,20 @@ export async function POST(req: Request) {
   let updated = 0;
   for (const o of orders || []) {
     try {
+      const t0 = Date.now();
       const { status } = await providerGetStatus(o.provider_order_id);
       const mapped = mapStatus(status);
-      await admin.from("orders").update({ status: mapped }).eq("id", o.id);
-      if (mapped === "cancelled") {
-        try { await admin.rpc("cancel_and_refund", { p_order_id: o.id }); } catch {}
+      await logProviderCall({ action: "status", ok: true, duration_ms: Date.now() - t0, response_masked: JSON.stringify({ status: mapped }) });
+      if (mapped !== o.status) {
+        await admin.from("orders").update({ status: mapped }).eq("id", o.id);
+        if (mapped === "cancelled") {
+          try { await admin.rpc("cancel_and_refund", { p_order_id: o.id }); } catch {}
+        }
+        await runHooks("order.status_changed", { orderId: o.id, status: mapped });
       }
       updated++;
-    } catch {
-      // skip provider errors
+    } catch (e) {
+      await logProviderCall({ action: "status", ok: false, error: String(e) });
     }
   }
 

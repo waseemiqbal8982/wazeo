@@ -63,7 +63,7 @@ if (url) {
   }
 } else if (anon) {
   try {
-    const r = await fetch(`https://${anon.split(".")[0]}.supabase.co/rest/v1/profiles?select=id&limit=1`);
+    await fetch(`https://${anon.split(".")[0]}.supabase.co/rest/v1/profiles?select=id&limit=1`);
     ok("Supabase URL reachable (derived)");
   } catch {
     bad("Supabase not reachable.");
@@ -145,7 +145,8 @@ if (process.env.MERCURY_BASE_URL && process.env.MERCURY_API_KEY && process.env.M
       signal: c.signal,
     });
     clearTimeout(t);
-    r.ok ? ok("Mercury reachable") : warn(`Mercury responded HTTP ${r.status} (fix endpoint/key/model)`);
+    if (r.ok) ok("Mercury reachable");
+    else warn(`Mercury responded HTTP ${r.status} (fix endpoint/key/model)`);
   } catch {
     warn("Mercury not reachable (ok for now — panel falls back).");
   }

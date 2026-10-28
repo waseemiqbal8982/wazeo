@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
@@ -35,11 +37,19 @@ export function AdminPayments() {
 
   async function decide(id: string, approve: boolean) {
     setBusyId(id);
-    const { error } = await supabase.rpc("approve_payment", { p_payment_id: id, p_approve: approve });
-    setBusyId(null);
-    if (error) return toast({ title: error.message, variant: "danger" });
-    toast({ title: approve ? "Payment approved" : "Payment rejected", variant: approve ? "success" : "danger" });
-    load();
+    try {
+      const res = await fetch("/api/admin/payments/decide", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId: id, approve }),
+      });
+      const data = await res.json();
+      if (!res.ok) return toast({ title: data.error || "Failed", variant: "danger" });
+      toast({ title: approve ? "Payment approved" : "Payment rejected", variant: approve ? "success" : "danger" });
+    } finally {
+      setBusyId(null);
+      load();
+    }
   }
 
   if (payments.length === 0) return <EmptyState title="No payments" description="New deposit requests will appear here." />;

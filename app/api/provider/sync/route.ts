@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/adminAuth";
 import { providerGetServices, isMockMode } from "@/lib/provider";
 import { heuristicServiceScore } from "@/lib/ai";
+import { logProviderCall } from "@/lib/providerLog";
 
 export const dynamic = "force-dynamic";
 
@@ -49,8 +50,11 @@ export async function POST(req: Request) {
 
   let services;
   try {
+    const t0 = Date.now();
     services = await providerGetServices();
+    await logProviderCall({ action: "services", ok: true, duration_ms: Date.now() - t0, response_masked: `{ count: ${services.length} }` });
   } catch (e) {
+    await logProviderCall({ action: "services", ok: false, error: String(e) });
     return NextResponse.json({ error: `Provider error: ${String(e)}` }, { status: 502 });
   }
 
