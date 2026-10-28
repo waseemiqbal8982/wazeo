@@ -13,6 +13,8 @@ if (!url || !key) {
 
 const sb = createClient(url, key, { auth: { persistSession: false } });
 
+const now = new Date().toISOString();
+
 const { count } = await sb.from("services").select("id", { count: "exact", head: true });
 
 if ((count || 0) > 0) {
@@ -93,5 +95,51 @@ if (!presetCount) {
   ]);
   console.log("✅ Package presets added.");
 }
+
+// ---- Starter demo services (Item 3): very cheap, drip min 10, is_demo = true ----
+const STARTER_SERVICES = [
+  { provider_service_id: "ig-st-views-reel", platform: "instagram", category: "Views", name: "Instagram Reel Views | Fast Start", provider_rate: 0.000008, min: 10, max: 100000 },
+  { provider_service_id: "ig-st-views-video", platform: "instagram", category: "Views", name: "Instagram Video Views | Boosting", provider_rate: 0.000008, min: 10, max: 100000 },
+  { provider_service_id: "ig-st-views-story", platform: "instagram", category: "Views", name: "Instagram Story Views", provider_rate: 0.000008, min: 10, max: 50000 },
+  { provider_service_id: "ig-st-views-live", platform: "instagram", category: "Views", name: "Instagram Live Views", provider_rate: 0.000008, min: 10, max: 50000 },
+  { provider_service_id: "ig-st-likes-post", platform: "instagram", category: "Likes", name: "Instagram Post Likes | High Quality", provider_rate: 0.000024, min: 10, max: 50000 },
+  { provider_service_id: "ig-st-likes-reel", platform: "instagram", category: "Likes", name: "Instagram Reel Likes", provider_rate: 0.000024, min: 10, max: 50000 },
+  { provider_service_id: "ig-st-followers", platform: "instagram", category: "Followers", name: "Instagram Followers | Real", provider_rate: 0.00005, min: 10, max: 10000 },
+  { provider_service_id: "ig-st-followers-fast", platform: "instagram", category: "Followers", name: "Instagram Followers | Instant", provider_rate: 0.00006, min: 10, max: 10000 },
+  { provider_service_id: "ig-st-comments", platform: "instagram", category: "Comments", name: "Instagram Comments | Custom Text", provider_rate: 0.0005, min: 10, max: 1000 },
+  { provider_service_id: "ig-st-shares", platform: "instagram", category: "Shares", name: "Instagram Shares | Post", provider_rate: 0.00003, min: 10, max: 5000 },
+  { provider_service_id: "ig-st-saves", platform: "instagram", category: "Saves", name: "Instagram Saves | Post", provider_rate: 0.00003, min: 10, max: 5000 },
+  { provider_service_id: "ig-st-visits", platform: "instagram", category: "Visits", name: "Instagram Profile Visits", provider_rate: 0.000006, min: 10, max: 20000 },
+  { provider_service_id: "ig-st-impressions", platform: "instagram", category: "Other", name: "Instagram Impressions", provider_rate: 0.000004, min: 10, max: 200000 },
+  { provider_service_id: "ig-st-likes-comments", platform: "instagram", category: "Other", name: "Instagram Likes & Comments Combo", provider_rate: 0.00004, min: 10, max: 10000 },
+  { provider_service_id: "ig-st-views-highlight", platform: "instagram", category: "Views", name: "Instagram Highlight Views", provider_rate: 0.000008, min: 10, max: 50000 },
+  { provider_service_id: "ig-st-views-video-slow", platform: "instagram", category: "Views", name: "Instagram Video Views | Slow Start", provider_rate: 0.000007, min: 10, max: 100000 },
+  { provider_service_id: "tt-st-views-video", platform: "tiktok", category: "Views", name: "TikTok Video Views", provider_rate: 0.000006, min: 10, max: 200000 },
+  { provider_service_id: "tt-st-views-live", platform: "tiktok", category: "Views", name: "TikTok Live Views", provider_rate: 0.000007, min: 10, max: 50000 },
+  { provider_service_id: "tt-st-likes", platform: "tiktok", category: "Likes", name: "TikTok Likes", provider_rate: 0.00002, min: 10, max: 50000 },
+  { provider_service_id: "tt-st-followers", platform: "tiktok", category: "Followers", name: "TikTok Followers | Real", provider_rate: 0.00005, min: 10, max: 10000 },
+  { provider_service_id: "tt-st-comments", platform: "tiktok", category: "Comments", name: "TikTok Comments", provider_rate: 0.00045, min: 10, max: 1000 },
+  { provider_service_id: "tt-st-shares", platform: "tiktok", category: "Shares", name: "TikTok Shares", provider_rate: 0.00003, min: 10, max: 5000 },
+  { provider_service_id: "tt-st-visits", platform: "tiktok", category: "Visits", name: "TikTok Profile Visits", provider_rate: 0.000006, min: 10, max: 20000 },
+  { provider_service_id: "tt-st-impressions", platform: "tiktok", category: "Other", name: "TikTok Impressions", provider_rate: 0.000004, min: 10, max: 200000 },
+  { provider_service_id: "yt-st-views-video", platform: "youtube", category: "Views", name: "YouTube Video Views", provider_rate: 0.00001, min: 10, max: 100000 },
+  { provider_service_id: "yt-st-views-shorts", platform: "youtube", category: "Views", name: "YouTube Shorts Views", provider_rate: 0.000008, min: 10, max: 150000 },
+  { provider_service_id: "yt-st-likes", platform: "youtube", category: "Likes", name: "YouTube Likes", provider_rate: 0.00003, min: 10, max: 20000 },
+  { provider_service_id: "yt-st-subscribers", platform: "youtube", category: "Subscribers", name: "YouTube Subscribers", provider_rate: 0.00007, min: 10, max: 5000 },
+  { provider_service_id: "yt-st-comments", platform: "youtube", category: "Comments", name: "YouTube Comments", provider_rate: 0.0005, min: 10, max: 1000 },
+  { provider_service_id: "yt-st-shares", platform: "youtube", category: "Shares", name: "YouTube Shares", provider_rate: 0.00003, min: 10, max: 5000 },
+  { provider_service_id: "yt-st-watchtime", platform: "youtube", category: "Other", name: "YouTube Watch Time (minutes)", provider_rate: 0.000006, min: 10, max: 100000 },
+  { provider_service_id: "yt-st-impressions", platform: "youtube", category: "Other", name: "YouTube Impressions", provider_rate: 0.000004, min: 10, max: 200000 },
+].map((s) => ({ ...s, active: true, is_demo: true, ai_score: 70, created_at: now }));
+
+let starterAdded = 0;
+for (const s of STARTER_SERVICES) {
+  const { count } = await sb.from("services").select("id", { count: "exact", head: true }).eq("provider_service_id", s.provider_service_id);
+  if (!count) {
+    const { error } = await sb.from("services").insert(s);
+    if (!error) starterAdded++;
+  }
+}
+console.log(`✅ Starter demo services added: ${starterAdded} (${STARTER_SERVICES.length} in set)`);
 
 console.log("🎉 Seed complete.");

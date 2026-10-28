@@ -270,7 +270,11 @@ Remaining for Item 1 (PARTIAL): admin page tables→cards on phones, filters bot
 
 
 
-## Item 2 — Access key system
+## Review-pass enhancements (this session)
+- ✅ Starter demo services (Item 3): `scripts/seed.mjs` now idempotently inserts 16 Instagram + 8 TikTok + 8 YouTube very-cheap starter services (`is_demo=true`, min 10, markup 30%). Ran `npm run seed` → 32 added. Fixed a bug (module-level `now`).
+- ✅ All checks green: lint 0 errors, build pass, `i18n:check` pass, `check:layout` pass, `check` pass (env OK, RLS on, tables present).
+- ⚠️ Remaining from earlier history (not yet done): Bulk/Combo order modes + natural-variation slider; deposit country-tabs/methods demo-complete; graphs everywhere; admin KPI trends/health/broadcast/notification-center; demo-unorderable-when-live enforcement in place_order SQL/API + "Selling below cost" admin warning; admin tables→cards on phones; new visible text into 5 locale files.
+
 - ✅ schema_v14 applied via `npm run db:setup` (access_codes columns + profiles.access_key_id live).
 - ✅ Admin Users page now shows a "🔑 Key" badge for key signups and, in the profile drawer, "Signed up with key" with the key label (from access_codes).
 - Code-path review of redeem: constant-time compare, atomic claim `eq(uses,0)`, generic error text, rate-limit 5/10-min per IP+email, temp-password mode, invite-only gate, audit logs — all present. Full key never logged.
