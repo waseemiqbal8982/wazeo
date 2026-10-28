@@ -39,9 +39,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     let t = "purple";
     let r = false;
     try {
-      t = localStorage.getItem(THEME_KEY) || "purple";
+      t = localStorage.getItem(THEME_KEY) || "";
+      if (!t) {
+        const m = document.cookie.match(/(?:^|; )wazeo-theme=([^;]*)/);
+        t = m ? decodeURIComponent(m[1]) : "purple";
+      }
       r = localStorage.getItem(REDUCE_KEY) === "true";
     } catch {}
+    if (!THEMES.some((x) => x.id === t)) t = "purple";
     _setTheme(t);
     _setReduceMotion(r);
     applyDocument(t, r);
@@ -52,6 +57,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyDocument(t, false);
     try {
       localStorage.setItem(THEME_KEY, t);
+      document.cookie = `wazeo-theme=${encodeURIComponent(t)}; path=/; max-age=31536000`;
     } catch {}
     // best-effort persist to profile
     void (async () => {

@@ -33,6 +33,61 @@
   --glow: rgba(16, 185, 129, 0.4);
 }
 
+[data-theme="rose"] {
+  --accent: #f43f5e;
+  --accent-2: #be123c;
+  --accent-soft: rgba(244, 63, 94, 0.16);
+  --glow: rgba(244, 63, 94, 0.4);
+}
+
+[data-theme="amber"] {
+  --accent: #f59e0b;
+  --accent-2: #b45309;
+  --accent-soft: rgba(245, 158, 11, 0.16);
+  --glow: rgba(245, 158, 11, 0.4);
+}
+
+[data-theme="ocean"] {
+  --accent: #3b82f6;
+  --accent-2: #1d4ed8;
+  --accent-soft: rgba(59, 130, 246, 0.16);
+  --glow: rgba(59, 130, 246, 0.4);
+}
+
+[data-theme="crimson"] {
+  --accent: #dc2626;
+  --accent-2: #991b1b;
+  --accent-soft: rgba(220, 38, 38, 0.16);
+  --glow: rgba(220, 38, 38, 0.4);
+}
+
+[data-theme="amoled"] {
+  --bg: #000000;
+  --surface: #0a0a12;
+  --surface-2: #10101a;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --text: #f2f2f7;
+  --text-muted: #9b9fb2;
+  --accent: #a78bfa;
+  --accent-2: #7c3aed;
+  --accent-soft: rgba(167, 139, 250, 0.16);
+  --glow: rgba(167, 139, 250, 0.4);
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+}
+
+/* Smooth color transition when switching themes (surfaces only). */
+html[data-theme] body,
+html[data-theme] .glass,
+html[data-theme] .glass-glow,
+html[data-theme] input,
+html[data-theme] textarea,
+html[data-theme] button {
+  transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, color 0.35s ease;
+}
+
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--text);

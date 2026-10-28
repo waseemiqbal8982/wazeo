@@ -29,6 +29,11 @@ export const THEMES = [
   { id: "purple", label: "Purple", hex: "#8B5CF6" },
   { id: "cyan", label: "Cyan", hex: "#22D3EE" },
   { id: "emerald", label: "Emerald", hex: "#10B981" },
+  { id: "rose", label: "Rose", hex: "#F43F5E" },
+  { id: "amber", label: "Amber", hex: "#F59E0B" },
+  { id: "ocean", label: "Ocean", hex: "#3B82F6" },
+  { id: "crimson", label: "Crimson", hex: "#DC2626" },
+  { id: "amoled", label: "AMOLED Black", hex: "#000000" },
 ] as const;
 
 export const MIN_DRIP_DURATION = 15; // minutes

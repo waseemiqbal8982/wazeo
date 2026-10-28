@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://wazeo.vercel.app"),
 };
 
-const preloadScript = `(function(){try{var t=localStorage.getItem('wazeo-theme')||'purple';var r=localStorage.getItem('wazeo-reduce')==='true';document.documentElement.dataset.theme=t;document.documentElement.dataset.reduceMotion=r?'true':'false';}catch(e){document.documentElement.dataset.theme='purple';}})();`;
+const preloadScript = `(function(){try{var t=localStorage.getItem('wazeo-theme')||'';if(!t){var m=document.cookie.match(/(?:^|; )wazeo-theme=([^;]*)/);t=m?decodeURIComponent(m[1]):'';}if(!t)t='purple';var r=localStorage.getItem('wazeo-reduce')==='true';document.documentElement.dataset.theme=t;document.documentElement.dataset.reduceMotion=r?'true':'false';}catch(e){document.documentElement.dataset.theme='purple';}})();`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();

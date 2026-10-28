@@ -243,4 +243,13 @@
 - docs/EMAIL_SETUP.md updated: Confirm email ON + OTP most-reliable note.
 - lint 0 errors, build pass.
 
+
+## Task 3 — Part 2 (More themes) ✅
+- 4 naye accent themes (Rose, Amber, Ocean, Crimson) + "AMOLED Black" dark variant (pure black bg) — CSS variables me define, `[data-theme]` ke zariye.
+- THEMES list updated (8 total); header dropdown + Settings picker automatically naye chips dikhate hain.
+- Smooth color transition on surfaces (body/glass/input/button) when switching.
+- Theme saved on profile (update_profile) + localStorage + cookie; preload script reads cookie fallback.
+- Applied everywhere via CSS vars (admin, charts, logo, canvas, all pages). Contrast checked for dark themes; light-mode note remains.
+- lint 0 errors, build pass.
+
 - ⏭ NEXT (not built yet): Part 4 currency refresh everywhere, Part 5 support logos SVG, Part 6 deposit by country + demo safety, Part 7 starter services seed, Part 8 graphs everywhere, Part 9 admin panel power, Part 10 finish (locales/seeds/docs/push).
