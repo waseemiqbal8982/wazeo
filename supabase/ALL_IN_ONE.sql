@@ -1811,3 +1811,100 @@ insert into storage.buckets (id, name, public)
 values ('payment-logos','payment-logos', true)
 on conflict (id) do nothing;
 
+-- ============================================================
+-- PRO UPGRADE v2.0 — Multi-provider infrastructure (additive)
+-- ============================================================
+
+-- ---------- providers: add missing columns (backward compatible) ----------
+alter table public.providers add column if not exists api_key_enc text;
+alter table public.providers add column if not exists api_format text not null default 'smm_v2';
+alter table public.providers add column if not exists currency text not null default 'USD';
+alter table public.providers add column if not exists balance numeric not null default 0;
+alter table public.providers add column if not exists balance_at timestamptz;
+alter table public.providers add column if not exists balance_stale boolean not null default false;
+alter table public.providers add column if not exists weight numeric not null default 1;
+alter table public.providers add column if not exists markup_pct numeric not null default 30;
+alter table public.providers add column if not exists status text not null default 'active' check (status in ('active','paused'));
+alter table public.providers add column if not exists error_rate numeric not null default 0;
+alter table public.providers add column if not exists error_streak integer not null default 0;
+alter table public.providers add column if not exists success_run integer not null default 0;
+alter table public.providers add column if not exists last_ok_at timestamptz;
+alter table public.providers add column if not exists low_balance_threshold numeric not null default 0;
+alter table public.providers add column if not exists concurrency_cap integer not null default 5;
+create index if not exists idx_providers_status on public.providers(status);
+
+-- ---------- provider_services: upstream service catalog per provider ----------
+create table if not exists public.provider_services (
+  id uuid primary key default gen_random_uuid(),
+  provider_id uuid not null references public.providers(id) on delete cascade,
+  provider_service_id text not null,
+  name text not null,
+  type text not null default 'other',
+  platform text not null default 'other',
+  rate numeric not null default 0,
+  min numeric not null default 1,
+  max numeric not null default 100000,
+  refill boolean not null default false,
+  cancel boolean not null default false,
+  quality_score numeric not null default 5,
+  enabled boolean not null default true,
+  raw_json jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (provider_id, provider_service_id)
+);
+alter table public.provider_services enable row level security;
+create index if not exists idx_provider_services_provider on public.provider_services(provider_id);
+create index if not exists idx_provider_services_platform on public.provider_services(platform);
+
+-- ---------- panel_services: sellable catalog ----------
+create table if not exists public.panel_services (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  platform text not null,
+  type text not null default 'other',
+  price numeric not null default 0,
+  min numeric not null default 1,
+  max numeric not null default 100000,
+  quality_score numeric not null default 5,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.panel_services enable row level security;
+create index if not exists idx_panel_services_platform on public.panel_services(platform);
+create index if not exists idx_panel_services_active on public.panel_services(active);
+
+-- ---------- service_map: panel service -> many provider services ----------
+create table if not exists public.service_map (
+  id uuid primary key default gen_random_uuid(),
+  panel_service_id uuid not null references public.panel_services(id) on delete cascade,
+  provider_service_id uuid not null references public.provider_services(id) on delete cascade,
+  priority integer not null default 100,
+  enabled boolean not null default true,
+  created_at timestamptz not null default now(),
+  unique (panel_service_id, provider_service_id)
+);
+alter table public.service_map enable row level security;
+create index if not exists idx_service_map_panel on public.service_map(panel_service_id);
+
+-- ---------- RLS policies ----------
+drop policy if exists "Providers admin" on public.providers;
+create policy "Providers admin" on public.providers
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Provider services admin" on public.provider_services;
+create policy "Provider services admin" on public.provider_services
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Panel services read authenticated" on public.panel_services;
+create policy "Panel services read authenticated" on public.panel_services
+  for select using (active = true or public.get_current_role() = 'admin');
+drop policy if exists "Panel services admin" on public.panel_services;
+create policy "Panel services admin" on public.panel_services
+  for all using (public.get_current_role() = 'admin');
+
+drop policy if exists "Service map admin" on public.service_map;
+create policy "Service map admin" on public.service_map
+  for all using (public.get_current_role() = 'admin');
+
