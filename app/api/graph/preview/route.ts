@@ -30,11 +30,9 @@ export async function POST(req: Request) {
 
   const input: OrganicOrderInput = {
     engagement,
-    presetId: body.presetId ?? "auto_safe",
+    presetId: body.presetId ?? "steady",
     windowId: body.windowId ?? "24h",
     variancePercent: body.variancePercent ?? 0,
-    peakHours: body.peakHours ?? false,
-    organicMode: body.organicMode ?? true,
     startHour: body.startHour,
     weekday: body.weekday,
   };
@@ -45,16 +43,10 @@ export async function POST(req: Request) {
     presetId: plan.presetId,
     presetLabel: plan.presetLabel,
     windowMinutes: plan.windowMinutes,
-    risk: plan.risk,
-    band: plan.band,
-    pass: plan.pass,
-    organicScore: plan.organicScore,
-    reRolls: plan.reRolls,
     microStepsCount: plan.microStepsCount,
     totalEvents: plan.totalEvents,
     engagement: plan.engagement,
     curvePoints: plan.curvePoints,
     violations: plan.violations,
-    penalties: plan.penalties,
   });
 }

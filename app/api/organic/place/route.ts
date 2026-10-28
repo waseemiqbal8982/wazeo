@@ -21,12 +21,6 @@ interface OrganicPlaceBody {
   engagement?: Record<string, number>;
 }
 
-/**
- * Persists an organic engagement plan as real rows (E-fix of the persistence
- * gap): engagement_orders (1), engagement_order_items (per type), and
- * organic_run_schedule (the micro-run timeline the execute-runs edge function
- * consumes). Guardrails are enforced server-side before any row is written.
- */
 export async function POST(req: Request) {
   let body: OrganicPlaceBody;
   try {
@@ -51,7 +45,6 @@ export async function POST(req: Request) {
   if (selected.length === 0) {
     return NextResponse.json({ error: "Pick at least one engagement type." }, { status: 400 });
   }
-  // hard per-type caps (server-side)
   for (const t of selected) {
     const qty = Number(engagement[t] || 0);
     if (qty > HARD_CAPS.maxEvents) {
@@ -64,25 +57,16 @@ export async function POST(req: Request) {
 
   const input = {
     engagement,
-    presetId: body.presetId || "auto_safe",
+    presetId: body.presetId || "steady",
     windowId: body.windowId || "24h",
     variancePercent: Number(body.variance) || 0,
-    peakHours: Boolean(body.peakHours),
-    organicMode: body.organicMode !== false,
   };
 
   const plan = generateOrganicPlan(input);
 
-  // E8 — enforce guardrails server-side, not only in the client.
   if (plan.violations.length > 0) {
     return NextResponse.json(
-      { error: "Plan violates server-side guardrails.", violations: plan.violations },
-      { status: 400 }
-    );
-  }
-  if (!plan.pass) {
-    return NextResponse.json(
-      { error: "Plan risk too high to place.", risk: plan.risk, band: plan.band },
+      { error: "Plan exceeds operational limits.", violations: plan.violations },
       { status: 400 }
     );
   }
@@ -96,12 +80,6 @@ export async function POST(req: Request) {
     windowId: body.windowId || "24h",
     windowMinutes: plan.windowMinutes,
     variancePercent: input.variancePercent,
-    peakHours: input.peakHours,
-    organicMode: input.organicMode,
-    risk: plan.risk,
-    band: plan.band,
-    organicScore: plan.organicScore,
-    reRolls: plan.reRolls,
     totalQty: plan.totalEvents,
     seed: plan.seed,
     microStepsCount: plan.microStepsCount,
@@ -117,12 +95,8 @@ export async function POST(req: Request) {
       window_id: body.windowId || "24h",
       window_minutes: plan.windowMinutes,
       variance_percent: input.variancePercent,
-      peak_hours: input.peakHours,
-      organic_mode: input.organicMode,
-      risk_score: plan.risk,
-      band: plan.band,
-      organic_score: plan.organicScore,
-      re_rolls: plan.reRolls,
+      peak_hours: Boolean(body.peakHours),
+      organic_mode: body.organicMode !== false,
       total_qty: plan.totalEvents,
       algorithm_json: algorithmJson,
       status: "scheduled",
@@ -135,7 +109,6 @@ export async function POST(req: Request) {
   }
   const orderId = order.id;
 
-  // per-type line items
   const itemRows = selected.map((t) => ({
     order_id: orderId,
     engagement_type: t,
@@ -153,7 +126,6 @@ export async function POST(req: Request) {
     items.map((i) => [i.engagement_type as EngagementType, i.id as string])
   );
 
-  // build the run schedule from the plan micro-steps
   const scheduleRows = plan.steps.map((s) => ({
     order_id: orderId,
     item_id: itemIdByType.get(s.engagementType as EngagementType) ?? null,
@@ -174,8 +146,6 @@ export async function POST(req: Request) {
     ok: true,
     orderId,
     scheduledRuns: scheduleRows.length,
-    risk: plan.risk,
-    band: plan.band,
     createdAt: now,
   });
 }

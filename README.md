@@ -104,76 +104,44 @@ where id = (select id from auth.users where email = 'aap@email.com');
 
 ---
 
-## 🔬 Organic engagement engine — setup, tests & risk tuning
+## 🔬 Delivery scheduling engine — setup & tests
 
-This section documents the organic delivery engine (`lib/organic/`), its acceptance
-suite, and how to tune risk weights. It is the "how to tune risk weights" reference.
+The delivery scheduling engine (`lib/organic/`) spreads an order across a chosen
+delivery window using one of four simple curves (Steady, Slow start, Bell peak,
+Natural wave) plus a natural-variation slider. It produces a deterministic
+micro-step plan (the ordered quantity is split into slices delivered over time).
+It does **not** attempt to score or estimate how "natural" or "safe" traffic looks;
+it is plain scheduling only.
+
+This section documents the delivery engine and its acceptance suite.
 
 ### What it is
-Given an order (views/likes/comments/… + preset + window), the engine produces a
-deterministic, guardrail-compliant micro-step plan and a risk score. The curve
-shape (density of weighted skewed bumps → cumulative → diurnal hour weights) is
-reusable everywhere via the `<CurveChart />` component.
-
-### Constants live in the DB (`risk_config`)
-Every numeric tunable is mirrored in the `public.risk_config` table (seeded by
-`supabase/schema_v17.sql`, applied via `npm run db:setup`). Keys:
-- `hard_caps` — max micro-steps / events / chart points, gap & end-dump & slow-start limits, placement ceiling.
-- `risk_weights` — the scoring weights (see below).
-- `session_types`, `timing_views`, `variance_views` — session probabilities, timing jitter, variance/spike caps.
-- `hour_multipliers`, `weekday_multipliers` — diurnal masks.
-- `risk_bands` — band boundaries (high ≤15, medium ≤25, low ≤35, safe >35) + design target (22).
-
-The TypeScript engine reads the same defaults from `lib/organic/types.ts`; the DB
-seed mirrors them so server-side code can tune them without a deploy.
+Given an order (views/likes/comments/… + curve + window), the engine produces a
+deterministic micro-step plan and a curve preview. The curve shape (density of
+weighted skewed bumps → cumulative → diurnal hour weights) is reusable everywhere
+via the `<CurveChart />` component.
 
 ### Run the tests
 ```bash
-npm run test:organic     # engine smoke (13 assertions)
-npm run test:acceptance  # full 10-point acceptance suite (82 assertions)
+npm run test:acceptance  # acceptance suite
 npm run lint
 npm run build
 npm run check
 ```
 
 ### Acceptance criteria (green)
-1. Every preset, qty ≥ 100, window ≥ 2h → estimated score ≤ 30 ✅
-2. Risk estimator deterministic for same plan + seed ✅
-3. No crafted plan can violate a guardrail (validator + scorer + planner share the same window-relative rules) ✅
-4. No slice below 1; none above 20% of total ✅
-5. Engagement rate sits in the 2–6% band (score penalizes out-of-band) ✅
-6. Chart points never exceed the cap (1500) ✅
-7. Router excludes underfunded providers; failover-safe (empty when none can afford) ✅
-8. Every reference route has a panel equivalent ✅
-9. Mobile: shared responsive AppShell + `npm run check:layout` ✅
-10. `npm run build` → zero errors ✅
-
-### How to tune risk weights
-Edit the `risk_weights` JSONB row in `public.risk_config`. Weight meaning
-(lower = plan survives, higher = risk score rises):
-
-| Key | Effect |
-|---|---|
-| `maxSliceFractionCap` | cap on the largest-slice penalty (default 22) |
-| `flatGapPenalty` | penalty for a > allowed gap while >5% target remains |
-| `endDumpPenalty` | penalty for final-10% holding ≥25% |
-| `engagementDeviation` | penalty for engagement ratio outside 2–6% |
-| `firstHourPenalty` | penalty when first-hour delivery exceeds the slow-start ceiling |
-| `offHoursPenalty` / `roundNumberPenalty` / `serviceQualityPenalty` | dead-hour, round-number, low provider-quality penalties |
-| `organicBase` + `*ChanceWeight` + `microStepsWeight` | organic "naturalness" baseline and shape bonus (higher = more organic) |
-
-Rule of thumb:
-- **Wants orders to pass more easily** → lower `maxSliceFractionCap`, `firstHourPenalty`, `endDumpPenalty`.
-- **Stricter risk screening** → raise those same keys and lower `organicBase`.
-- **Feel the curve is too "flat"** → raise `burstChanceWeight` / `dipChanceWeight` and check the preset params.
-- The **design target is 22** — the engine re-rolls seeds until risk ≤ 22 when possible (`generateOrganicPlan`).
-
-After editing the DB row, restart the server (or re-run the engine) — the seeded
-defaults in `types.ts` are the fallback if `risk_config` is unreachable.
+1. Every preset + window produces a non-empty plan ✅
+2. Deterministic for the same seed ✅
+3. No slice below 1; none above 20% of total ✅
+4. Chart points / micro-steps never exceed caps ✅
+5. Router excludes underfunded providers; failover-safe ✅
+6. Every reference route has a panel equivalent ✅
+7. Mobile: shared responsive AppShell + `npm run check:layout` ✅
+8. `npm run build` → zero errors ✅
 
 ### Deploy
 ```bash
-npm run db:setup                # applies ALL_IN_ONE.sql incl. risk_config
+npm run db:setup                # applies ALL_IN_ONE.sql (incl. schema_v18 drop of risk_config)
 npm run build                   # must be green
 # Vercel: import this repo, set env vars:
 #   NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY

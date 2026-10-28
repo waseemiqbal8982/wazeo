@@ -3,11 +3,34 @@ import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/api/:path*"],
 };
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
+
+  // Enforce read-only impersonation: when an admin is impersonating a user
+  // (wazeo-impersonating cookie set), every non-safe HTTP method on /api is
+  // blocked except the explicit exit route. Impersonation is view-only.
+  if (request.nextUrl.pathname.startsWith("/api")) {
+    const method = request.method;
+    const impersonating = request.cookies.get("wazeo-impersonating")?.value;
+    const isSafe = method === "GET" || method === "HEAD" || method === "OPTIONS";
+    const isExit = request.nextUrl.pathname === "/api/admin/users/impersonate/exit";
+    if (impersonating && !isSafe && !isExit) {
+      return NextResponse.json(
+        { error: "Impersonation is read-only. Write actions are disabled." },
+        { status: 403 }
+      );
+    }
+  }
+
+  // Only authenticated pages run the session/auth checks below; API routes pass
+  // through after the impersonation guard.
+  const path = request.nextUrl.pathname;
+  if (!path.startsWith("/dashboard") && !path.startsWith("/admin")) {
+    return response;
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,8 +69,6 @@ export async function proxy(request: NextRequest) {
     url.searchParams.set("next", request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
-
-  const path = request.nextUrl.pathname;
 
   // Admin 2FA enforcement (server-side). Only applies once an admin has opted in.
   if (path.startsWith("/admin") && !path.startsWith("/admin/2fa")) {

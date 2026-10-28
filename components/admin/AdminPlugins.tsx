@@ -2,141 +2,112 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Input } from "@/components/ui/Input";
-import { Modal } from "@/components/ui/Modal";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 
-interface Plugin {
+interface ModuleDef {
   id: string;
   name: string;
-  version: string;
-  enabled: boolean;
-  hooks: string[];
-  description?: string;
+  description: string;
+  icon: string;
 }
 
-const DEFAULT_PLUGINS: Plugin[] = [
-  { id: "ai-order-assistant", name: "AI Order Assistant", version: "1.0.0", enabled: false, hooks: ["order.create.before"], description: "Adds an AI co-pilot for the new-order flow." },
-  { id: "referrals", name: "Referrals & Loyalty", version: "1.0.0", enabled: false, hooks: ["user.created"], description: "Referral tracking and loyalty progress." },
-  { id: "coupons", name: "Coupons Engine", version: "1.0.0", enabled: false, hooks: ["checkout.apply"], description: "Coupon & promo-code support at checkout." },
-  { id: "webhooks", name: "Webhooks", version: "1.0.0", enabled: false, hooks: ["order.status.changed"], description: "Send order updates to external URLs." },
-  { id: "public-tracker", name: "Public Order Tracker", version: "1.0.0", enabled: false, hooks: ["page.route"], description: "Public order tracking page (no login)." },
+// Built-in modules only — no code upload or execution from the admin panel.
+const MODULES: ModuleDef[] = [
+  { id: "combo", name: "Combo planner", description: "Bundle multiple services into a single combo order.", icon: "🔗" },
+  { id: "bulk", name: "Bulk planner", description: "Place many orders in one go.", icon: "📦" },
+  { id: "growth", name: "Growth planner", description: "Plan a growth campaign over time.", icon: "📈" },
+  { id: "likes", name: "Likes planner", description: "Schedule likes across a campaign.", icon: "❤️" },
+  { id: "scheduler", name: "Scheduler", description: "Schedule orders at a future time.", icon: "⏰" },
+  { id: "referral", name: "Referral", description: "Referral program & rewards.", icon: "🎁" },
+  { id: "daily_reward", name: "Daily reward", description: "Daily check-in rewards.", icon: "🗓️" },
+  { id: "coupons", name: "Coupons", description: "Coupon & promo-code engine.", icon: "🏷️" },
+  { id: "ai", name: "AI assistant", description: "AI-powered support assistant.", icon: "🤖" },
+  { id: "live_chat", name: "Live chat", description: "Real-time chat support.", icon: "💬" },
+  { id: "blog", name: "Blog", description: "Content / blog module.", icon: "📝" },
+  { id: "api", name: "API access", description: "Public API access for customers.", icon: "🔌" },
+  { id: "reviews", name: "Reviews", description: "Customer reviews & testimonials.", icon: "⭐" },
 ];
 
 export function AdminPlugins() {
   const supabase = createClient();
   const { toast } = useToast();
-  const [plugins, setPlugins] = useState<Plugin[]>(DEFAULT_PLUGINS);
+  const [modules, setModules] = useState<Record<string, { enabled: boolean; settings: Record<string, unknown> }>>({});
   const [busy, setBusy] = useState(false);
-  const [installOpen, setInstallOpen] = useState(false);
-  const [draft, setDraft] = useState({ name: "", version: "1.0.0", description: "", hooks: "" });
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("settings").select("value").eq("key", "plugins").maybeSingle();
+      const { data } = await supabase.from("settings").select("value").eq("key", "modules").maybeSingle();
       if (data?.value) {
         try {
-          const arr = JSON.parse(data.value);
-          if (Array.isArray(arr) && arr.length) setPlugins(arr);
+          const obj = JSON.parse(data.value);
+          if (obj && typeof obj === "object") setModules(obj);
         } catch {}
       }
+      setLoaded(true);
     })();
-  }, []);
+  }, [supabase]);
 
-  async function persist(next: Plugin[]) {
+  async function persist(next: Record<string, { enabled: boolean; settings: Record<string, unknown> }>) {
     setBusy(true);
-    const { error } = await supabase.from("settings").upsert({ key: "plugins", value: JSON.stringify(next) });
+    const { error } = await supabase.from("settings").upsert({ key: "modules", value: JSON.stringify(next) });
     setBusy(false);
     if (error) return toast({ title: error.message, variant: "danger" });
-    setPlugins(next);
-    toast({ title: "Plugins saved", variant: "success" });
+    setModules(next);
+    toast({ title: "Modules saved", variant: "success" });
   }
 
-  function toggle(p: Plugin) {
-    persist(plugins.map((x) => x.id === p.id ? { ...x, enabled: !x.enabled } : x));
-  }
-
-  function installPlugin() {
-    const name = draft.name.trim();
-    if (!name) return toast({ title: "Plugin name is required", variant: "danger" });
-    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    if (plugins.some((p) => p.id === id)) return toast({ title: "A plugin with that name already exists", variant: "danger" });
-    const hooks = draft.hooks.split(",").map((h) => h.trim()).filter(Boolean);
-    const next = [
-      ...plugins,
-      { id, name, version: draft.version.trim() || "1.0.0", description: draft.description.trim() || undefined, hooks, enabled: true },
-    ];
-    persist(next);
-    setInstallOpen(false);
-    setDraft({ name: "", version: "1.0.0", description: "", hooks: "" });
+  function toggle(id: string) {
+    const current = modules[id] || { enabled: false, settings: {} };
+    persist({ ...modules, [id]: { ...current, enabled: !current.enabled } });
   }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Plugins</h1>
-          <p className="text-sm text-[var(--text-muted)]">Enable/disable optional features. Hooks define where each plugin integrates.</p>
+          <h1 className="text-2xl font-bold">Modules</h1>
+          <p className="text-sm text-[var(--text-muted)]">
+            Toggle built-in modules. Features are hidden when their module is off. No custom code or uploads are supported.
+          </p>
         </div>
-        <Button variant="outline" onClick={() => setInstallOpen(true)}>+ Install plugin</Button>
       </div>
 
-      {plugins.length === 0 ? (
-        <EmptyState title="No plugins" description="Plugins you install will appear here." />
+      {!loaded ? (
+        <div className="animate-pulse space-y-2">
+          <div className="h-24 w-full rounded-xl bg-white/[0.04]" />
+        </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {plugins.map((p) => (
-            <div key={p.id} className={cn("glass rounded-2xl p-4 transition-opacity", !p.enabled && "opacity-60")}>
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-lg">🧩</div>
-                  <div>
-                    <p className="font-semibold">{p.name}</p>
-                    <p className="text-xs text-[var(--text-muted)]">v{p.version}</p>
+          {MODULES.map((m) => {
+            const state = modules[m.id] || { enabled: false, settings: {} };
+            return (
+              <div key={m.id} className={cn("glass rounded-2xl p-4 transition-opacity", !state.enabled && "opacity-60")}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-lg">{m.icon}</div>
+                    <div>
+                      <p className="font-semibold">{m.name}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{m.description}</p>
+                    </div>
                   </div>
+                  <Badge tone={state.enabled ? "success" : "muted"}>{state.enabled ? "On" : "Off"}</Badge>
                 </div>
-                <Badge tone={p.enabled ? "success" : "muted"}>{p.enabled ? "Enabled" : "Disabled"}</Badge>
+                <button
+                  type="button"
+                  onClick={() => toggle(m.id)}
+                  disabled={busy}
+                  className="mt-4 w-full rounded-xl border border-[var(--border-strong)] py-2 text-sm font-medium text-[var(--accent)] hover:border-[var(--accent)] disabled:opacity-60"
+                >
+                  {state.enabled ? "Disable module" : "Enable module"}
+                </button>
               </div>
-              {p.description && <p className="mt-3 text-sm text-[var(--text-muted)]">{p.description}</p>}
-              <div className="mt-3 flex flex-wrap gap-1">
-                {p.hooks.map((h) => (
-                  <span key={h} className="rounded-md bg-white/[0.05] px-2 py-0.5 font-mono text-[10px] text-[var(--text-muted)]">{h}</span>
-                ))}
-              </div>
-              <Button size="sm" variant="outline" full className="mt-4" loading={busy} onClick={() => toggle(p)}>
-                {p.enabled ? "Disable" : "Enable"}
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
-
-      <Modal open={installOpen} onClose={() => setInstallOpen(false)} title="Install a custom plugin">
-        <div className="space-y-3">
-          <Input label="Plugin name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="e.g. Mass Order" />
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="Version" value={draft.version} onChange={(e) => setDraft({ ...draft, version: e.target.value })} />
-            <Input label="Hooks (comma separated)" value={draft.hooks} onChange={(e) => setDraft({ ...draft, hooks: e.target.value })} placeholder="order.create.before" />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Description</label>
-            <textarea
-              value={draft.description}
-              onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-              rows={3}
-              className="w-full rounded-xl border border-[var(--border)] bg-white/[0.03] p-3 text-sm text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
-            />
-          </div>
-          <div className="flex gap-2 pt-2">
-            <Button full onClick={installPlugin}>Install plugin</Button>
-            <Button variant="outline" onClick={() => setInstallOpen(false)}>Cancel</Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }

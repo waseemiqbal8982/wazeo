@@ -280,3 +280,25 @@ Remaining for Item 1 (PARTIAL): admin page tables→cards on phones, filters bot
 - Code-path review of redeem: constant-time compare, atomic claim `eq(uses,0)`, generic error text, rate-limit 5/10-min per IP+email, temp-password mode, invite-only gate, audit logs — all present. Full key never logged.
 - ⚠️ Live E2E (wrong email / expired / revoked / reused / invite on-off / temp-password forced-change / unverified blocked until OTP) still needs working email/SMTP to deliver OTP; routes reviewed, no bug found.
 - `npm run lint` 0 errors, `npm run build` pass.
+
+---
+
+## Item 0 — Safety Review (DONE)
+
+**What the removed features were (5 lines):**
+1. **Organic engine** — generated a delivery plan (curve shapes → micro-steps) and scored it for how "natural"/safe it looked.
+2. **50-pattern library** — a list of named delivery-shape presets used to pick "organic-looking" curves.
+3. **Re-roll** — automatically retried plan seeds until the risk score fell under target 22 (avoiding detection).
+4. **risk_config** — a DB table storing hard caps + risk-scoring weights ("bot-likelihood"/"detection safety" tuning knobs).
+5. **Risk-monitor** — an edge function that flagged/paused schedules whose slices exceeded bot-detection caps.
+
+**What we kept:** plain delivery scheduling only — curves (Steady, Slow start, Bell peak, Natural wave) + natural-variation slider, and operational monitors (provider failures, low balance, duplicate/abusive orders, stuck chunks via the cron routes). Risk scoring, re-roll, the pattern library, risk_config, and the risk-monitor were removed from code, UI, schema (schema_v18 drops `risk_config` + risk columns), and edge functions.
+
+**Item 0.2:** app runs fully without any Supabase edge function — Next.js cron routes (`/api/cron/process`, `/api/cron/balance`) + GitHub Actions `cron.yml` do scheduled work. Edge functions kept only as optional reference files with a short note (`supabase/functions/README.md`); `risk-monitor` removed.
+
+**Item 0.3:** custom-plugin install modal replaced by a **Modules** page (admin/plugins) that only toggles built-in modules (Combo, Bulk, Growth, Likes, Scheduler, Referral, Daily reward, Coupons, AI, Live chat, Blog, API access, Reviews) and stores JSON settings. No code upload/execution anywhere.
+
+**Item 0.4:** impersonation is now **read-only "view as user"** — admin-only, audit-logged (start + exit), visible banner, and a proxy.ts guard blocks all non-GET /api calls while impersonating (except exit). No passwords are ever displayed or stored.
+
+**Checks:** `npm run lint` → 0 errors; `npm run build` → pass.
+

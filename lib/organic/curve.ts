@@ -1,20 +1,15 @@
 /**
- * Core curve engine.
+ * Core curve engine for plain delivery scheduling.
  *
  * Density = weighted sum of skewed gaussian bumps over normalized time t in [0,1]
- * over a window of W minutes. The cumulative distribution (normalized integral)
- * maps t -> fraction of total delivered. A diurnal mask (hour-of-day weights)
- * is applied and the curve renormalized.
- *
- * From the cumulative we generate discrete delivery events (slices) that obey
- * the variance / spike caps. All randomness is driven by an injectable Rng so
+ * over a window of W minutes. The cumulative distribution maps t -> fraction of
+ * total delivered. From the cumulative we generate discrete delivery slices that
+ * obey per-type variance/spike caps. All randomness uses an injectable Rng so
  * results are deterministic for a given (seed, params).
  */
 
 import type { Rng } from "./random";
 import {
-  SESSION_TYPES,
-  ENGAGEMENT_TIMING,
   ENGAGEMENT_VARIANCE,
   HARD_CAPS,
   DEFAULT_HOUR_MULTIPLIERS,
@@ -30,12 +25,11 @@ export interface CurvePoint {
   cumulative: number; // fraction of total
 }
 
-// ---------- Skewed gaussian bump ----------
 export function bumpValue(
   t: number,
   mu: number,
   sigma: number,
-  gamma: number,
+  gamma: number
 ): number {
   if (sigma <= 0) return t === mu ? 1 : 0;
   const d = t - mu;
@@ -43,7 +37,6 @@ export function bumpValue(
   return Math.exp(-(d * d) / (2 * s * s));
 }
 
-// ---------- Density over t in [0,1] ----------
 export function densityAt(t: number, preset: CurvePreset): number {
   let d = 0;
   for (const b of preset.params.bumps) {
@@ -52,25 +45,6 @@ export function densityAt(t: number, preset: CurvePreset): number {
   return Math.max(0, d);
 }
 
-/** Numerically integrate density over [0,1] using trapezoid sum. */
-export function integrateDensity(preset: CurvePreset, steps = 2000): number {
-  let sum = 0;
-  const h = 1 / steps;
-  let prev = densityAt(0, preset);
-  for (let i = 1; i <= steps; i++) {
-    const t = i * h;
-    const cur = densityAt(t, preset);
-    sum += ((prev + cur) / 2) * h;
-    prev = cur;
-  }
-  return sum;
-}
-
-/**
- * Expected share of total delivery that lands in the first 60 minutes, computed
- * from the same density function used to generate micro-steps. Used as the
- * shape-relative slow-start ceiling.
- */
 export function expectedFirstHourFraction(preset: CurvePreset, windowMinutes: number): number {
   const tEnd = Math.min(1, 60 / Math.max(1, windowMinutes));
   const N = 400;
@@ -85,60 +59,44 @@ export function expectedFirstHourFraction(preset: CurvePreset, windowMinutes: nu
   return tot > 0 ? up / tot : 0;
 }
 
-/**
- * Build sample points of the cumulative distribution (with diurnal masking).
- * Returns up to maxPoints points.
- */
 export function buildCumulativeCurve(
   preset: CurvePreset,
   windowMinutes: number,
   opts?: {
     maxPoints?: number;
-    startHour?: number; // local hour (0-23) at order start
-    weekday?: boolean; // apply weekday multipliers
+    startHour?: number;
+    weekday?: boolean;
     hourMultipliers?: number[];
     weekdayMultipliers?: number[];
-  },
+  }
 ): CurvePoint[] {
   const maxPoints = Math.min(opts?.maxPoints ?? 300, HARD_CAPS.maxChartPoints);
   const hourMult = opts?.hourMultipliers ?? DEFAULT_HOUR_MULTIPLIERS;
   const wdMult = opts?.weekdayMultipliers ?? DEFAULT_WEEKDAY_MULTIPLIERS;
   const startHour = (((opts?.startHour ?? 12) % 24) + 24) % 24;
 
-  // sample density at a fixed step, apply diurnal mask
   const N = 1000;
   const h = 1 / N;
   let totalWeight = 0;
-  const w: number[] = [];
+  const weights: number[] = [];
   for (let i = 0; i <= N; i++) {
     const t = i * h;
-    const minutes = t * windowMinutes;
-    const hour = (startHour + Math.floor(minutes / 60)) % 24;
-    let mult = hourMult[hour] ?? 1;
-    if (opts?.weekday) mult *= wdMult[hour] ?? 1;
-    const d = densityAt(t, preset) * mult;
-    w.push(d);
-    totalWeight += d;
-  }
-  if (totalWeight <= 0) {
-    for (let i = 0; i <= N; i++) w[i] = 1;
-    totalWeight = N + 1;
+    const hour = (startHour + Math.floor(t * windowMinutes / 60)) % 24;
+    const m = hourMult[hour] ?? 1;
+    const w = wdMult[hour] ?? 1;
+    const dens = densityAt(t, preset) * m * w;
+    weights.push(dens);
+    totalWeight += dens;
   }
 
-  // cumulative
+  const step = Math.max(1, Math.floor(N / maxPoints));
   const out: CurvePoint[] = [];
-  let running = 0;
-  const step = Math.max(1, Math.floor((N + 1) / maxPoints));
+  let cum = 0;
   for (let i = 0; i <= N; i += step) {
-    running += w[i];
-    out.push({
-      t: i * h,
-      x: i * h * windowMinutes,
-      density: w[i] / totalWeight,
-      cumulative: running / totalWeight,
-    });
+    const t = i * h;
+    cum += weights[i] / Math.max(1e-9, totalWeight);
+    out.push({ t, x: Math.round(t * windowMinutes), density: weights[i], cumulative: Math.min(1, cum) });
   }
-  // ensure endpoint
   const last = out[out.length - 1];
   if (last.t < 0.9999) {
     out.push({ t: 1, x: windowMinutes, density: 0, cumulative: 1 });
@@ -146,25 +104,12 @@ export function buildCumulativeCurve(
   return out;
 }
 
-
-// ---------- Micro-step slicing ----------
 export interface MicroStep {
-  minute: number; // minutes offset from start (float ok)
+  minute: number;
   quantity: number;
   engagementType: EngagementType;
 }
 
-/**
- * Generate a curve-shaped plan of micro-steps for one engagement type over the
- * window. Slices are placed deterministically along the preset's cumulative
- * curve: slice *i* is delivered at the time where the CDF crosses the evenly
- * spaced point (i+0.5)/N, with quantity proportional to the CDF segment delta.
- *
- * This guarantees the delivered curve visually matches the preset shape with no
- * end-dump and no erratic large slices. Small jitter and the per-type variance
- * caps are applied, but the session model is used only to modulate slice size
- * within the caps (not to change placement).
- */
 export function generateMicroSteps(opts: {
   preset: CurvePreset;
   engagementType: EngagementType;
@@ -174,15 +119,8 @@ export function generateMicroSteps(opts: {
   maxSteps?: number;
   curve?: CurvePoint[];
 }): MicroStep[] {
-  const {
-    preset,
-    engagementType,
-    totalQuantity,
-    windowMinutes,
-    rng,
-    maxSteps = HARD_CAPS.maxMicroStepsPerRun,
-  } = opts;
-
+  const { preset, engagementType, totalQuantity, windowMinutes, rng } = opts;
+  const maxSteps = opts.maxSteps ?? HARD_CAPS.maxMicroStepsPerRun;
   const variance = ENGAGEMENT_VARIANCE[engagementType];
   const qty = Math.max(0, Math.floor(totalQuantity));
   if (qty <= 0) return [];
@@ -190,9 +128,6 @@ export function generateMicroSteps(opts: {
   const cap = Math.max(1, Math.floor(qty * 0.2));
   const N = Math.min(maxSteps, Math.max(1, qty));
 
-  // Time-uniform step positions (guarantees timeline coverage, no big gaps, no
-  // end-dump). Per-step quantity is weighted by the curve density so the
-  // delivered profile still matches the selected preset shape.
   const dens: number[] = [];
   let denSum = 0;
   for (let i = 0; i < N; i++) {
@@ -237,7 +172,6 @@ export function generateMicroSteps(opts: {
     if (delivered >= qty) break;
   }
 
-  // Redistribute rounding remainder, never pushing a slice above 20% of total.
   if (delivered < qty) {
     let remainder = qty - delivered;
     for (const st of steps) {
@@ -253,5 +187,3 @@ export function generateMicroSteps(opts: {
 
   return steps;
 }
-
-
