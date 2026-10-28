@@ -268,3 +268,11 @@ Root cause: admin `AdminShell`/`AdminSidebar` rendered a fixed desktop sidebar w
 Fix: one shared shell `components/shell/AppShell.tsx` for BOTH dashboard and admin; layout mode is decided only by Tailwind breakpoints (phone <768 = bottom pill bar + More bottom sheet; tablet 768–1023 = icon-rail that expands; desktop ≥1024 = full sidebar). No JS device detection. Legacy shell components removed (`git rm`). Added `npm run check:layout` (fails on `window.innerWidth`/`userAgent`/`matchMedia`-except-reduce-motion and if shell gates missing). `npm run lint` 0 errors, `npm run build` pass, `npm run check:layout` pass.
 Remaining for Item 1 (PARTIAL): admin page tables→cards on phones, filters bottom-sheet, full width-sweep visual audit (320/360/390/430/600/768/1024/1280, portrait/landscape, LTR/RTL).
 
+
+
+## Item 2 — Access key system
+- ✅ schema_v14 applied via `npm run db:setup` (access_codes columns + profiles.access_key_id live).
+- ✅ Admin Users page now shows a "🔑 Key" badge for key signups and, in the profile drawer, "Signed up with key" with the key label (from access_codes).
+- Code-path review of redeem: constant-time compare, atomic claim `eq(uses,0)`, generic error text, rate-limit 5/10-min per IP+email, temp-password mode, invite-only gate, audit logs — all present. Full key never logged.
+- ⚠️ Live E2E (wrong email / expired / revoked / reused / invite on-off / temp-password forced-change / unverified blocked until OTP) still needs working email/SMTP to deliver OTP; routes reviewed, no bug found.
+- `npm run lint` 0 errors, `npm run build` pass.

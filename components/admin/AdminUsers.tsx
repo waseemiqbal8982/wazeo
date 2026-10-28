@@ -42,6 +42,7 @@ interface UserRow {
   referral_used?: string;
   full_name?: string;
   notes?: string;
+  access_key_id?: string | null;
 }
 
 export function AdminUsers() {
@@ -51,6 +52,7 @@ export function AdminUsers() {
   const [q, setQ] = useState("");
   const [viewUser, setViewUser] = useState<UserRow | null>(null);
   const [verifiedMap, setVerifiedMap] = useState<Record<string, boolean>>({});
+  const [keyLabels, setKeyLabels] = useState<Record<string, string>>({});
   const [vFilter, setVFilter] = useState("all");
   const [adjustUser, setAdjustUser] = useState<UserRow | null>(null);
   const [amount, setAmount] = useState("");
@@ -59,6 +61,13 @@ export function AdminUsers() {
   async function load() {
     const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
     setUsers(data || []);
+    const ids = (data || []).map((u) => u.access_key_id).filter(Boolean) as string[];
+    if (ids.length) {
+      const { data: keys } = await supabase.from("access_codes").select("id,label,email").in("id", ids);
+      const map: Record<string, string> = {};
+      (keys || []).forEach((k) => { map[k.id] = k.label || k.email || "Access key"; });
+      setKeyLabels(map);
+    }
   }
   useEffect(() => { load(); }, []);
 
@@ -150,6 +159,9 @@ export function AdminUsers() {
                 <td className="px-4 py-2.5">
                   <p className="font-medium">{u.username}</p>
                   <p className="text-xs text-[var(--text-muted)]">{u.email || u.id.slice(0, 8)}</p>
+                  {u.access_key_id && (
+                    <span className="mt-0.5 inline-flex"><Badge tone="accent">🔑 Key</Badge></span>
+                  )}
                 </td>
                 <td className="px-4 py-2.5">
                   {u.country ? <span className="inline-flex items-center gap-1.5">{countryFlag(u.country)} {u.country}</span> : "—"}
@@ -206,6 +218,9 @@ export function AdminUsers() {
             <Field label="Last login">{viewUser.last_login_at ? formatDateTime(viewUser.last_login_at) : "—"}</Field>
             <Field label="Referral code">{viewUser.referral_code || "—"}</Field>
             <Field label="Referral used">{viewUser.referral_used || "—"}</Field>
+            <Field label="Signed up with key">
+              {viewUser.access_key_id ? (keyLabels[viewUser.access_key_id] || "Yes") : "No"}
+            </Field>
             <div className="col-span-2">
               <Field label="Notes">{viewUser.notes || "—"}</Field>
             </div>
