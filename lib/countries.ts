@@ -88,3 +88,10 @@ export const COUNTRY_BY_CODE: Record<string, string> = Object.fromEntries(
 export function countryName(code: string): string {
   return COUNTRY_BY_CODE[code.toUpperCase()] || code.toUpperCase();
 }
+
+// ISO 3166-1 alpha-2 -> flag emoji (regional indicator symbols).
+export function countryFlag(code: string): string {
+  const c = code.toUpperCase();
+  if (!/^[A-Z]{2}$/.test(c)) return "🌐";
+  return String.fromCodePoint(...[...c].map((ch) => 0x1f1e6 + ch.charCodeAt(0) - 65));
+}

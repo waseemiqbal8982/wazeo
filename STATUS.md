@@ -141,3 +141,11 @@
 - OTP keys added to all 5 locales (en/ur/hi/fr/zh); locale JSON rebuilt valid.
 - `npm run lint` → 0 errors (36 warnings). `npm run build` → pass.
 
+
+## Update (Part 2 — Save ALL signup data) ✅
+- Audit: signup data ab mehfooz hota hai profiles me (trigger + server route dono). Copy karta hai: username, email (auth.users), phone, country (2-letter), language, currency (default USD), referral_used, full_name, signup_ip_hash, created_at (signup time), last_login_at.
+- `supabase/schema_v11.sql`: new columns email, currency, full_name, referral_used (+indexes); extended `handle_new_user` trigger to copy har metadata field; extended `update_profile` to save currency/country; re-runnable backfill from auth.users metadata. Merged into ALL_IN_ONE.sql + `npm run db:setup` ✅.
+- `lib/currencies.ts` + `lib/countries.ts` (`countryFlag`) added.
+- Admin Users table ab sab fields dikhata hai (username, email, country+flag, language, currency, balance, signup date, last login, status) + profile drawer modal with all fields. "Make admin" button UI se hata diya (ab sirf make-admin script).
+- `npm run lint` → 0 errors. `npm run build` → pass.
+
