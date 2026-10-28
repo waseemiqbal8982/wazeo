@@ -78,10 +78,35 @@ function buildSinglePlan(input: OrganicOrderInput, seed: string): OrganicPreview
   const windowMinutes = resolveWindow(input.windowId);
   const rng = rngFromString(seed);
 
-  // apply per-order parameter randomisation (±15-30%) on window/preset params
-  const varianceScale = 1 + (rng() - 0.5) * 0.3;
+  // E4 — true per-order re-roll: jitter the delivery window and the preset shape
+  // geometry by ±15–30% seeded by this attempt's seed, so each re-roll explores a
+  // genuinely different delivery profile (not just a new RNG stream).
+  const windowScale = 1 + (rng() - 0.5) * 0.6; // ±30% around the chosen window
+  const jitteredWindow = Math.max(60, Math.round(windowMinutes * windowScale));
 
-  const curvePoints = buildCumulativeCurve(preset, windowMinutes, {
+  function jitterBump(b: { w: number; mu: number; sigma: number; gamma: number }) {
+    const j = (v: number, lo: number, hi: number) =>
+      Math.min(hi, Math.max(lo, v * (1 + (rng() - 0.5) * 0.3)));
+    return {
+      w: Math.max(0.05, b.w * (1 + (rng() - 0.5) * 0.3)),
+      mu: j(b.mu, 0.02, 0.98),
+      sigma: j(b.sigma, 0.02, 0.6),
+      gamma: j(b.gamma, 0.6, 3),
+    };
+  }
+
+  const jitteredPreset: CurvePreset = {
+    ...preset,
+    params: {
+      bumps: preset.params.bumps.map(jitterBump),
+      jitter: preset.params.jitter,
+      dipChance: preset.params.dipChance,
+      burstChance: preset.params.burstChance,
+      pauseChance: preset.params.pauseChance,
+    },
+  };
+
+  const curvePoints = buildCumulativeCurve(jitteredPreset, jitteredWindow, {
     startHour: input.startHour,
     weekday: input.weekday,
   });
@@ -95,10 +120,10 @@ function buildSinglePlan(input: OrganicOrderInput, seed: string): OrganicPreview
   for (const t of engagement) {
     const qty = input.engagement[t]!;
     const rawSteps: OrganicStep[] = generateMicroSteps({
-      preset,
+      preset: jitteredPreset,
       engagementType: t,
       totalQuantity: qty,
-      windowMinutes,
+      windowMinutes: jitteredWindow,
       rng,
       curve: curvePoints,
       maxSteps: Math.max(1, Math.floor(HARD_CAPS.maxMicroStepsPerRun / Math.max(1, engagement.length))),
@@ -116,18 +141,18 @@ function buildSinglePlan(input: OrganicOrderInput, seed: string): OrganicPreview
 
   // Expected first-60-min fraction from the selected curve density (shape-
   // relative slow-start ceiling). Shared with the hard validator.
-  const expFirstHourFrac = expectedFirstHourFraction(preset, windowMinutes);
+  const expFirstHourFrac = expectedFirstHourFraction(jitteredPreset, jitteredWindow);
 
   const guard = validateGuardrails({
     steps: allSteps,
-    windowMinutes,
+    windowMinutes: jitteredWindow,
     totalQuantity: totalQty || 1,
     expectedFirstHourFraction: expFirstHourFrac,
   });
 
   // First-hour guardrail is curve-relative (shared with validateGuardrails so
   // the hard validator, scorer, and planner always agree).
-  const ceiling = firstHourCeiling(windowMinutes, expFirstHourFrac);
+  const ceiling = firstHourCeiling(jitteredWindow, expFirstHourFrac);
   const firstHourAbove = guard.firstHourFraction > ceiling;
   // scale penalty by how far over the ceiling we are, capped
   const firstHourPenaltyRaw = Math.max(0, (guard.firstHourFraction - ceiling) / ceiling);
@@ -170,7 +195,7 @@ function buildSinglePlan(input: OrganicOrderInput, seed: string): OrganicPreview
   return {
     presetId: preset.id,
     presetLabel: preset.label,
-    windowMinutes,
+    windowMinutes: jitteredWindow,
     risk: finalRisk,
     band: riskBand(finalRisk),
     pass: finalRisk <= HARD_CAPS.placementMinScore,

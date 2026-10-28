@@ -59,6 +59,7 @@ export function OrganicNewOrderPage() {
   const [loading, setLoading] = useState(false);
   const [autoFix, setAutoFix] = useState(false);
   const [placed, setPlaced] = useState(false);
+  const [placing, setPlacing] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
 
@@ -138,7 +139,7 @@ export function OrganicNewOrderPage() {
     });
   }
 
-  function handlePlace() {
+  async function handlePlace() {
     if (!link) {
       toast({ title: "Link required", description: "Paste a post link to continue.", variant: "danger" });
       return;
@@ -151,10 +152,12 @@ export function OrganicNewOrderPage() {
       toast({ title: "Risk too high", description: "Use Auto-fix to lower risk before placing.", variant: "danger" });
       return;
     }
+    setPlacing(true);
     try {
-      sessionStorage.setItem(
-        "wazeo-organic-plan",
-        JSON.stringify({
+      const res = await fetch("/api/organic/place", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           link,
           platform,
           presetId,
@@ -163,13 +166,27 @@ export function OrganicNewOrderPage() {
           peakHours,
           organicMode,
           engagement: eng,
-          totalQty,
-        })
-      );
-    } catch {}
-    setPlaced(true);
-    toast({ title: "Organic plan ready", description: "Redirecting to place your order…", variant: "success" });
-    router.push("/dashboard/new-order");
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast({ title: "Could not save organic plan", description: data.error || "Please try again.", variant: "danger" });
+        return;
+      }
+      try {
+        sessionStorage.setItem(
+          "wazeo-organic-plan",
+          JSON.stringify({ link, platform, presetId, windowId, variance, peakHours, organicMode, engagement: eng, totalQty })
+        );
+      } catch {}
+      setPlaced(true);
+      toast({ title: "Organic plan saved", description: `${data.scheduledRuns ?? 0} runs scheduled. Redirecting to orders…`, variant: "success" });
+      router.push("/dashboard/orders");
+    } catch {
+      toast({ title: "Network error", description: "Could not save your organic plan.", variant: "danger" });
+    } finally {
+      setPlacing(false);
+    }
   }
 
   if (placed) return null;
@@ -358,10 +375,10 @@ export function OrganicNewOrderPage() {
           <button
             type="button"
             onClick={handlePlace}
-            disabled={loading}
+            disabled={loading || placing}
             className="mt-4 w-full rounded-xl bg-[var(--accent)] py-3 text-sm font-semibold text-white shadow-[0_8px_24px_-8px_var(--glow)] hover:brightness-110 disabled:opacity-50"
           >
-            Continue to Place Order
+            {placing ? "Saving organic plan…" : "Continue to Place Order"}
           </button>
           <p className="mt-2 text-center text-[10px] text-[var(--text-muted)]">
             Proceeds to the standard New Order flow with your organic plan attached.

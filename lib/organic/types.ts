@@ -239,58 +239,189 @@ export const CURVE_PRESETS: CurvePreset[] = [
   },
 ];
 
-// Pattern library (a set of named micro-patterns).
-export const PATTERN_LIBRARY: { id: string; label: string; rating: number }[] = [
-  { id: "smooth-s-curve", label: "Smooth S-Curve", rating: 4 },
-  { id: "exponential-burst", label: "Exponential Burst", rating: 4 },
-  { id: "fibonacci-spiral", label: "Fibonacci Spiral", rating: 4 },
-  { id: "staircase", label: "Staircase", rating: 3 },
-  { id: "double-peak", label: "Double Peak", rating: 4 },
-  { id: "early-boost", label: "Early Boost", rating: 4 },
-  { id: "viral-spike", label: "Viral Spike", rating: 4 },
+// Named micro-pattern library (E3). Each entry carries the bump geometry the
+// curve engine consumes. Exactly 50 named patterns are exposed.
+export interface PatternDef {
+  id: string;
+  label: string;
+  rating: number;
+  params: CurvePreset["params"];
+}
+
+export const PATTERN_DEFS: PatternDef[] = [
+  // --- core 7 (preserved behaviour) ---
+  { id: "smooth-s-curve", label: "Smooth S-Curve", rating: 4, params: { bumps: [{ w: 1, mu: 0.5, sigma: 0.4, gamma: 1 }] } },
+  { id: "exponential-burst", label: "Exponential Burst", rating: 4, params: { bumps: [{ w: 1, mu: 0.05, sigma: 0.05, gamma: 0.7 }], burstChance: 0.5 } },
+  { id: "fibonacci-spiral", label: "Fibonacci Spiral", rating: 4, params: { bumps: [
+      { w: 0.2, mu: 0.1, sigma: 0.04, gamma: 1 },
+      { w: 0.3, mu: 0.3, sigma: 0.06, gamma: 1 },
+      { w: 0.5, mu: 0.6, sigma: 0.1, gamma: 1 },
+    ] } },
+  { id: "staircase", label: "Staircase", rating: 3, params: { bumps: [
+      { w: 0.25, mu: 0.12, sigma: 0.08, gamma: 1.2 },
+      { w: 0.5, mu: 0.4, sigma: 0.08, gamma: 1.2 },
+      { w: 1, mu: 0.75, sigma: 0.1, gamma: 1.2 },
+    ] } },
+  { id: "double-peak", label: "Double Peak", rating: 4, params: { bumps: [
+      { w: 0.8, mu: 0.3, sigma: 0.08, gamma: 1 },
+      { w: 1, mu: 0.75, sigma: 0.09, gamma: 1 },
+    ], burstChance: 0.3 } },
+  { id: "early-boost", label: "Early Boost", rating: 4, params: { bumps: [{ w: 1, mu: 0.12, sigma: 0.07, gamma: 0.85 }], burstChance: 0.4 } },
+  { id: "viral-spike", label: "Viral Spike", rating: 4, params: { bumps: [
+      { w: 1, mu: 0.06, sigma: 0.03, gamma: 0.8 },
+      { w: 0.3, mu: 0.35, sigma: 0.1, gamma: 1.5 },
+    ], burstChance: 0.55 } },
+  // --- 43 more named patterns (E3: total 50) ---
+  { id: "quiet-grow", label: "Quiet Grow", rating: 3, params: { bumps: [{ w: 1, mu: 0.8, sigma: 0.18, gamma: 0.7 }], pauseChance: 0.2 } },
+  { id: "morning-lift", label: "Morning Lift", rating: 3, params: { bumps: [{ w: 1, mu: 0.15, sigma: 0.06, gamma: 1 }], burstChance: 0.25 } },
+  { id: "evening-surge", label: "Evening Surge", rating: 3, params: { bumps: [{ w: 1, mu: 0.82, sigma: 0.06, gamma: 1 }], burstChance: 0.25 } },
+  { id: "weekend-wave", label: "Weekend Wave", rating: 4, params: { bumps: [
+      { w: 0.8, mu: 0.35, sigma: 0.12, gamma: 1 },
+      { w: 1, mu: 0.8, sigma: 0.12, gamma: 1 },
+    ] } },
+  { id: "midday-plateau", label: "Midday Plateau", rating: 4, params: { bumps: [{ w: 1, mu: 0.55, sigma: 0.25, gamma: 1.5 }] } },
+  { id: "overnight-slow", label: "Overnight Slow", rating: 3, params: { bumps: [{ w: 1, mu: 0.95, sigma: 0.05, gamma: 0.8 }], pauseChance: 0.3 } },
+  { id: "drip-feed", label: "Steady Drip Feed", rating: 4, params: { bumps: [{ w: 1, mu: 0.5, sigma: 0.6, gamma: 1 }], pauseChance: 0.25 } },
+  { id: "sawtooth", label: "Sawtooth Ripple", rating: 3, params: { bumps: [
+      { w: 0.5, mu: 0.2, sigma: 0.05, gamma: 1.4 },
+      { w: 0.7, mu: 0.5, sigma: 0.05, gamma: 1.4 },
+      { w: 0.6, mu: 0.8, sigma: 0.05, gamma: 1.4 },
+    ] } },
+  { id: "heartbeat", label: "Heartbeat Pulses", rating: 4, params: { bumps: [
+      { w: 0.4, mu: 0.15, sigma: 0.035, gamma: 1 },
+      { w: 0.8, mu: 0.45, sigma: 0.07, gamma: 1.1 },
+      { w: 0.4, mu: 0.75, sigma: 0.035, gamma: 1 },
+    ], burstChance: 0.2 } },
+  { id: "rising-tide", label: "Rising Tide", rating: 4, params: { bumps: [
+      { w: 0.4, mu: 0.2, sigma: 0.1, gamma: 1 },
+      { w: 0.8, mu: 0.6, sigma: 0.12, gamma: 1.1 },
+      { w: 1, mu: 0.9, sigma: 0.08, gamma: 1 },
+    ] } },
+  { id: "fade-in", label: "Fade-In Start", rating: 3, params: { bumps: [{ w: 1, mu: 0.1, sigma: 0.08, gamma: 0.8 }], burstChance: 0.35 } },
+  { id: "burst-peak", label: "Burst Peak", rating: 4, params: { bumps: [{ w: 1, mu: 0.5, sigma: 0.1, gamma: 1 }], burstChance: 0.5 } },
+  { id: "compound-s", label: "Compound S-Curve", rating: 5, params: { bumps: [
+      { w: 0.6, mu: 0.3, sigma: 0.1, gamma: 1 },
+      { w: 1, mu: 0.7, sigma: 0.15, gamma: 1.1 },
+    ] } },
+  { id: "ss-curve", label: "Steady Slope S-Curve", rating: 4, params: { bumps: [
+      { w: 0.7, mu: 0.35, sigma: 0.14, gamma: 1 },
+      { w: 1, mu: 0.65, sigma: 0.14, gamma: 1 },
+    ] } },
+  { id: "ramp-hold", label: "Ramp & Hold", rating: 4, params: { bumps: [
+      { w: 0.8, mu: 0.3, sigma: 0.2, gamma: 1.5 },
+      { w: 1, mu: 0.75, sigma: 0.2, gamma: 1.5 },
+    ] } },
+  { id: "sinusoid", label: "Smooth Sinusoid", rating: 4, params: { bumps: [
+      { w: 0.6, mu: 0.2, sigma: 0.08, gamma: 1.2 },
+      { w: 0.6, mu: 0.8, sigma: 0.08, gamma: 1.2 },
+    ] } },
+  { id: "twin-peak", label: "Twin Peak", rating: 4, params: { bumps: [
+      { w: 1, mu: 0.3, sigma: 0.08, gamma: 1 },
+      { w: 1, mu: 0.7, sigma: 0.08, gamma: 1 },
+    ] } },
+  { id: "triple-peak", label: "Triple Peak", rating: 4, params: { bumps: [
+      { w: 0.8, mu: 0.2, sigma: 0.06, gamma: 1 },
+      { w: 1, mu: 0.5, sigma: 0.06, gamma: 1 },
+      { w: 0.8, mu: 0.8, sigma: 0.06, gamma: 1 },
+    ] } },
+  { id: "surge-tail", label: "Surge + Long Tail", rating: 4, params: { bumps: [
+      { w: 1, mu: 0.08, sigma: 0.04, gamma: 0.85 },
+      { w: 0.4, mu: 0.6, sigma: 0.35, gamma: 2.5 },
+    ], burstChance: 0.5 } },
+  { id: "cliff-decay", label: "Cliff Decay", rating: 3, params: { bumps: [{ w: 1, mu: 0.12, sigma: 0.05, gamma: 0.9 }], burstChance: 0.5 } },
+  { id: "plateau-plateau", label: "Double Plateau", rating: 4, params: { bumps: [
+      { w: 1, mu: 0.35, sigma: 0.18, gamma: 1.5 },
+      { w: 0.9, mu: 0.75, sigma: 0.18, gamma: 1.5 },
+    ] } },
+  { id: "gentle-wave", label: "Gentle Wave", rating: 3, params: { bumps: [
+      { w: 0.5, mu: 0.25, sigma: 0.12, gamma: 1 },
+      { w: 0.5, mu: 0.75, sigma: 0.12, gamma: 1 },
+    ], pauseChance: 0.15 } },
+  { id: "steep-rise", label: "Steep Rise", rating: 3, params: { bumps: [{ w: 1, mu: 0.9, sigma: 0.08, gamma: 0.9 }], burstChance: 0.4 } },
+  { id: "slow-tail", label: "Slow Tail", rating: 3, params: { bumps: [{ w: 1, mu: 0.6, sigma: 0.4, gamma: 1.2 }], pauseChance: 0.2 } },
+  { id: "pulse-train", label: "Pulse Train", rating: 4, params: { bumps: [
+      { w: 0.4, mu: 0.15, sigma: 0.04, gamma: 1.2 },
+      { w: 0.4, mu: 0.4, sigma: 0.04, gamma: 1.2 },
+      { w: 0.4, mu: 0.65, sigma: 0.04, gamma: 1.2 },
+      { w: 0.4, mu: 0.9, sigma: 0.04, gamma: 1.2 },
+    ] } },
+  { id: "meander", label: "Meandering", rating: 3, params: { bumps: [
+      { w: 0.5, mu: 0.3, sigma: 0.14, gamma: 1.3 },
+      { w: 0.5, mu: 0.7, sigma: 0.14, gamma: 1.3 },
+    ], pauseChance: 0.25 } },
+  { id: "iceberg", label: "Iceberg (heavy front)", rating: 4, params: { bumps: [
+      { w: 1, mu: 0.1, sigma: 0.05, gamma: 0.8 },
+      { w: 0.6, mu: 0.5, sigma: 0.3, gamma: 1.5 },
+    ], burstChance: 0.45 } },
+  { id: "bell-flat", label: "Bell → Flat", rating: 4, params: { bumps: [
+      { w: 1, mu: 0.35, sigma: 0.12, gamma: 1.2 },
+      { w: 0.8, mu: 0.7, sigma: 0.2, gamma: 1.5 },
+    ] } },
+  { id: "flat-bell", label: "Flat → Bell", rating: 4, params: { bumps: [
+      { w: 0.8, mu: 0.3, sigma: 0.2, gamma: 1.5 },
+      { w: 1, mu: 0.65, sigma: 0.12, gamma: 1.2 },
+    ] } },
+  { id: "yoyo", label: "Yoyo Up-Down", rating: 3, params: { bumps: [
+      { w: 0.6, mu: 0.25, sigma: 0.07, gamma: 1.3 },
+      { w: 0.4, mu: 0.5, sigma: 0.07, gamma: 1.3 },
+      { w: 0.7, mu: 0.75, sigma: 0.07, gamma: 1.3 },
+    ] } },
+  { id: "spiral-wait", label: "Spiral & Wait", rating: 3, params: { bumps: [
+      { w: 0.3, mu: 0.2, sigma: 0.06, gamma: 1 },
+      { w: 0.5, mu: 0.6, sigma: 0.12, gamma: 1 },
+      { w: 0.4, mu: 0.92, sigma: 0.04, gamma: 0.9 },
+    ], pauseChance: 0.3 } },
+  { id: "snowball", label: "Snowball Accelerating", rating: 4, params: { bumps: [
+      { w: 0.3, mu: 0.2, sigma: 0.1, gamma: 1 },
+      { w: 0.6, mu: 0.6, sigma: 0.1, gamma: 1 },
+      { w: 1, mu: 0.95, sigma: 0.05, gamma: 1 },
+    ] } },
+  { id: "decelerate", label: "Decelerating", rating: 3, params: { bumps: [
+      { w: 1, mu: 0.15, sigma: 0.12, gamma: 0.9 },
+      { w: 0.5, mu: 0.7, sigma: 0.2, gamma: 1.4 },
+    ], burstChance: 0.3 } },
+  { id: "ticking", label: "Ticking Clock", rating: 4, params: { bumps: [
+      { w: 0.5, mu: 0.25, sigma: 0.04, gamma: 1.4 },
+      { w: 0.5, mu: 0.75, sigma: 0.04, gamma: 1.4 },
+    ] } },
+  { id: "organic-pulse", label: "Organic Pulse", rating: 4, params: { bumps: [
+      { w: 0.7, mu: 0.3, sigma: 0.08, gamma: 1.2 },
+      { w: 0.9, mu: 0.6, sigma: 0.1, gamma: 1.2 },
+    ], dipChance: 0.2, burstChance: 0.2 } },
+  { id: "evening-peak", label: "Evening Peak Focus", rating: 4, params: { bumps: [{ w: 1, mu: 0.83, sigma: 0.06, gamma: 1 }], burstChance: 0.3 } },
+  { id: "morning-spike", label: "Morning Spike", rating: 3, params: { bumps: [{ w: 1, mu: 0.14, sigma: 0.05, gamma: 0.85 }], burstChance: 0.35 } },
+  { id: "quiet-night", label: "Quiet Night", rating: 3, params: { bumps: [{ w: 1, mu: 0.97, sigma: 0.03, gamma: 0.7 }], pauseChance: 0.4 } },
+  { id: "linear-attention", label: "Linear Attention", rating: 3, params: { bumps: [{ w: 1, mu: 0.5, sigma: 0.5, gamma: 1.4 }] } },
+  { id: "power-up", label: "Power-Up Ramp", rating: 4, params: { bumps: [
+      { w: 0.5, mu: 0.3, sigma: 0.12, gamma: 1 },
+      { w: 1, mu: 0.85, sigma: 0.08, gamma: 1 },
+    ], burstChance: 0.3 } },
+  { id: "harmonic", label: "Harmonic Bumps", rating: 4, params: { bumps: [
+      { w: 0.6, mu: 0.2, sigma: 0.06, gamma: 1 },
+      { w: 0.4, mu: 0.5, sigma: 0.06, gamma: 1 },
+      { w: 0.6, mu: 0.8, sigma: 0.06, gamma: 1 },
+    ] } },
+  { id: "valley-first", label: "Valley First", rating: 3, params: { bumps: [
+      { w: 0.4, mu: 0.3, sigma: 0.08, gamma: 1 },
+      { w: 1, mu: 0.7, sigma: 0.12, gamma: 1 },
+    ], pauseChance: 0.3 } },
+  { id: "crescendo", label: "Crescendo", rating: 4, params: { bumps: [
+      { w: 0.4, mu: 0.3, sigma: 0.1, gamma: 1 },
+      { w: 0.8, mu: 0.7, sigma: 0.1, gamma: 1 },
+      { w: 1, mu: 0.95, sigma: 0.04, gamma: 1 },
+    ] } },
 ];
+export const PATTERN_LIBRARY: { id: string; label: string; rating: number }[] = PATTERN_DEFS.map((p) => ({
+  id: p.id,
+  label: p.label,
+  rating: p.rating,
+}));
 
 export function buildPatternParams(id: string): CurvePreset["params"] {
-  const map: Record<string, CurvePreset["params"]> = {
-    "smooth-s-curve": { bumps: [{ w: 1, mu: 0.5, sigma: 0.4, gamma: 1 }] },
-    "exponential-burst": {
-      bumps: [{ w: 1, mu: 0.05, sigma: 0.05, gamma: 0.7 }],
-      burstChance: 0.5,
-    },
-    "fibonacci-spiral": {
-      bumps: [
-        { w: 0.2, mu: 0.1, sigma: 0.04, gamma: 1 },
-        { w: 0.3, mu: 0.3, sigma: 0.06, gamma: 1 },
-        { w: 0.5, mu: 0.6, sigma: 0.1, gamma: 1 },
-      ],
-    },
-    staircase: {
-      bumps: [
-        { w: 0.25, mu: 0.12, sigma: 0.08, gamma: 1.2 },
-        { w: 0.5, mu: 0.4, sigma: 0.08, gamma: 1.2 },
-        { w: 1, mu: 0.75, sigma: 0.1, gamma: 1.2 },
-      ],
-    },
-    "double-peak": {
-      bumps: [
-        { w: 0.8, mu: 0.3, sigma: 0.08, gamma: 1 },
-        { w: 1, mu: 0.75, sigma: 0.09, gamma: 1 },
-      ],
-      burstChance: 0.3,
-    },
-    "early-boost": {
-      bumps: [{ w: 1, mu: 0.12, sigma: 0.07, gamma: 0.85 }],
-      burstChance: 0.4,
-    },
-    "viral-spike": {
-      bumps: [
-        { w: 1, mu: 0.06, sigma: 0.03, gamma: 0.8 },
-        { w: 0.3, mu: 0.35, sigma: 0.1, gamma: 1.5 },
-      ],
-      burstChance: 0.55,
-    },
-  };
-  return map[id] ?? { bumps: [{ w: 1, mu: 0.5, sigma: 0.3, gamma: 1 }] };
+  const d = PATTERN_DEFS.find((x) => x.id === id);
+  return d
+    ? d.params
+    : { bumps: [{ w: 1, mu: 0.5, sigma: 0.3, gamma: 1 }] };
 }
 
 export const ALL_CURVE_PRESETS: CurvePreset[] = [
