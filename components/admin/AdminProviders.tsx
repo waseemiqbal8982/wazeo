@@ -29,6 +29,9 @@ export function AdminProviders() {
   const [list, setList] = useState<Provider[]>([]);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<string>("");
 
   async function load() {
     const { data } = await sb.from("providers").select("*").order("priority");
@@ -63,6 +66,38 @@ export function AdminProviders() {
     load();
   }
 
+  async function syncServices() {
+    setSyncing(true);
+    setTestResult("");
+    try {
+      const res = await fetch("/api/provider/sync", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setTestResult(`❌ ${data.error || "Sync failed"}`);
+      } else {
+        setTestResult(`✅ Synced ${data.count} services (${data.mock ? "mock" : "live"} mode).`);
+      }
+    } catch {
+      setTestResult("❌ Sync request failed.");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  async function testConnection() {
+    setTesting(true);
+    setTestResult("");
+    try {
+      const res = await fetch("/api/admin/providers/test", { method: "POST" });
+      const data = await res.json();
+      setTestResult(data.ok ? `✅ ${data.message} Balance: ${data.balance}` : `❌ ${data.error}`);
+    } catch {
+      setTestResult("❌ Test request failed.");
+    } finally {
+      setTesting(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -70,8 +105,18 @@ export function AdminProviders() {
           <h1 className="text-2xl font-bold">Providers</h1>
           <p className="text-sm text-[var(--text-muted)]">SMM API providers. API key sirf server-side store hota hai.</p>
         </div>
-        <Button size="sm" onClick={() => { setEditing(null); setForm(empty); }}>+ Add provider</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" loading={syncing} onClick={syncServices}>Sync services</Button>
+          <Button size="sm" variant="outline" loading={testing} onClick={testConnection}>Test connection</Button>
+          <Button size="sm" onClick={() => { setEditing(null); setForm(empty); }}>+ Add provider</Button>
+        </div>
       </div>
+
+      {testResult && (
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-sm">
+          {testResult}
+        </div>
+      )}
 
       {list.length === 0 && !editing && (
         <EmptyState title="Provider baad mein add karna hai"
@@ -101,7 +146,7 @@ export function AdminProviders() {
               <p className="truncate text-xs text-[var(--text-muted)]">{p.api_url || "no url"} · key {mask(p.api_key)}</p>
             </div>
             <Button size="sm" variant="outline" onClick={() => edit(p)}>Edit</Button>
-            <Button size="sm" variant="outline" onClick={async () => { toast({ title: "Test → mock mode me connection fake hai" }); }}>Test</Button>
+            <Button size="sm" variant="outline" loading={testing} onClick={testConnection}>Test</Button>
             <Button size="sm" variant="danger" onClick={() => remove(p.id)}>Delete</Button>
           </div>
         ))}
