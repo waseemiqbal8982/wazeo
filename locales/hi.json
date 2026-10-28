@@ -81,6 +81,13 @@
   "auth.visual.tagline2": "ड्रिप-फ़ीड डिलीवरी स्वाभाविक लगती है",
   "auth.visual.tagline3": "हर ऑर्डर पर तेज़ शुरुआत",
   "auth.visual.stat.views": "व्यू डिलीवर हुए",
-  "auth.visual.stat.orders": "आज के ऑर्डर",
-  "auth.visual.stat.platforms": "प्लेटफ़ॉर्म"
+  "auth.visual.stat.platforms": "प्लेटफ़ॉर्म",
+  "auth.check_email_title": "अपना ईमेल देखें",
+  "auth.check_email_body": "हमने {email} पर 6 अंकों का कोड भेजा है। सत्यापन के लिए नीचे दर्ज करें।",
+  "auth.resend_code": "कोड फिर से भेजें",
+  "auth.resend_in": "{s} सेकंड में फिर से भेजें",
+  "auth.wrong_email": "गलत ईमेल? बदलें",
+  "auth.otp_success_title": "ईमेल सत्यापित!",
+  "auth.otp_success_body": "आपका खाता तैयार है। आपको डैशबोर्ड पर भेजा जा रहा है…",
+  "auth.error.otp_generic": "कोड सत्यापित नहीं हो सका। दोबारा प्रयास करें।"
 }

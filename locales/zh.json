@@ -81,6 +81,13 @@
   "auth.visual.tagline2": "滴灌式投放更显自然",
   "auth.visual.tagline3": "每单快速开始",
   "auth.visual.stat.views": "已交付浏览量",
-  "auth.visual.stat.orders": "今日订单",
-  "auth.visual.stat.platforms": "平台数"
+  "auth.visual.stat.platforms": "平台数",
+  "auth.check_email_title": "请查收邮件",
+  "auth.check_email_body": "我们已向 {email} 发送了 6 位验证码。请在下方输入以验证您的账户。",
+  "auth.resend_code": "重新发送验证码",
+  "auth.resend_in": "{s} 秒后重新发送",
+  "auth.wrong_email": "邮箱错误？修改",
+  "auth.otp_success_title": "邮箱已验证！",
+  "auth.otp_success_body": "您的账户已就绪。正在跳转到仪表盘…",
+  "auth.error.otp_generic": "无法验证验证码，请重试。"
 }

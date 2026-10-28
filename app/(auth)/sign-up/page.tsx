@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { COUNTRIES, countryName } from "@/lib/countries";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Logo } from "@/components/Logo";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { OtpInput } from "@/components/auth/OtpInput";
 import { passwordStrength } from "@/lib/validation";
 import { useI18n } from "@/lib/i18n";
 
@@ -44,6 +45,15 @@ export default function SignUpPage() {
   const [errTick, setErrTick] = useState(0);
   const [done, setDone] = useState(false);
 
+  // OTP flow state
+  const [otp, setOtp] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [otpTick, setOtpTick] = useState(0);
+  const [verified, setVerified] = useState(false);
+  const [resendIn, setResendIn] = useState(0);
+  const [resendBusy, setResendBusy] = useState(false);
+
   useEffect(() => {
     fetch("/api/meta/country")
       .then((r) => r.json())
@@ -55,6 +65,14 @@ export default function SignUpPage() {
       })
       .catch(() => {});
   }, []);
+
+  // Start the 60s resend countdown once the check-email panel shows.
+  useEffect(() => {
+    if (!done) return;
+    setResendIn(60);
+    const id = setInterval(() => setResendIn((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => clearInterval(id);
+  }, [done]);
 
   const strength = passwordStrength(password);
 
@@ -95,20 +113,137 @@ export default function SignUpPage() {
     }
   }
 
+  const verifyCode = useCallback(async () => {
+    if (otp.length < 6 || verifying) return;
+    setVerifying(true);
+    setOtpError("");
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, token: otp }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOtpError(data.error || t("auth.error.otp_generic"));
+        setOtpTick((c) => c + 1);
+        setOtp("");
+        return;
+      }
+      setVerified(true);
+      setTimeout(() => {
+        router.replace("/dashboard");
+        router.refresh();
+      }, 900);
+    } catch {
+      setOtpError(t("auth.error.network"));
+      setOtpTick((c) => c + 1);
+      setOtp("");
+    } finally {
+      setVerifying(false);
+    }
+  }, [otp, verifying, email, t, router]);
+
+  useEffect(() => {
+    if (done && otp.length === 6 && !verifying) void verifyCode();
+  }, [otp, done, verifying, verifyCode]);
+
+  const resend = useCallback(async () => {
+    if (resendBusy || resendIn > 0) return;
+    setResendBusy(true);
+    try {
+      const res = await fetch("/api/auth/resend-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOtpError(data.error || t("auth.error.network"));
+        setOtpTick((c) => c + 1);
+        return;
+      }
+      setOtp("");
+      setOtpError("");
+      setResendIn(60);
+    } catch {
+      setOtpError(t("auth.error.network"));
+      setOtpTick((c) => c + 1);
+    } finally {
+      setResendBusy(false);
+    }
+  }, [email, resendBusy, resendIn, t]);
+
+  const changeEmail = () => {
+    setDone(false);
+    setOtp("");
+    setOtpError("");
+    setVerified(false);
+    setResendIn(0);
+  };
+
   if (done) {
     return (
       <Card className="glass-glow p-6 text-center sm:p-8">
-        <Checkmark />
-        <div className="mb-4 flex justify-center">
-          <Logo size={36} />
+        <div key={otpTick} className={otpError || verified ? "animate-shake" : ""}>
+          {verified ? (
+            <>
+              <Checkmark />
+              <h1 className="text-lg font-semibold">{t("auth.otp_success_title")}</h1>
+              <p className="mt-2 text-sm text-[var(--text-muted)]">
+                {t("auth.otp_success_body")}
+              </p>
+              <div className="mt-5 flex justify-center">
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)]" />
+              </div>
+            </>
+          ) : (
+            <>
+              {otpError && <div className="mb-3 h-1" />}
+              <div className="mb-4 flex justify-center">
+                <Logo size={36} />
+              </div>
+              <h1 className="text-lg font-semibold">{t("auth.check_email_title")}</h1>
+              <p className="mb-5 mt-2 text-sm text-[var(--text-muted)]">
+                {t("auth.check_email_body").replace("{email}", email)}
+              </p>
+
+              <OtpInput
+                value={otp}
+                onChange={(v) => { setOtp(v); if (otpError) setOtpError(""); }}
+                disabled={verifying}
+                error={!!otpError}
+                autoFocus
+              />
+
+              {otpError && (
+                <p role="alert" className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                  {otpError}
+                </p>
+              )}
+
+              <div className="mt-5 flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={resendIn > 0 || resendBusy}
+                  onClick={resend}
+                >
+                  {resendIn > 0
+                    ? t("auth.resend_in").replace("{s}", String(resendIn))
+                    : t("auth.resend_code")}
+                </Button>
+                <button
+                  type="button"
+                  onClick={changeEmail}
+                  className="text-xs text-[var(--text-muted)] underline-offset-2 hover:text-[var(--accent)] hover:underline"
+                >
+                  {t("auth.wrong_email")}
+                </button>
+              </div>
+            </>
+          )}
         </div>
-        <h1 className="text-lg font-semibold">{t("auth.signup_success_title")}</h1>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">
-          {t("auth.signup_success_body").replace("{email}", email)}
-        </p>
-        <Button variant="outline" full className="mt-5" onClick={() => router.replace("/sign-in")}>
-          {t("auth.go_signin")}
-        </Button>
       </Card>
     );
   }

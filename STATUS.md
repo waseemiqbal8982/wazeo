@@ -131,3 +131,13 @@
 - `npm run lint` → 0 errors (35 pre-existing warnings). `npm run build` → pass.
 - E2E test (scripts/auth-e2e-test.mjs): signup HTTP → admin confirm → signin client-SDK → signin-touch endpoint → invalid password reject. Sab ✅.
 
+
+## Update (Part 1 — Email OTP verification) ✅
+- Signup ab OTP se verify hota hai: `components/auth/OtpInput.tsx` (single invisible native input + 6 boxes — auto-focus, auto-advance, paste full code, backspace, numeric keypad, shake on wrong, caret indicator).
+- `app/(auth)/sign-up/page.tsx`: signup ke baad animated "Check your email" panel — 6-box OTP, 60s resend countdown, "wrong email? change it" link, wrong/expired/too-many messages, success checkmark + smooth redirect to /dashboard.
+- New API routes: `app/api/auth/verify-otp` (verifyOtp type=signup + ensures profile row), `app/api/auth/resend-code` (resend, rate-limited). Verify limit = 5 wrong per 10 min per IP+email.
+- `app/auth/callback/route.ts`: email link (token_hash) verification works too; signup route now sets `emailRedirectTo` → /auth/callback.
+- docs: `docs/EMAIL_TEMPLATE.html` (dark branded, uses {{ .Token }}) + `docs/EMAIL_SETUP.md` (Roman Urdu: Resend account, innvera.shop DNS in Hostinger, SMTP/API key in Supabase, OTP expiration 600, test).
+- OTP keys added to all 5 locales (en/ur/hi/fr/zh); locale JSON rebuilt valid.
+- `npm run lint` → 0 errors (36 warnings). `npm run build` → pass.
+

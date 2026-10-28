@@ -67,11 +67,13 @@ export async function POST(req: Request) {
   const langByCountry: Record<string, string> = { PK: "ur", IN: "hi", CN: "zh" };
   const defaultLang = langByCountry[country || ""] || "en";
 
+  const origin = new URL(req.url).origin;
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: `${origin}/auth/callback`,
       data: { username, referral: referral || undefined, phone: phone || undefined, ip_hash: ipHash, country: country || undefined, language: defaultLang },
     },
   });
@@ -84,7 +86,7 @@ export async function POST(req: Request) {
     try {
       const admin = createAdminClient();
       await admin.from("profiles").upsert(
-        { id: data.user.id, username, phone: phone || null, signup_ip_hash: ipHash, country, language: defaultLang },
+        { id: data.user.id, username, phone: phone || null, signup_ip_hash: ipHash, country, language: defaultLang, referral_used: referral || null },
         { onConflict: "id" }
       );
     } catch {}

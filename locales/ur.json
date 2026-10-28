@@ -81,6 +81,13 @@
   "auth.visual.tagline2": "ڈرپ فیڈ ڈیلیوری قدرتی لگتی ہے",
   "auth.visual.tagline3": "ہر آرڈر پر تیز شروعات",
   "auth.visual.stat.views": "ویوز ڈیلیور",
-  "auth.visual.stat.orders": "آج کے آرڈرز",
-  "auth.visual.stat.platforms": "پلیٹ فارمز"
+  "auth.visual.stat.platforms": "پلیٹ فارمز",
+  "auth.check_email_title": "اپنی ای میل چیک کریں",
+  "auth.check_email_body": "ہم نے 6 ہندسوں کا کوڈ {email} پر بھیجا ہے۔ تصدیق کے لیے نیچے درج کریں۔",
+  "auth.resend_code": "کوڈ دوبارہ بھیجیں",
+  "auth.resend_in": "{s} سیکنڈ میں دوبارہ بھیجیں",
+  "auth.wrong_email": "غلط ای میل؟ تبدیل کریں",
+  "auth.otp_success_title": "ای میل تصدیق ہو گئی!",
+  "auth.otp_success_body": "آپ کا اکاؤنٹ تیار ہے۔ آپ کو ڈیش بورڈ پر لے جایا جا رہا ہے…",
+  "auth.error.otp_generic": "کوڈ کی تصدیق نہیں ہو سکی۔ دوبارہ کوشش کریں۔"
 }

@@ -81,6 +81,13 @@
   "auth.visual.tagline2": "Drip-feed delivery looks organic",
   "auth.visual.tagline3": "Fast starts on every order",
   "auth.visual.stat.views": "Views delivered",
-  "auth.visual.stat.orders": "Orders today",
-  "auth.visual.stat.platforms": "Platforms"
+  "auth.visual.stat.platforms": "Platforms",
+  "auth.check_email_title": "Check your email",
+  "auth.check_email_body": "We sent a 6-digit code to {email}. Enter it below to verify your account.",
+  "auth.resend_code": "Resend code",
+  "auth.resend_in": "Resend in {s}s",
+  "auth.wrong_email": "Wrong email? Change it",
+  "auth.otp_success_title": "Email verified!",
+  "auth.otp_success_body": "Your account is ready. Redirecting you to your dashboard…",
+  "auth.error.otp_generic": "Could not verify the code. Try again."
 }

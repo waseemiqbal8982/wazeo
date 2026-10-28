@@ -81,6 +81,13 @@
   "auth.visual.tagline2": "La livraison progressive semble naturelle",
   "auth.visual.tagline3": "Démarrage rapide sur chaque commande",
   "auth.visual.stat.views": "Vues livrées",
-  "auth.visual.stat.orders": "Commandes aujourd'hui",
-  "auth.visual.stat.platforms": "Plateformes"
+  "auth.visual.stat.platforms": "Plateformes",
+  "auth.check_email_title": "Vérifiez votre e-mail",
+  "auth.check_email_body": "Nous avons envoyé un code à 6 chiffres à {email}. Saisissez-le ci-dessous pour vérifier votre compte.",
+  "auth.resend_code": "Renvoyer le code",
+  "auth.resend_in": "Renvoyer dans {s}s",
+  "auth.wrong_email": "Mauvais e-mail ? Modifier",
+  "auth.otp_success_title": "E-mail vérifié !",
+  "auth.otp_success_body": "Votre compte est prêt. Redirection vers votre tableau de bord…",
+  "auth.error.otp_generic": "Impossible de vérifier le code. Réessayez."
 }

@@ -1,0 +1,9 @@
+git : To https://github.com/waseemiqbal8982/wazeo.git
+At line:1 char:632
++ ... t-Null; Write-Host 'commit done'; git push origin master 2>&1 | Out-S ...
++                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (To https://gith...l8982/wazeo.git:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+   6af9180..8ef8488  master -> master
+
