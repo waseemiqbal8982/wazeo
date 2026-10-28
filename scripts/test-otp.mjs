@@ -41,14 +41,30 @@ try {
     email,
     options: { redirectTo: `${baseUrl}/auth/callback` },
   });
-  if (le || !link?.properties?.redirect_to) {
+  if (le) {
     console.log(`❌ FAIL: generateLink failed — ${le?.message || "no link"}`);
     process.exit(1);
   }
-  const parsed = new URL(link.properties.redirect_to);
-  linkToken = parsed.searchParams.get("token_hash") || "";
+  // Supabase may return the verification link under different fields depending on
+  // version: action_link (full URL with token_hash), redirect_to, or email_otp.
+  const props = link?.properties || {};
+  const rawUrl = String(props.action_link || props.redirect_to || "");
+  if (props.email_otp) {
+    linkToken = String(props.email_otp);
+  } else if (rawUrl) {
+    try {
+      const u = new URL(rawUrl);
+      linkToken = u.searchParams.get("token_hash") || "";
+    } catch {
+      linkToken = "";
+    }
+  }
   if (!linkToken) {
-    console.log("❌ FAIL: token_hash not found in generated link");
+    const found = JSON.stringify(link).match(/token_hash=([^&"\\s]+)/);
+    if (found) linkToken = found[1];
+  }
+  if (!linkToken) {
+    console.log("❌ FAIL: token_hash/email_otp not found in generated link");
     process.exit(1);
   }
 

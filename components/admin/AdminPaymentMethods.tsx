@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
+import { Select } from "@/components/ui/Select";
 import { cn } from "@/lib/utils";
 
 interface PaymentMethod {
@@ -188,15 +189,16 @@ export function AdminPaymentMethods() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Country</label>
-              <select
+              <Select
                 value={draft.country}
                 onChange={(e) => setDraft({ ...draft, country: e.target.value })}
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-white/[0.03] px-3 text-sm text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
-              >
-                <option value="IN">India</option>
-                <option value="PK">Pakistan</option>
-                <option value="GLOBAL">Global</option>
-              </select>
+                options={[
+                  { value: "IN", label: "India" },
+                  { value: "PK", label: "Pakistan" },
+                  { value: "GLOBAL", label: "Global" },
+                ]}
+                className="w-full"
+              />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Logo</label>

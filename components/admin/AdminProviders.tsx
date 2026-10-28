@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
+import { Select } from "@/components/ui/Select";
 import { formatDateTime } from "@/lib/currency";
 
 interface Provider {
@@ -188,10 +189,7 @@ export function AdminProviders() {
           <Input placeholder="API URL (https only)" value={form.api_url} onChange={(e) => setForm({ ...form, api_url: e.target.value })} />
           <div className="flex gap-2">
             <Input type="password" placeholder="API key (blank to keep)" value={form.api_key} onChange={(e) => setForm({ ...form, api_key: e.target.value })} />
-            <select value={form.api_format} onChange={(e) => setForm({ ...form, api_format: e.target.value })} className="h-9 rounded-lg border border-[var(--border)] bg-white/[0.03] px-2 text-xs">
-              <option value="smm_v2">SMM v2</option>
-              <option value="mock">Mock</option>
-            </select>
+            <Select value={form.api_format} onChange={(e) => setForm({ ...form, api_format: e.target.value })} options={[{ value: "smm_v2", label: "SMM v2" }, { value: "mock", label: "Mock" }]} className="w-36" />
           </div>
           <Input placeholder="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
           <Input type="number" placeholder="Priority" value={form.priority} onChange={(e) => setForm({ ...form, priority: Number(e.target.value) })} />
@@ -242,15 +240,8 @@ export function AdminProviders() {
         <div className="flex flex-wrap items-center justify-between gap-3 p-4 pb-2">
           <p className="text-sm font-semibold">Provider call logs</p>
           <div className="flex flex-wrap gap-2 text-xs">
-            <select value={logProvider} onChange={(e) => setLogProvider(e.target.value)} className="h-8 rounded-lg border border-[var(--border)] bg-white/[0.03] px-2 text-xs">
-              <option value="">All providers</option>
-              {list.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-            <select value={logOk} onChange={(e) => setLogOk(e.target.value)} className="h-8 rounded-lg border border-[var(--border)] bg-white/[0.03] px-2 text-xs">
-              <option value="">All results</option>
-              <option value="ok">ok</option>
-              <option value="err">error</option>
-            </select>
+            <Select value={logProvider} onChange={(e) => setLogProvider(e.target.value)} options={[{ value: "", label: "All providers" }, ...list.map((p) => ({ value: p.id, label: p.name }))]} className="w-40" />
+            <Select value={logOk} onChange={(e) => setLogOk(e.target.value)} options={[{ value: "", label: "All results" }, { value: "ok", label: "ok" }, { value: "err", label: "error" }]} className="w-32" />
           </div>
         </div>
         <div className="max-h-72 overflow-y-auto">

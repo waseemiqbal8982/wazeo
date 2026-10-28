@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { Select } from "@/components/ui/Select";
 import { THEMES } from "@/lib/constants";
 
 export function AdminSettings() {
@@ -100,24 +101,21 @@ export function AdminSettings() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Default color theme</label>
-            <select
+            <Select
               value={values.default_theme ?? "purple"}
               onChange={(e) => setValues((v) => ({ ...v, default_theme: e.target.value }))}
-              className="h-11 w-full rounded-xl border border-[var(--border)] bg-white/[0.03] px-3 text-sm text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
-            >
-              {THEMES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-            </select>
+              options={THEMES.map((t) => ({ value: t.id, label: t.label }))}
+              className="w-full"
+            />
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Default mode</label>
-            <select
+            <Select
               value={values.default_theme_mode ?? "dark"}
               onChange={(e) => setValues((v) => ({ ...v, default_theme_mode: e.target.value }))}
-              className="h-11 w-full rounded-xl border border-[var(--border)] bg-white/[0.03] px-3 text-sm text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
-            >
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
-            </select>
+              options={[{ value: "dark", label: "Dark" }, { value: "light", label: "Light" }]}
+              className="w-full"
+            />
           </div>
         </div>
         <div>

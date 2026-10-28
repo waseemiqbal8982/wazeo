@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { passwordStrength } from "@/lib/validation";
+import { Select } from "@/components/ui/Select";
 
 export function AccessKeyRedeem() {
   const router = useRouter();
@@ -116,25 +117,18 @@ export function AccessKeyRedeem() {
           <Input label="Email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
           <Input label="Username" placeholder="Choose a username" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
           <div>
-            <Input
+            <Select
               label="Country"
-              list="key-countries"
               placeholder="e.g. PK, IN, BD…"
               value={country}
-              onChange={(e) => setCountry(e.target.value.toUpperCase().slice(0, 2))}
+              onChange={(e) => setCountry(e.target.value)}
+              options={COUNTRIES.map((c) => ({ value: c.code, label: `${c.name} (${c.code})` }))}
             />
             {detected && (
               <p className="-mt-1 mb-1 text-xs text-[var(--text-muted)]">
                 Detected: {countryName(detected)}. Change if wrong.
               </p>
             )}
-            <datalist id="key-countries">
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.name}
-                </option>
-              ))}
-            </datalist>
           </div>
           <Input label="Phone (optional)" placeholder="+92…" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
           <div>

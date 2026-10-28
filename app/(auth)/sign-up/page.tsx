@@ -12,6 +12,7 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { OtpInput } from "@/components/auth/OtpInput";
 import { passwordStrength } from "@/lib/validation";
 import { useI18n } from "@/lib/i18n";
+import { Select } from "@/components/ui/Select";
 
 const Checkmark = () => (
   <div className="auth-check-pop mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--success)]/15">
@@ -285,25 +286,18 @@ export default function SignUpPage() {
             autoComplete="email"
           />
           <div>
-            <Input
+            <Select
               label={t("auth.country")}
-              list="countries"
               placeholder={t("auth.ph.country")}
               value={country}
-              onChange={(e) => setCountry(e.target.value.toUpperCase().slice(0, 2))}
+              onChange={(e) => setCountry(e.target.value)}
+              options={COUNTRIES.map((c) => ({ value: c.code, label: `${c.name} (${c.code})` }))}
             />
             {detected && (
               <p className="-mt-1 mb-1 text-xs text-[var(--text-muted)]">
                 Detected: {countryName(detected)}. Change if wrong.
               </p>
             )}
-            <datalist id="countries">
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.name}
-                </option>
-              ))}
-            </datalist>
           </div>
           <div>
             <PasswordInput

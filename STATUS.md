@@ -328,3 +328,11 @@ Remaining for Item 1 (PARTIAL): admin page tables→cards on phones, filters bot
 - Added `npm run test:schedule` (2007 assertions) — all pass.
 - lint 0 errors, build pass.
 
+## Update (prompt 24 — P0 stability)
+- Tag stable-before-prompt24 created + pushed.
+- `npm run db:setup` FAIL: `relation "public.engagement_orders" does not exist` (live DB schema purana hai; ALL_IN_ONE.sql mein organic-era reference). Recorded; rest continue.
+- P0 checks: lint 0 errors (35 warnings baseline), build pass, i18n:check pass, check pass (RLS ON; provider MOCK; Mercury unconfigured → fallback), check:layout pass, test:schedule 2007 PASS.
+- `npm run test:otp` fix: token extraction ab `action_link`/`redirect_to`/`email_otp`/regex fallback handle karta hai. Full live OTP E2E abhi bhi SMTP + chalte huye server (TEST_BASE_URL) chahta hai.
+- Native `<select>`/`<datalist>` sab WazeoSelect se replace (sign-up country, AccessKeyRedeem country, LanguageSwitcher, AppShell lang, AdminPaymentMethods/Providers/Settings/Users).
+- Splash: animated logo + spinning ring, koi text nahi, 900ms (>=600ms) — theek.
+

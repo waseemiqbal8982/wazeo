@@ -14,6 +14,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { THEMES } from "@/lib/constants";
 import { useI18n, LANGS } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
+import { Select } from "@/components/ui/Select";
 
 /* ------------------------------------------------------------------ */
 /* Icons (inline SVG path `d` strings — one per menu item)             */
@@ -180,16 +181,13 @@ export function AppShell({
     : [];
 
   const langSwitcher = (
-    <select
+    <Select
+      aria-label="Language"
       value={lang}
       onChange={(e) => setLang(e.target.value as Lang)}
-      className="h-10 w-full rounded-xl border border-[var(--border)] bg-white/[0.03] px-3 text-sm text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
-      aria-label="Language"
-    >
-      {(Object.keys(LANGS) as Lang[]).map((code) => (
-        <option key={code} value={code}>{LANGS[code].label}</option>
-      ))}
-    </select>
+      options={(Object.keys(LANGS) as Lang[]).map((code) => ({ value: code, label: LANGS[code].label }))}
+      className="w-full"
+    />
   );
 
 

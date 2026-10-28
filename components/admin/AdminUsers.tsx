@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/Toast";
 import { formatMoney, formatDateTime } from "@/lib/currency";
 import { countryFlag, countryName } from "@/lib/countries";
 import { currencyInfo } from "@/lib/currencies";
+import { Select } from "@/components/ui/Select";
 import { cn } from "@/lib/utils";
 
 const LANG_LABEL: Record<string, string> = {
@@ -243,10 +244,7 @@ export function AdminUsers() {
           <Button size="sm" variant="outline" onClick={() => bulk("unban")}>Unban</Button>
           <Button size="sm" variant="outline" onClick={() => setAdjustUser({ id: "", username: `bulk (${selected.size})` } as UserRow)}>+ / − balance</Button>
           <Button size="sm" variant="outline" onClick={() => bulk("mark_verified")}>Mark verified</Button>
-          <select value={bulkRole || ""} onChange={(e) => { setBulkRole(e.target.value); if (e.target.value) bulk("set_role", e.target.value); }} className="h-8 rounded-lg border border-[var(--border)] bg-white/[0.03] px-2 text-xs">
-            <option value="">Set role…</option>
-            {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
+          <Select value={bulkRole || ""} onChange={(e) => { setBulkRole(e.target.value); if (e.target.value) bulk("set_role", e.target.value); }} options={[{ value: "", label: "Set role…" }, ...ROLES.map((r) => ({ value: r, label: r }))]} className="w-36" />
           <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Clear</Button>
         </div>
       )}
@@ -281,9 +279,7 @@ export function AdminUsers() {
                 </td>
                 <td className="px-4 py-2.5">{u.country ? <span className="inline-flex items-center gap-1.5">{countryFlag(u.country)} {u.country}</span> : "—"}</td>
                 <td className="px-4 py-2.5">
-                  <select value={u.role} onChange={(e) => bulk("set_role", e.target.value).then(() => load())} disabled={busy} className="rounded-lg border border-[var(--border)] bg-white/[0.03] px-2 py-1 text-xs">
-                    {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-                  </select>
+                  <Select value={u.role} onChange={(e) => { void bulk("set_role", e.target.value).then(() => load()); }} disabled={busy} options={ROLES.map((r) => ({ value: r, label: r }))} className="w-28" />
                 </td>
                 <td className="px-4 py-2.5">{formatMoney(u.balance)}</td>
                 <td className="px-4 py-2.5 text-xs">{u.last_login_at ? formatDateTime(u.last_login_at) : "—"}</td>

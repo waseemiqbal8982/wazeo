@@ -34,7 +34,7 @@ Workflow: tag `stable-before-prompt23` ✅ (created + pushed). Har item ke baad 
 - [ ] Generic errors, rate limit 5/10min; keys get access_days/plan_name/features/bind-on-first-use; profiles access_expires_at/plan/features; header/sidebar "Access left"; expired blocks new orders with "Renew with a new key"; admin create/extend/revoke
 
 ## E. Native Popups & Services Menu
-- [ ] Replace remaining native datalist/select/browser popups with WazeoSelect
+- [x] Replace remaining native datalist/select/browser popups with WazeoSelect (sign-up country, AccessKeyRedeem country, LanguageSwitcher, AppShell lang, AdminPaymentMethods/Providers/Settings/Users)
 - [ ] Platform logo cards (Instagram/TikTok/YouTube inline SVG) → animated accordion categories/services on phones
 
 ## F. Payment Methods & Deposit
