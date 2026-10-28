@@ -314,3 +314,11 @@ Remaining for Item 1 (PARTIAL): admin page tables→cards on phones, filters bot
 - **`npm run test:otp`** added (`scripts/test-otp.mjs`): creates a temp user, uses `admin.generateLink` to obtain a token, calls the verification route, reports OK/FAIL, then deletes the test user. Structured 4xx (invalid/expired) proves the route is alive; live OTP delivery needs real SMTP.
 - **Checks:** `npm run lint` → 0 errors; `npm run build` → pass.
 
+
+## Update (prompt 23 � Part A foundation)
+- Tag stable-before-prompt23 created + pushed.
+- Design tokens: light-mode accent variants (AA), radius/shadow/glass tokens (--radius-*, --shadow-*, .glass-strong, --glass-*) added.
+- New shared components: Chip, ProgressRing, Stepper, Drawer, Table (phone-card mode).
+- npm run lint -> 0 errors; npm run build -> pass.
+- Item A page redesign + responsive audit + rest of A-K: TASKS.md me checkboxes.
+
