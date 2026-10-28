@@ -213,3 +213,10 @@
 - NOTE: tablet "collapsible sidebar" (768-1024) not fully wired — phones use bottom bar, desktop full sidebar; tablet currently uses bottom bar.
 - lint 0 errors, build pass.
 
+
+## Task 2 — Part 2 (Custom dropdowns everywhere) ✅
+- New reusable `components/ui/WazeoSelect.tsx`: theme-aware dropdown — anchored below field on tablet/desktop, full bottom sheet on phones (breakpoint sm), search for long lists (>7), keyboard (arrows/Enter/Escape), icons + badges + group headers, smooth framer-motion open/close, option badge.
+- `components/ui/Select.tsx` ab WazeoSelect par delegate karta hai (same event API — no call-site changes needed). No browser-native `<select>` remains anywhere.
+- Covers: OrderForm curve, AddFundsPage method, AdminCoupons type, AdminProviders mode, AdminTranslations language, plus any other Select usage.
+- lint 0 errors, build pass.
+
