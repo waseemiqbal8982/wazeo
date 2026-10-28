@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
@@ -30,6 +32,8 @@ export function AdminPlugins() {
   const { toast } = useToast();
   const [plugins, setPlugins] = useState<Plugin[]>(DEFAULT_PLUGINS);
   const [busy, setBusy] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
+  const [draft, setDraft] = useState({ name: "", version: "1.0.0", description: "", hooks: "" });
 
   useEffect(() => {
     (async () => {
@@ -56,6 +60,21 @@ export function AdminPlugins() {
     persist(plugins.map((x) => x.id === p.id ? { ...x, enabled: !x.enabled } : x));
   }
 
+  function installPlugin() {
+    const name = draft.name.trim();
+    if (!name) return toast({ title: "Plugin name is required", variant: "danger" });
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    if (plugins.some((p) => p.id === id)) return toast({ title: "A plugin with that name already exists", variant: "danger" });
+    const hooks = draft.hooks.split(",").map((h) => h.trim()).filter(Boolean);
+    const next = [
+      ...plugins,
+      { id, name, version: draft.version.trim() || "1.0.0", description: draft.description.trim() || undefined, hooks, enabled: true },
+    ];
+    persist(next);
+    setInstallOpen(false);
+    setDraft({ name: "", version: "1.0.0", description: "", hooks: "" });
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -63,7 +82,7 @@ export function AdminPlugins() {
           <h1 className="text-2xl font-bold">Plugins</h1>
           <p className="text-sm text-[var(--text-muted)]">Enable/disable optional features. Hooks define where each plugin integrates.</p>
         </div>
-        <Button variant="outline" onClick={() => toast({ title: "Install plugin", description: "Upload a plugin package or configure from a marketplace (coming soon)." })}>+ Install plugin</Button>
+        <Button variant="outline" onClick={() => setInstallOpen(true)}>+ Install plugin</Button>
       </div>
 
       {plugins.length === 0 ? (
@@ -95,6 +114,29 @@ export function AdminPlugins() {
           ))}
         </div>
       )}
+
+      <Modal open={installOpen} onClose={() => setInstallOpen(false)} title="Install a custom plugin">
+        <div className="space-y-3">
+          <Input label="Plugin name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="e.g. Mass Order" />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Version" value={draft.version} onChange={(e) => setDraft({ ...draft, version: e.target.value })} />
+            <Input label="Hooks (comma separated)" value={draft.hooks} onChange={(e) => setDraft({ ...draft, hooks: e.target.value })} placeholder="order.create.before" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Description</label>
+            <textarea
+              value={draft.description}
+              onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+              rows={3}
+              className="w-full rounded-xl border border-[var(--border)] bg-white/[0.03] p-3 text-sm text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
+            />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button full onClick={installPlugin}>Install plugin</Button>
+            <Button variant="outline" onClick={() => setInstallOpen(false)}>Cancel</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
