@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PLATFORMS, CATEGORIES } from "@/lib/constants";
-import { Tabs } from "@/components/ui/Tabs";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -79,11 +78,25 @@ export function ServicesPage() {
         <p className="text-sm text-[var(--text-muted)]">Browse available services by platform.</p>
       </div>
 
-      <Tabs
-        tabs={PLATFORMS.map((p) => ({ id: p.id, label: p.label }))}
-        value={platform}
-        onChange={setPlatform}
-      />
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {PLATFORMS.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => { setPlatform(p.id); setCategory("all"); }}
+            className={cn(
+              "flex shrink-0 items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition-colors",
+              platform === p.id
+                ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
+                : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--text)]"
+            )}
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.06] text-lg">
+              {p.id === "instagram" ? "📸" : p.id === "tiktok" ? "🎵" : "▶️"}
+            </span>
+            {p.label}
+          </button>
+        ))}
+      </div>
 
       <Input placeholder="Search services…" value={q} onChange={(e) => setQ(e.target.value)} />
 

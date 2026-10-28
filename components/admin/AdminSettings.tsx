@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { THEMES } from "@/lib/constants";
 
 export function AdminSettings() {
   const supabase = createClient();
@@ -33,6 +34,27 @@ export function AdminSettings() {
     { key: "working_hours", label: "Working hours (format HH:MM-HH:MM, e.g. 09:00-18:00)" },
     { key: "working_tz", label: "Working timezone (e.g. Asia/Karachi, UTC)" },
     { key: "support_welcome", label: "Support welcome message" },
+    { key: "oauth_google_client_id", label: "Google OAuth client ID" },
+    { key: "oauth_google_client_secret", label: "Google OAuth client secret" },
+    { key: "oauth_twitter_client_id", label: "Twitter/X OAuth client ID" },
+    { key: "oauth_twitter_client_secret", label: "Twitter/X OAuth client secret" },
+    { key: "oauth_github_client_id", label: "GitHub OAuth client ID" },
+    { key: "oauth_github_client_secret", label: "GitHub OAuth client secret" },
+    { key: "site_logo_url", label: "Site logo URL" },
+    { key: "site_favicon_url", label: "Favicon URL" },
+    { key: "seo_title", label: "SEO title" },
+    { key: "seo_description", label: "SEO description" },
+    { key: "smtp_host", label: "SMTP host" },
+    { key: "smtp_port", label: "SMTP port" },
+    { key: "smtp_user", label: "SMTP username" },
+    { key: "smtp_pass", label: "SMTP password" },
+    { key: "smtp_from", label: "SMTP from address" },
+    { key: "maintenance_mode", label: "Maintenance mode (true/false)" },
+    { key: "maintenance_message", label: "Maintenance message" },
+    { key: "owner_name", label: "Owner name (portfolio page)" },
+    { key: "owner_bio", label: "Owner bio" },
+    { key: "owner_contact", label: "Owner contact details" },
+    { key: "owner_email", label: "Owner email" },
   ];
 
   async function save() {
@@ -75,6 +97,47 @@ export function AdminSettings() {
             onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
           />
         ))}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Default color theme</label>
+            <select
+              value={values.default_theme ?? "purple"}
+              onChange={(e) => setValues((v) => ({ ...v, default_theme: e.target.value }))}
+              className="h-11 w-full rounded-xl border border-[var(--border)] bg-white/[0.03] px-3 text-sm text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
+            >
+              {THEMES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Default mode</label>
+            <select
+              value={values.default_theme_mode ?? "dark"}
+              onChange={(e) => setValues((v) => ({ ...v, default_theme_mode: e.target.value }))}
+              className="h-11 w-full rounded-xl border border-[var(--border)] bg-white/[0.03] px-3 text-sm text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
+            >
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Owner skills (JSON array)</label>
+          <textarea
+            value={values.owner_skills ?? "[]"}
+            onChange={(e) => setValues((v) => ({ ...v, owner_skills: e.target.value }))}
+            rows={3}
+            className="w-full rounded-xl border border-[var(--border)] bg-white/[0.03] p-3 font-mono text-xs text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Owner projects (JSON array)</label>
+          <textarea
+            value={values.owner_projects ?? "[]"}
+            onChange={(e) => setValues((v) => ({ ...v, owner_projects: e.target.value }))}
+            rows={4}
+            className="w-full rounded-xl border border-[var(--border)] bg-white/[0.03] p-3 font-mono text-xs text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
+          />
+        </div>
         <div>
           <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">
             Payment methods (JSON array)

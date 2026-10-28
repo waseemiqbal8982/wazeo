@@ -4,6 +4,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 import { isValidEmail } from "@/lib/authMessages";
 
+const MAX_ATTEMPTS = 5;
+const LOCK_MS = 10 * 60 * 1000;
+const EXPIRY_SECONDS = Number(process.env.OTP_EXPIRY_SECONDS || 300);
+
 export async function POST(req: Request) {
   let body: { email?: string; token?: string };
   try {
@@ -28,6 +32,26 @@ export async function POST(req: Request) {
     );
   }
 
+  const admin = createAdminClient();
+
+  // Policy checks (DB-backed): locked + expired.
+  try {
+    const { data: row } = await admin.from("email_otps").select("*").eq("email", email).maybeSingle();
+    if (row?.locked_until) {
+      const lock = new Date(row.locked_until).getTime();
+      if (Date.now() < lock) {
+        const s = Math.max(1, Math.ceil((lock - Date.now()) / 1000));
+        return NextResponse.json({ error: `Too many wrong attempts. Try again in ${s}s.`, retryAfter: s }, { status: 429 });
+      }
+    }
+    if (row?.last_sent_at) {
+      const sent = new Date(row.last_sent_at).getTime();
+      if (Date.now() - sent > EXPIRY_SECONDS * 1000) {
+        return NextResponse.json({ error: "This code has expired. Please request a new one." }, { status: 400 });
+      }
+    }
+  } catch {}
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.verifyOtp({
     email,
@@ -37,19 +61,46 @@ export async function POST(req: Request) {
 
   if (error || !data.user) {
     const msg = error?.message || "Invalid code.";
-    // Supabase returns the same message for expired and wrong codes.
-    if (/expired|invalid/i.test(msg)) {
+    let attempts = 1;
+    let lockUntil: string | null = null;
+    try {
+      const { data: row } = await admin.from("email_otps").select("*").eq("email", email).maybeSingle();
+      if (row) attempts = (Number(row.attempts) || 0) + 1;
+      if (attempts >= MAX_ATTEMPTS) {
+        lockUntil = new Date(Date.now() + LOCK_MS).toISOString();
+        await admin.from("email_otps").upsert(
+          { email, purpose: "signup", attempts, locked_until: lockUntil, updated_at: new Date().toISOString() },
+          { onConflict: "email" }
+        );
+      } else {
+        await admin.from("email_otps").upsert(
+          { email, purpose: "signup", attempts, updated_at: new Date().toISOString() },
+          { onConflict: "email" }
+        );
+      }
+    } catch {}
+    if (/expired/i.test(msg)) {
+      return NextResponse.json({ error: "This code has expired. Please request a new one." }, { status: 400 });
+    }
+    if (lockUntil) {
       return NextResponse.json(
-        { error: "This code is incorrect or has expired. Please request a new one." },
-        { status: 400 }
+        { error: "Too many wrong attempts. Please wait 10 minutes and try again.", retryAfter: 600 },
+        { status: 429 }
       );
     }
-    return NextResponse.json({ error: "Could not verify the code. Try again." }, { status: 400 });
+    return NextResponse.json({ error: "Incorrect code. Please check the latest email and try again." }, { status: 400 });
   }
+
+  // Success — reset attempt/lock state.
+  try {
+    await admin.from("email_otps").upsert(
+      { email, purpose: "signup", attempts: 0, locked_until: null, updated_at: new Date().toISOString() },
+      { onConflict: "email" }
+    );
+  } catch {}
 
   // Ensure the profile row exists (carry over any metadata fields).
   try {
-    const admin = createAdminClient();
     const { data: existing } = await admin.from("profiles").select("id").eq("id", data.user.id).maybeSingle();
     if (!existing) {
       const meta = data.user.user_metadata || {};

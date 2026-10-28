@@ -3,13 +3,21 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { cn } from "@/lib/utils";
 import { PaymentHistory } from "./PaymentHistory";
 
-interface Method { name: string; account: string; instructions?: string }
+interface Method {
+  name: string;
+  account: string;
+  instructions?: string;
+  logo_url?: string | null;
+  min_deposit?: number;
+  max_deposit?: number;
+  fee_percent?: number;
+}
 
 export function AddFundsPage() {
   const supabase = createClient();
@@ -25,15 +33,20 @@ export function AddFundsPage() {
   useEffect(() => {
     let active = true;
     (async () => {
-      const [{ data: settings }, { data: pays }] = await Promise.all([
-        supabase.from("settings").select("value").eq("key", "payment_methods").single(),
+      const [{ data: payMethods }, { data: pays }] = await Promise.all([
+        supabase.from("payment_methods").select("*").eq("enabled", true).order("sort", { ascending: true }),
         supabase.from("payments").select("*").order("created_at", { ascending: false }).limit(20),
       ]);
       if (!active) return;
-      let list: Method[] = [];
-      try {
-        list = settings?.value ? (JSON.parse(settings.value) as Method[]) : [];
-      } catch {}
+      let list: Method[] = (payMethods || []).map((m: any) => ({
+        name: m.name,
+        account: m.account_number || m.account_name || "",
+        instructions: m.instructions || undefined,
+        logo_url: m.logo_url,
+        min_deposit: m.min_deposit,
+        max_deposit: m.max_deposit,
+        fee_percent: m.fee_percent,
+      }));
       if (list.length === 0) list = [{ name: "Bank Transfer", account: "Contact support for details", instructions: "Ask support for the latest account details." }];
       setMethods(list);
       setMethod(list[0]?.name || "");
@@ -49,6 +62,10 @@ export function AddFundsPage() {
     setError("");
     const amt = Number(amount);
     if (!amt || amt <= 0) return setError("Enter a valid amount.");
+    const min = Number(selectedMethod?.min_deposit || 1);
+    const max = Number(selectedMethod?.max_deposit || 100000);
+    if (amt < min) return setError(`Minimum deposit for ${method} is ${min}.`);
+    if (amt > max) return setError(`Maximum deposit for ${method} is ${max}.`);
     if (!file) return setError("Upload a payment screenshot.");
     if (!method) return setError("Select a payment method.");
     setBusy(true);
@@ -87,12 +104,26 @@ export function AddFundsPage() {
               <p className="text-sm font-semibold">Payment instructions</p>
               <p className="mt-1 text-sm text-[var(--text-muted)]">{selectedMethod?.instructions || selectedMethod?.account}</p>
             </div>
-            <Select
-              label="Method"
-              options={methods.map((m) => ({ value: m.name, label: m.name }))}
-              value={method}
-              onChange={(e) => setMethod(e.target.value)}
-            />
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {methods.map((m) => (
+                <button
+                  key={m.name}
+                  type="button"
+                  onClick={() => setMethod(m.name)}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 rounded-xl border p-3 text-xs font-medium transition-colors",
+                    method === m.name ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]" : "border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]"
+                  )}
+                >
+                  {m.logo_url ? (
+                    <img src={m.logo_url} alt={m.name} className="h-7 w-7 rounded-lg object-cover" />
+                  ) : (
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06] text-sm font-bold">{m.name.slice(0, 1)}</span>
+                  )}
+                  {m.name}
+                </button>
+              ))}
+            </div>
             <Input label="Account details" value={selectedMethod?.account || ""} readOnly />
             <Input label="Amount (USD)" type="number" min={1} placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
             <div>

@@ -80,6 +80,17 @@ export async function POST(req: Request) {
         { id: data.user.id, username, phone: phone || null, signup_ip_hash: ipHash, country, language: defaultLang, referral_used: referral || null },
         { onConflict: "id" }
       );
+      // Record when the signup OTP email was sent (for expiry/cooldown).
+      await admin.from("email_otps").upsert(
+        {
+          email,
+          purpose: "signup",
+          last_sent_at: new Date().toISOString(),
+          attempts: 0,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "email" }
+      );
     } catch {}
   }
 

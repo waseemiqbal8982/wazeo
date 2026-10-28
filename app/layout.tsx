@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { SplashLoader } from "@/components/SplashLoader";
+import { MaintenanceGate } from "@/components/MaintenanceGate";
 import { ContactFab } from "@/components/support/ContactFab";
 import { CurrencyProvider } from "@/lib/currency-store";
 
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://wazeo.vercel.app"),
 };
 
-const preloadScript = `(function(){try{var t=localStorage.getItem('wazeo-theme')||'';if(!t){var m=document.cookie.match(/(?:^|; )wazeo-theme=([^;]*)/);t=m?decodeURIComponent(m[1]):'';}if(!t)t='purple';var r=localStorage.getItem('wazeo-reduce')==='true';document.documentElement.dataset.theme=t;document.documentElement.dataset.reduceMotion=r?'true':'false';}catch(e){document.documentElement.dataset.theme='purple';}})();`;
+const preloadScript = `(function(){try{var t=localStorage.getItem('wazeo-theme')||'';if(!t){var m=document.cookie.match(/(?:^|; )wazeo-theme=([^;]*)/);t=m?decodeURIComponent(m[1]):'';}if(!t)t='purple';var md=localStorage.getItem('wazeo-mode')||'';if(!md){var cm=document.cookie.match(/(?:^|; )wazeo-mode=([^;]*)/);md=cm?decodeURIComponent(cm[1]):'';}if(md!=='light'&&md!=='dark')md='dark';var r=localStorage.getItem('wazeo-reduce')==='true';document.documentElement.dataset.theme=t;document.documentElement.dataset.mode=md;document.documentElement.dataset.reduceMotion=r?'true':'false';}catch(e){document.documentElement.dataset.theme='purple';document.documentElement.dataset.mode='dark';}})();`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
@@ -33,7 +34,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ThemeProvider>
             <CurrencyProvider>
               <SplashLoader />
-              {children}
+              <MaintenanceGate>
+                {children}
+              </MaintenanceGate>
               <ContactFab />
             </CurrencyProvider>
           </ThemeProvider>

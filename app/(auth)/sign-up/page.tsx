@@ -53,6 +53,7 @@ export default function SignUpPage() {
   const [verified, setVerified] = useState(false);
   const [resendIn, setResendIn] = useState(0);
   const [resendBusy, setResendBusy] = useState(false);
+  const [expiresIn, setExpiresIn] = useState(0);
 
   useEffect(() => {
     fetch("/api/meta/country")
@@ -66,11 +67,16 @@ export default function SignUpPage() {
       .catch(() => {});
   }, []);
 
-  // Start the 60s resend countdown once the check-email panel shows.
+  // Start the 60s resend countdown + 5-minute expiry countdown once the
+  // check-email panel shows.
   useEffect(() => {
     if (!done) return;
     setResendIn(60);
-    const id = setInterval(() => setResendIn((s) => (s > 0 ? s - 1 : 0)), 1000);
+    setExpiresIn(300);
+    const id = setInterval(() => {
+      setResendIn((s) => (s > 0 ? s - 1 : 0));
+      setExpiresIn((s) => (s > 0 ? s - 1 : 0));
+    }, 1000);
     return () => clearInterval(id);
   }, [done]);
 
@@ -215,6 +221,12 @@ export default function SignUpPage() {
                 error={!!otpError}
                 autoFocus
               />
+
+              {expiresIn <= 0 && !verified && (
+                <p role="alert" className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
+                  This code has expired. Request a new one below.
+                </p>
+              )}
 
               {otpError && (
                 <p role="alert" className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">

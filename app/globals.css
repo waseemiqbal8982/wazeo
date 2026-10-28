@@ -360,4 +360,34 @@ svg {
   scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
 }
 
+/* ---------- Light / Dark mode ----------
+   Dark is the default (CSS vars above). Light overrides the base
+   surface/neutral tokens while keeping per-theme accent colors. */
+html[data-mode="light"] {
+  --bg: #f3f4fb;
+  --surface: #ffffff;
+  --surface-2: #eef0f7;
+  --border: rgba(15, 20, 40, 0.10);
+  --border-strong: rgba(15, 20, 40, 0.20);
+  --text: #151725;
+  --text-muted: #5b6178;
+  color-scheme: light;
+}
+
+html[data-mode="light"] input,
+html[data-mode="light"] textarea,
+html[data-mode="light"] select {
+  color-scheme: light;
+}
+
+html[data-mode="light"] .glass-glow,
+html[data-mode="light"] .glass {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+html[data-mode="light"] .btn-glow {
+  box-shadow: 0 6px 24px -8px var(--glow);
+}
+
+
 

@@ -10,7 +10,7 @@ export function SplashLoader() {
     const start = Date.now();
     const timer = setTimeout(() => {
       const elapsed = Date.now() - start;
-      const wait = Math.max(0, 600 - elapsed);
+      const wait = Math.max(0, 900 - elapsed);
       setTimeout(() => setPhase("fading"), wait);
     }, 0);
     return () => clearTimeout(timer);
@@ -31,7 +31,6 @@ export function SplashLoader() {
         <div className="splash-spinner" />
         <Logo size={54} />
       </div>
-      <p className="text-sm text-[var(--text-muted)]">Panel khul raha hai</p>
     </div>
   );
 }
