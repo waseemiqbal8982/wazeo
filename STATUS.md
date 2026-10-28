@@ -158,3 +158,12 @@
 - `.env.example` me `ADMIN_EMAILS` add; `npm run check` ab ise verify karta hai; `docs/ENV_CHECKLIST.md` (names only, Vercel reminder included).
 - `npm run lint` → 0 errors. `npm run build` → pass.
 
+
+## Update (Part 4 — Support Hub + floating contact icon) ✅
+- Support settings DB me save hote hain (`schema_v12.sql`: support_whatsapp, support_telegram, support_email, working_hours, working_tz, support_welcome). Merged + db:setup ✅.
+- `components/support/ContactFab.tsx`: floating contact button har page par (root layout me) — animated popup, WhatsApp (wa.me) / Telegram (t.me) / Ticket cards, online/offline badge (working hours se), empty cards hidden.
+- `app/support/page.tsx` (public): same cards + FAQ + working hours + contact form jo ticket banata hai (`/api/support/ticket`).
+- Admin > Settings me Support fields add kiye.
+- Support links: landing footer + dashboard sidebar (NAV) me add.
+- `npm run lint` → 0 errors. `npm run build` → pass (includes /support).
+

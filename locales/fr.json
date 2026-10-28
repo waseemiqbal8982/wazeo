@@ -89,5 +89,6 @@
   "auth.wrong_email": "Mauvais e-mail ? Modifier",
   "auth.otp_success_title": "E-mail vérifié !",
   "auth.otp_success_body": "Votre compte est prêt. Redirection vers votre tableau de bord…",
-  "auth.error.otp_generic": "Impossible de vérifier le code. Réessayez."
+  "auth.error.otp_generic": "Impossible de vérifier le code. Réessayez.",
+  "footer.support": "Support"
 }

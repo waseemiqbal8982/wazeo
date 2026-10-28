@@ -18,6 +18,7 @@ export const NAV = [
   { href: "/dashboard/tickets", label: "Tickets", icon: "M4 6h16v10H8l-4 4V6z" },
   { href: "/dashboard/services", label: "Services", icon: "M4 7h16M4 12h16M4 17h16" },
   { href: "/dashboard/settings", label: "Settings", icon: "M12 15a3 3 0 100-6 3 3 0 000 6z" },
+  { href: "/support", label: "Support", icon: "M4 6h16v10H8l-4 4V6z" },
 ] as const;
 
 export const MOBILE = [0, 1, 2, 3, 6];

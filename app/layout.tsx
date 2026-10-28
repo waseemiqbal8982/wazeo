@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { SplashLoader } from "@/components/SplashLoader";
+import { ContactFab } from "@/components/support/ContactFab";
 
 export const metadata: Metadata = {
   title: {
@@ -31,6 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ThemeProvider>
             <SplashLoader />
             {children}
+            <ContactFab />
           </ThemeProvider>
         </ToastProvider>
       </body>

@@ -89,5 +89,6 @@
   "auth.wrong_email": "गलत ईमेल? बदलें",
   "auth.otp_success_title": "ईमेल सत्यापित!",
   "auth.otp_success_body": "आपका खाता तैयार है। आपको डैशबोर्ड पर भेजा जा रहा है…",
-  "auth.error.otp_generic": "कोड सत्यापित नहीं हो सका। दोबारा प्रयास करें।"
+  "auth.error.otp_generic": "कोड सत्यापित नहीं हो सका। दोबारा प्रयास करें।",
+  "footer.support": "सहायता"
 }

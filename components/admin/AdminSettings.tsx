@@ -26,6 +26,12 @@ export function AdminSettings() {
     { key: "site_name", label: "Site name" },
     { key: "markup_percent", label: "Default markup %" },
     { key: "referral_percent", label: "Referral bonus %" },
+    { key: "support_whatsapp", label: "Support WhatsApp number (e.g. 923001234567)" },
+    { key: "support_telegram", label: "Support Telegram (username or full link)" },
+    { key: "support_email", label: "Support email" },
+    { key: "working_hours", label: "Working hours (format HH:MM-HH:MM, e.g. 09:00-18:00)" },
+    { key: "working_tz", label: "Working timezone (e.g. Asia/Karachi, UTC)" },
+    { key: "support_welcome", label: "Support welcome message" },
   ];
 
   async function save() {

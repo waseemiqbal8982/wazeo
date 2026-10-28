@@ -62,6 +62,7 @@ export function Sections() {
           <div className="flex items-center gap-5 text-sm">
             <Link href="/terms" className="text-[var(--text-muted)] hover:text-[var(--accent)]">{t("footer.terms")}</Link>
             <Link href="/refund-policy" className="text-[var(--text-muted)] hover:text-[var(--accent)]">{t("footer.refund")}</Link>
+            <Link href="/support" className="text-[var(--text-muted)] hover:text-[var(--accent)]">{t("footer.support")}</Link>
             <Link href="/sign-in" className="text-[var(--text-muted)] hover:text-[var(--accent)]">{t("footer.signin")}</Link>
           </div>
         </div>

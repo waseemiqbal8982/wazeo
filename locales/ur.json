@@ -89,5 +89,6 @@
   "auth.wrong_email": "غلط ای میل؟ تبدیل کریں",
   "auth.otp_success_title": "ای میل تصدیق ہو گئی!",
   "auth.otp_success_body": "آپ کا اکاؤنٹ تیار ہے۔ آپ کو ڈیش بورڈ پر لے جایا جا رہا ہے…",
-  "auth.error.otp_generic": "کوڈ کی تصدیق نہیں ہو سکی۔ دوبارہ کوشش کریں۔"
+  "auth.error.otp_generic": "کوڈ کی تصدیق نہیں ہو سکی۔ دوبارہ کوشش کریں۔",
+  "footer.support": "معاونت"
 }

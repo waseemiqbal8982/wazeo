@@ -89,5 +89,6 @@
   "auth.wrong_email": "邮箱错误？修改",
   "auth.otp_success_title": "邮箱已验证！",
   "auth.otp_success_body": "您的账户已就绪。正在跳转到仪表盘…",
-  "auth.error.otp_generic": "无法验证验证码，请重试。"
+  "auth.error.otp_generic": "无法验证验证码，请重试。",
+  "footer.support": "支持"
 }
