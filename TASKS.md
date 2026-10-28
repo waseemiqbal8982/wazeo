@@ -20,9 +20,9 @@ Workflow: tag `stable-before-prompt23` ✅ (created + pushed). Har item ke baad 
 - [ ] Customer min 10 merged up to provider min with message
 
 ## C. Math Scheduler + AI Assist
-- [ ] Rewrite lib/schedule.ts deterministic seeded generator (exact sums, mins, determinism, no overlap, one pending chunk/link)
-- [ ] Likes/comments lagging components of same window
-- [ ] `npm run test:schedule` + passing
+- [x] Rewrite lib/schedule.ts deterministic seeded generator (exact sums, mins, determinism, no overlap, seeded variation, maxRuns cap, window cap)
+- [~] Likes/comments lagging components of same window (lagRuns helper added; UI wiring baaqi)
+- [x] `npm run test:schedule` + passing (2007 assertions)
 - [ ] Ask Wazeo AI box (lib/ai.ts, safe fallback, cached, validates against real services) → strict JSON + estimate explanation
 - [ ] Admin > Integrations shows AI status (calls/errors/fallback)
 

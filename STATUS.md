@@ -315,10 +315,16 @@ Remaining for Item 1 (PARTIAL): admin page tables→cards on phones, filters bot
 - **Checks:** `npm run lint` → 0 errors; `npm run build` → pass.
 
 
-## Update (prompt 23 � Part A foundation)
+## Update (prompt 23 � Part A foundation)
 - Tag stable-before-prompt23 created + pushed.
 - Design tokens: light-mode accent variants (AA), radius/shadow/glass tokens (--radius-*, --shadow-*, .glass-strong, --glass-*) added.
 - New shared components: Chip, ProgressRing, Stepper, Drawer, Table (phone-card mode).
 - npm run lint -> 0 errors; npm run build -> pass.
 - Item A page redesign + responsive audit + rest of A-K: TASKS.md me checkboxes.
+
+## Update (prompt 23 — Item C scheduler)
+- lib/schedule.ts rewritten as deterministic seeded generator (mulberry32 PRNG, order-id seed, exact sums, per-run min, non-decreasing, no overlap, variation clamped 0-30, maxRuns cap). Backward compatible with existing 4-arg buildSchedule callers.
+- Added lagRuns() for likes/comments lagging components.
+- Added `npm run test:schedule` (2007 assertions) — all pass.
+- lint 0 errors, build pass.
 

@@ -15,7 +15,8 @@
                     "test:login":  "node scripts/test-login.mjs",
                     "test:infra":  "node scripts/test-infra.mjs",
                     "test:acceptance":  "tsx scripts/test-acceptance.ts",
-                    "test:otp":  "node scripts/test-otp.mjs"
+                    "test:otp":  "node scripts/test-otp.mjs",
+                    "test:schedule":  "tsx scripts/test-schedule.ts"
                 },
     "devDependencies":  {
                             "@tailwindcss/turbopack":  "^4",
