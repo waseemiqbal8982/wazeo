@@ -262,3 +262,9 @@
 - ✅ `npm run lint` → 0 errors (38 warnings). `npm run build` → pass. `npm run i18n:check` → pass.
 - ⏭ NEXT / manual: apply `npm run db:setup` (schema_v14); live-test key flow; admin Users page key-origin display; automated key tests.
 
+
+## Item 1 — Mobile/Desktop layout mix-up (FIXED)
+Root cause: admin `AdminShell`/`AdminSidebar` rendered a fixed desktop sidebar with no responsive CSS gating (no `hidden lg:`/`md:`), so it opened on phones via a JS-state hamburger; customer had two separate nav systems (desktop `Sidebar` + `MobileNav`) both mounted, with no tablet rail and inconsistent breakpoints.
+Fix: one shared shell `components/shell/AppShell.tsx` for BOTH dashboard and admin; layout mode is decided only by Tailwind breakpoints (phone <768 = bottom pill bar + More bottom sheet; tablet 768–1023 = icon-rail that expands; desktop ≥1024 = full sidebar). No JS device detection. Legacy shell components removed (`git rm`). Added `npm run check:layout` (fails on `window.innerWidth`/`userAgent`/`matchMedia`-except-reduce-motion and if shell gates missing). `npm run lint` 0 errors, `npm run build` pass, `npm run check:layout` pass.
+Remaining for Item 1 (PARTIAL): admin page tables→cards on phones, filters bottom-sheet, full width-sweep visual audit (320/360/390/430/600/768/1024/1280, portrait/landscape, LTR/RTL).
+
