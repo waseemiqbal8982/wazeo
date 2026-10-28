@@ -14,7 +14,7 @@ export function Card({ glow, interactive, className, children, ...props }: CardP
         "glass rounded-2xl p-5",
         glow && "glass-glow",
         interactive &&
-          "transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_16px_40px_-12px_var(--glow)]",
+          "card-tilt transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_16px_40px_-12px_var(--glow)]",
         className
       )}
       {...props}

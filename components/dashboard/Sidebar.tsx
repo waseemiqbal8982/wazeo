@@ -39,9 +39,9 @@ export function Sidebar({ user, pathname }: { user: User; pathname: string }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200",
+                "nav-indicator flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200",
                 active
-                  ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                  ? "active bg-[var(--accent-soft)] text-[var(--accent)]"
                   : "text-[var(--text-muted)] hover:bg-white/[0.04] hover:text-[var(--text)]"
               )}
             >

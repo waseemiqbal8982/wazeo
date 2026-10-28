@@ -72,6 +72,86 @@ svg {
   }
 }
 
+/* ---------- Part 7: custom animation utilities ----------
+   Only transform/opacity, 150-600ms, reduced-motion handled globally
+   (see prefers-reduced-motion + [data-reduce-motion] blocks above).
+   Touch devices skip tilt/glow (hover:none). */
+
+/* Glow-trail on button hover. */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+}
+.btn-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.28) 50%, transparent 80%);
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-glow:hover::after {
+    animation: glow-trail 0.5s ease forwards;
+  }
+}
+@keyframes glow-trail {
+  to {
+    transform: translateX(100%);
+    opacity: 1;
+  }
+}
+
+/* Card tilt (desktop only, hover). */
+.card-tilt {
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.3s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .card-tilt:hover {
+    transform: perspective(900px) rotateX(2deg) rotateY(-2deg) translateY(-2px);
+  }
+}
+
+/* Animated active indicator in the sidebar. */
+.nav-indicator {
+  position: relative;
+}
+.nav-indicator::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  width: 3px;
+  height: 0;
+  border-radius: 9999px;
+  background: var(--accent);
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: height 0.25s ease, opacity 0.25s ease;
+}
+.nav-indicator.active::before {
+  height: 20px;
+  opacity: 1;
+}
+
+/* Sliding page transition. */
+.page-transition {
+  animation: page-slide 0.35s ease both;
+}
+@keyframes page-slide {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* ---------- reusable glass / effects ---------- */
 .glass {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));

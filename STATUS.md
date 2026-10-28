@@ -187,3 +187,11 @@
 - NOTE: full "tables→cards on phones" conversion aur every page 360/768/1440 audit abhi partial hai.
 - `npm run lint` → 0 errors. `npm run build` → pass.
 
+
+## Update (Part 7 — Extra CSS & animation) ✅
+- globals.css: `btn-glow` (glow-trail on hover), `card-tilt` (desktop-only via @media hover:hover/pointer:fine), `nav-indicator` animated active bar, `page-transition` sliding page entrance. All transform/opacity only, 150-600ms.
+- Applied: Button primary + btn-glow; interactive Cards + card-tilt; Sidebar active links + nav-indicator; AppShell main + page-transition.
+- Reduced-motion (prefers-reduced-motion + data-reduce-motion) globally honors; tilt/glow gated to fine-pointer devices (disabled on touch).
+- OTP checkmark/pop + CountUp already existed.
+- `npm run lint` → 0 errors. `npm run build` → pass.
+
