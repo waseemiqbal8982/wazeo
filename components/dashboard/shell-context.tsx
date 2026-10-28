@@ -16,6 +16,7 @@ export interface User {
 export const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: "M3 12l9-9 9 9M5 10v10h14V10" },
   { href: "/dashboard/new-order", label: "New Order", icon: "M12 5v14M5 12h14" },
+  { href: "/dashboard/organic-new-order", label: "Organic Growth", icon: "M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5" },
   { href: "/dashboard/orders", label: "Orders", icon: "M4 6h16M4 12h16M4 18h10" },
   { href: "/dashboard/add-funds", label: "Add Funds", icon: "M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5" },
   { href: "/dashboard/tickets", label: "Tickets", icon: "M4 6h16v10H8l-4 4V6z" },
@@ -24,7 +25,7 @@ export const NAV = [
   { href: "/support", label: "Support", icon: "M4 6h16v10H8l-4 4V6z" },
 ] as const;
 
-export const MOBILE = [0, 1, 2, 3, 6];
+export const MOBILE = [0, 1, 2, 3, 7];
 
 interface ShellCtx {
   balance: number;

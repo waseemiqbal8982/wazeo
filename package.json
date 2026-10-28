@@ -13,7 +13,8 @@
                     "i18n:check":  "node scripts/i18n-check.mjs",
                     "check:layout":  "node scripts/check-layout.mjs",
                     "test:login":  "node scripts/test-login.mjs",
-                    "test:infra":  "node scripts/test-infra.mjs"
+                    "test:infra":  "node scripts/test-infra.mjs",
+                    "test:acceptance":  "tsx scripts/test-acceptance.ts"
                 },
     "devDependencies":  {
                             "@tailwindcss/turbopack":  "^4",
