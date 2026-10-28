@@ -12,6 +12,7 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { createClient } from "@/lib/supabase/client";
 import { signIn } from "../actions";
 import { useI18n } from "@/lib/i18n";
+import { AccessKeyRedeem } from "@/components/auth/AccessKeyRedeem";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function SignInPage() {
   const [banned, setBanned] = useState(false);
   const [state, formAction, pending] = useActionState(signIn, undefined);
   const [errTick, setErrTick] = useState(0);
+  const [mode, setMode] = useState<"signin" | "key">("signin");
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -67,7 +69,33 @@ export default function SignInPage() {
         <p className="mt-2 text-sm text-[var(--text-muted)]">{t("auth.login.title")}</p>
       </div>
 
-      <div key={errTick} className={showError ? "animate-shake" : ""}>
+      <div className="mb-4 grid grid-cols-2 gap-2">
+        <Link
+          href="/sign-up"
+          className={`inline-flex items-center justify-center rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+            mode === "signin"
+              ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
+              : "border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]"
+          }`}
+        >
+          {t("auth.create_link")}
+        </Link>
+        <button
+          type="button"
+          onClick={() => setMode("key")}
+          className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+            mode === "key"
+              ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
+              : "border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]"
+          }`}
+        >
+          I have an access key
+        </button>
+      </div>
+
+      {mode === "signin" ? (
+        <>
+        <div key={errTick} className={showError ? "animate-shake" : ""}>
         {showError && (
           <div role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
             {state?.error || t("auth.error.banned")}
@@ -105,6 +133,17 @@ export default function SignInPage() {
           {t("auth.create_link")}
         </Link>
       </div>
+        </>
+      ) : (
+        <>
+          <AccessKeyRedeem />
+          <div className="mt-4 text-center text-sm">
+            <button type="button" onClick={() => setMode("signin")} className="font-medium text-[var(--accent)] hover:brightness-110">
+              ← Use email &amp; password instead
+            </button>
+          </div>
+        </>
+      )}
     </Card>
   );
 }

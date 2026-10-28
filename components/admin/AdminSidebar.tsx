@@ -24,6 +24,7 @@ export const ADMIN_GROUPS: { title: string; items: { href: string; label: string
     { href: "/admin/cms", label: "Pages & FAQ" },
   ] },
   { title: "Manage", items: [
+    { href: "/admin/keys", label: "Access Keys" },
     { href: "/admin/settings", label: "Settings" },
     { href: "/admin/translations", label: "Translations" },
     { href: "/admin/system", label: "System" },

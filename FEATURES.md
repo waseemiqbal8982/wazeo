@@ -24,6 +24,8 @@ Marking: ✅ WORKING · 🟡 PARTIAL (mock/limited) · ❌ NOT BUILT
 - ✅ Admin shell: grouped collapsible sidebar, top bar search (Ctrl+K), breadcrumbs
 - ✅ Overview (stats)
 - ✅ Users (adjust/ban/make-admin)
+- ✅ Access Keys (admin /admin/keys): generate single/bulk, expiry, starting balance, mode self/admin, revoke/regenerate/delete-expired, filters/search, CSV export, counters + chart, invite-only switch, full key shown once with copy + ready-to-send message — NEW
+- ✅ Customer key redeem: sign-in "I have an access key" flow (key, email, password strength, username, country, phone) → /verify-email; "Request a key" → WhatsApp/Telegram — NEW
 - ✅ Orders (refund, refresh)
 - ✅ Services (sync, markup, active)
 - ✅ Payments (approve/reject + proof)

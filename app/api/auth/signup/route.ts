@@ -41,21 +41,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
   }
 
-  // Invite-only gate (if enabled in settings)
+  // Invite-only gate: when ON, plain signup is blocked (access keys are used instead).
   try {
     const admin0 = createAdminClient();
     const { data: settingsRow } = await admin0.from("settings").select("value").eq("key", "invite_only").maybeSingle();
     if (settingsRow?.value === "true") {
-      const code = (body.code || "").trim().toUpperCase();
-      const { data: ac } = await admin0.from("access_codes").select("*").eq("code", code).eq("active", true).maybeSingle();
-      if (!ac) return NextResponse.json({ error: "A valid invite code is required." }, { status: 400 });
-      if (ac.expires_at && new Date(ac.expires_at) < new Date()) {
-        return NextResponse.json({ error: "Invite code expired." }, { status: 400 });
-      }
-      if (ac.usage_limit != null && ac.uses >= ac.usage_limit) {
-        return NextResponse.json({ error: "Invite code usage limit reached." }, { status: 400 });
-      }
-      await admin0.from("access_codes").update({ uses: (ac.uses || 0) + 1 }).eq("id", ac.id);
+      return NextResponse.json({ error: "Sign-up is invite only. A valid access key is required." }, { status: 400 });
     }
   } catch {}
 

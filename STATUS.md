@@ -253,3 +253,12 @@
 - lint 0 errors, build pass.
 
 - ⏭ NEXT (not built yet): Part 4 currency refresh everywhere, Part 5 support logos SVG, Part 6 deposit by country + demo safety, Part 7 starter services seed, Part 8 graphs everywhere, Part 9 admin panel power, Part 10 finish (locales/seeds/docs/push).
+
+## Handover pass — Block A (Access Key System) — progress
+- ✅ `schema_v14` (access key columns) merged into `supabase/ALL_IN_ONE.sql` (access_codes: email/hash/last4/mode/note/used_by/used_at/revoked; profiles: access_key_id/must_change_password/password_temp_set; transactions type `credit` allowed). **Apply with `npm run db:setup`.**
+- ✅ Fixed TypeScript errors in pre-existing `/api/admin/keys` + `/api/auth/key-redeem` routes (replaced illegal `.catch()` on Supabase builders with try/catch).
+- ✅ NEW `/admin/keys` page (`app/admin/keys/page.tsx` + `components/admin/AdminKeys.tsx`): generate single/bulk (label, expiry 7d default, starting balance, note, mode self/admin), list with filters/search, revoke/regenerate/delete-expired, CSV export, counters + status chart (Chart.js), invite-only toggle, multiple key shown once with Copy + "Copy ready-to-send message".
+- ✅ Customer sign-in key flow: sign-in page now has two options ("Create an account" → signup, "I have an access key" → redeem). New `components/auth/AccessKeyRedeem.tsx`: key + email + username + password strength bar + country + phone → `/api/auth/key-redeem` → redirect to `/verify-email`. "Request a key" → WhatsApp/Telegram links from Admin > Settings > Support.
+- ✅ `npm run lint` → 0 errors (38 warnings). `npm run build` → pass. `npm run i18n:check` → pass.
+- ⏭ NEXT / manual: apply `npm run db:setup` (schema_v14); live-test key flow; admin Users page key-origin display; automated key tests.
+
