@@ -6,7 +6,7 @@ import { NAV, MOBILE } from "./shell-context";
 
 export function MobileNav({ pathname }: { pathname: string }) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-[var(--border)] bg-[#0d0d18]/90 px-2 py-2 backdrop-blur-xl lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-[var(--border)] bg-[#0d0d18]/90 px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:hidden">
       {MOBILE.map((idx) => {
         const item = NAV[idx];
         const active = pathname === item.href;

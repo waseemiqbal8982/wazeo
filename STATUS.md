@@ -178,3 +178,12 @@
 - NOTE: full page-by-page price conversion (orders, add-funds, services) abhi partial hai — currency framework ready, core header/wallet/landing wired.
 - `npm run lint` → 0 errors. `npm run build` → pass.
 
+
+## Update (Part 6 — Mobile-friendly UI) ✅ (partial)
+- Modal: bottom-sheet on phones already; now max-h 88vh + internal scroll + notch safe-area bottom.
+- Bottom tab bar: safe-area bottom padding (env(safe-area-inset-bottom)).
+- `globals.css`: `body` overflow-x hidden (no horizontal scroll), img/svg max-width, touch tap target >=44px helper (`@media (pointer:coarse)`), dropdown overflow guard on small screens.
+- LTR + Urdu RTL are driven by `html dir` already (i18n); deep RTL layout flip for sidebar/dropdowns not fully done.
+- NOTE: full "tables→cards on phones" conversion aur every page 360/768/1440 audit abhi partial hai.
+- `npm run lint` → 0 errors. `npm run build` → pass.
+

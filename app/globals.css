@@ -49,6 +49,27 @@ body {
   color: var(--text);
   font-family: var(--font-sans);
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+/* Comfortable tap targets on touch devices (>= 44px). */
+@media (pointer: coarse) {
+  .tap-target,
+  .tap-target > * {
+    min-height: 44px;
+  }
+}
+
+/* Ensure anchored dropdowns never overflow the viewport on small screens. */
+@media (max-width: 640px) {
+  .popover-anchored {
+    max-width: calc(100vw - 2rem);
+  }
 }
 
 /* ---------- reusable glass / effects ---------- */
