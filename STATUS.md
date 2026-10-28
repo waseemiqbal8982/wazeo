@@ -229,3 +229,8 @@
 - OrderForm currency-aware ho gaya (fmt) — est cost + balance chosen currency me.
 - NOTE: natural-variation slider aur Single/Bulk/Combo modes exist nahi karte (only Instant/Drip) — partial.
 - lint 0 errors, build pass.
+
+
+## Task 2 — Status @ context end
+- ✅ Parts 1, 2, 3 committed (mobile pill nav/header, WazeoSelect everywhere, New Order redesign).
+- ⏭ NEXT (not built yet): Part 4 currency refresh everywhere, Part 5 support logos SVG, Part 6 deposit by country + demo safety, Part 7 starter services seed, Part 8 graphs everywhere, Part 9 admin panel power, Part 10 finish (locales/seeds/docs/push).
