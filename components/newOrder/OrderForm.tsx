@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Tabs } from "@/components/ui/Tabs";
 import { formatMoney } from "@/lib/currency";
+import { useCurrency } from "@/lib/currency-store";
 import { SchedulePreview } from "./SchedulePreview";
 import type { ScheduleChunk } from "@/lib/schedule";
 
@@ -41,6 +42,7 @@ interface Props {
 
 export function OrderForm(props: Props) {
   const hint = PLATFORMS.find((p) => p.id === props.platform)?.hint;
+  const { fmt } = useCurrency();
   return (
     <div className="space-y-4">
       <Tabs tabs={[{ id: "instant", label: "Instant" }, { id: "drip", label: "Drip-feed" }]} value={props.mode} onChange={props.onMode} />
@@ -64,11 +66,11 @@ export function OrderForm(props: Props) {
           <div className="rounded-xl border border-[var(--border)] bg-white/[0.02] p-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-[var(--text-muted)]">Estimated cost</span>
-              <span className="text-lg font-bold text-[var(--accent)]">{formatMoney(props.estCost)}</span>
+              <span className="text-lg font-bold text-[var(--accent)]">{fmt(props.estCost)}</span>
             </div>
             <div className="mt-1 flex items-center justify-between text-xs text-[var(--text-muted)]">
               <span>Balance</span>
-              <span>{formatMoney(props.balance)}</span>
+              <span>{fmt(props.balance)}</span>
             </div>
           </div>
         )}

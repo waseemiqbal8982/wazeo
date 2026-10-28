@@ -220,3 +220,12 @@
 - Covers: OrderForm curve, AddFundsPage method, AdminCoupons type, AdminProviders mode, AdminTranslations language, plus any other Select usage.
 - lint 0 errors, build pass.
 
+
+
+## Task 2 — Part 3 (New Order redesign) ✅ (partial: natural-variation slider / Bulk-Combo)
+- Step 1: platform selection ab bade icon tabs (Instagram/TikTok/YouTube) hain (ServicePicker).
+- Step 2: services ab SIRF ek "Select service" WazeoSelect dropdown me hain — sirf selected platform ke, category ke hisaab se grouped, name + price per 1000 chuni hui currency me + min/max badge. Platform change se selection clear hota hai. No list outside dropdown.
+- Live price summary card (chosen currency), balance after order, aur confirm modal add kiya (placeOrder tabhi chalta hai jab confirm ho).
+- OrderForm currency-aware ho gaya (fmt) — est cost + balance chosen currency me.
+- NOTE: natural-variation slider aur Single/Bulk/Combo modes exist nahi karte (only Instant/Drip) — partial.
+- lint 0 errors, build pass.

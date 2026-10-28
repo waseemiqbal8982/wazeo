@@ -9,6 +9,9 @@ import { useShell } from "@/components/dashboard/shell-context";
 import { useToast } from "@/components/ui/Toast";
 import { ServicePicker } from "./ServicePicker";
 import { OrderForm } from "./OrderForm";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { useCurrency } from "@/lib/currency-store";
 
 interface Service {
   id: string;
@@ -25,20 +28,20 @@ export function NewOrderPage() {
   const router = useRouter();
   const { balance, setBalance } = useShell();
   const { toast } = useToast();
+  const { fmt } = useCurrency();
   const supabase = createClient();
 
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState("instant");
   const [platform, setPlatform] = useState("instagram");
-  const [category, setCategory] = useState("all");
-  const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Service | null>(null);
   const [link, setLink] = useState("");
   const [quantity, setQuantity] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("60");
   const [curve, setCurve] = useState("steady");
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -63,21 +66,35 @@ export function NewOrderPage() {
     return buildSchedule(qty, Number(durationMinutes) || 60, curve as any, Number(selected.min));
   }, [mode, selected, qty, durationMinutes, curve]);
 
-  async function submit() {
-    setError("");
-    if (!selected) return setError("Please choose a service.");
-    if (!link) return setError("Please paste your link.");
-    if (linkError) return setError(linkError);
-    if (!qty || qty <= 0) return setError("Enter a quantity.");
+  function validate(): string | null {
+    if (!selected) return "Please choose a service.";
+    if (!link) return "Please paste your link.";
+    if (linkError) return linkError;
+    if (!qty || qty <= 0) return "Enter a quantity.";
     if (qty < Number(selected.min) || qty > Number(selected.max)) {
-      return setError(`Quantity must be between ${selected.min} and ${selected.max}.`);
+      return `Quantity must be between ${selected.min} and ${selected.max}.`;
     }
     if (mode === "drip") {
       const dur = Number(durationMinutes);
-      if (!dur || dur < 15 || dur > 72 * 60) return setError("Duration must be 15 min – 72 hours.");
-      if (qty < Math.min(10, Number(selected.min))) return setError("Drip-feed quantity minimum is 10.");
+      if (!dur || dur < 15 || dur > 72 * 60) return "Duration must be 15 min – 72 hours.";
+      if (qty < Math.min(10, Number(selected.min))) return "Drip-feed quantity minimum is 10.";
     }
-    if (estCost > balance) return setError("Insufficient balance for this order.");
+    if (estCost > balance) return "Insufficient balance for this order.";
+    return null;
+  }
+
+  function handleConfirm() {
+    setError("");
+    const v = validate();
+    if (v) return setError(v);
+    setConfirmOpen(true);
+  }
+
+  async function placeOrder() {
+    setConfirmOpen(false);
+    setError("");
+    const v = validate();
+    if (v) return setError(v);
 
     setSubmitting(true);
     try {
@@ -85,7 +102,7 @@ export function NewOrderPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          serviceId: selected.id,
+          serviceId: selected!.id,
           link: link.trim(),
           quantity: qty,
           mode,
@@ -120,13 +137,9 @@ export function NewOrderPage() {
         services={services}
         loading={loading}
         platform={platform}
-        onPlatform={(p) => { setPlatform(p); setSelected(null); setCategory("all"); }}
-        category={category}
-        onCategory={setCategory}
-        q={q}
-        onQ={setQ}
+        onPlatform={(p) => { setPlatform(p); setSelected(null); }}
         selected={selected}
-        onSelect={(s) => { setSelected(s); setCategory(s.category); }}
+        onSelect={setSelected}
       />
 
       <OrderForm
@@ -148,8 +161,34 @@ export function NewOrderPage() {
         balance={balance}
         error={error}
         submitting={submitting}
-        onSubmit={submit}
+        onSubmit={handleConfirm}
       />
+
+      <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Confirm order">
+        {selected && (
+          <div className="space-y-3">
+            <div className="rounded-xl border border-[var(--border)] bg-white/[0.02] p-3 text-sm">
+              <p className="font-medium">{selected.name}</p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">Link: {link}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="rounded-xl border border-[var(--border)] bg-white/[0.02] p-3">
+                <p className="text-xs text-[var(--text-muted)]">Quantity</p>
+                <p className="mt-1 font-semibold">{qty}</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border)] bg-white/[0.02] p-3">
+                <p className="text-xs text-[var(--text-muted)]">Mode</p>
+                <p className="mt-1 font-semibold capitalize">{mode}</p>
+              </div>
+              <div className="col-span-2 rounded-xl border border-[var(--border)] bg-white/[0.02] p-3">
+                <p className="text-xs text-[var(--text-muted)]">Cost</p>
+                <p className="mt-1 text-lg font-bold text-[var(--accent)]">{fmt(estCost)}</p>
+              </div>
+            </div>
+            <Button full loading={submitting} onClick={placeOrder}>Place order</Button>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
