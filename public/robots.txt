@@ -4,4 +4,4 @@ Disallow: /admin
 Disallow: /dashboard
 Disallow: /api/
 
-Sitemap: https://wazeo.vercel.app/sitemap.xml
+Sitemap: https://innvera.shop/sitemap.xml

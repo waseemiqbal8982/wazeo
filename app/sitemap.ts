@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://wazeo.vercel.app";
+  const base = "https://innvera.shop";
   const paths = [
     "",
     "/about",

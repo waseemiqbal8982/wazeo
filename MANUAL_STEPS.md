@@ -36,8 +36,8 @@ Manually verify / configure things that need a live project or a human.
 
 ### Supabase Redirect URLs
 1. Supabase Dashboard → **Authentication → URL Configuration → Redirect URLs**.
-2. Add your site URL (e.g. `https://wazeo.vercel.app`).
-3. Add `https://wazeo.vercel.app/reset-password` (and the same for localhost in dev).
+2. Add your site URL (e.g. `https://innvera.shop`).
+3. Add `https://innvera.shop/reset-password` (and the same for localhost in dev).
    - The reset email link goes through `/auth/callback?next=/reset-password`, so
      `/auth/callback` must also be allowed (it is).
 

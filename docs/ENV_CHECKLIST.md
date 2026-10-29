@@ -27,7 +27,7 @@ in `.env.local` locally and in your hosting platform (Vercel) when deploying.
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_SITE_URL` — set this in Vercel to your production URL
-  (e.g. `https://wazeo.vercel.app`) so confirmation-link emails redirect correctly.
+  (e.g. `https://innvera.shop`) so confirmation-link emails redirect correctly.
 
 ## ⚠️ Deploy reminder (Vercel)
 

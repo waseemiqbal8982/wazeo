@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin", "/dashboard", "/api", "/auth", "/verify-email", "/reset-password"],
       },
     ],
-    sitemap: "https://wazeo.vercel.app/sitemap.xml",
-    host: "https://wazeo.vercel.app",
+    sitemap: "https://innvera.shop/sitemap.xml",
+    host: "https://innvera.shop",
   };
 }

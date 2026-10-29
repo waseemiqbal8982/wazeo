@@ -20,12 +20,12 @@ export const metadata: Metadata = {
   },
   description:
     "Wazeo delivers your social media orders gradually and naturally with curves you control. Draw your own curve, watch the live graph, and keep growth looking organic.",
-  metadataBase: new URL("https://wazeo.vercel.app"),
+  metadataBase: new URL("https://innvera.shop"),
   openGraph: {
     title: "Wazeo — Gradual delivery for Instagram, TikTok & YouTube",
     description:
       "Draw your own delivery curve. Watch your order grow gradually with a live graph. Real prices, honest features, secure sign-in.",
-    url: "https://wazeo.vercel.app",
+    url: "https://innvera.shop",
     siteName: "Wazeo",
     type: "website",
   },

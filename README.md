@@ -70,7 +70,7 @@ git push -u origin main
 
 GitHub repo me **Settings → Secrets and variables → Actions** kholo:
 - **Secrets** me `CRON_SECRET` add karo (wohi value jo `.env.local` me hai).
-- **Variables** me `DEPLOYMENT_URL` add karo (aapka Vercel URL, jaise `https://wazeo.vercel.app`).
+- **Variables** me `DEPLOYMENT_URL` add karo (aapka Vercel URL, jaise `https://innvera.shop`).
 
 Phir `.github/workflows/cron.yml` har 5 minute me `/api/cron/process` call karega (drip-feed worker).
 
