@@ -493,3 +493,7 @@ html:not([data-reduce-motion="true"]) [data-reduce-motion="true"] .reveal { opac
 
 
 
+.cursor-ripple{position:fixed;width:12px;height:12px;border-radius:9999px;background:var(--accent);opacity:.5;transform:scale(.4);pointer-events:none;z-index:59;animation:cursorRipple .5s ease-out forwards}
+@keyframes cursorRipple{to{opacity:0;transform:scale(3)}}
+.btn-ripple{position:absolute;border-radius:9999px;background:currentColor;opacity:.25;transform:scale(0);pointer-events:none;animation:btnRipple .55s ease-out forwards}
+@keyframes btnRipple{to{opacity:0;transform:scale(1)}}

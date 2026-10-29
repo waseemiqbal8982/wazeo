@@ -11,6 +11,7 @@ import { CurrencyProvider } from "@/lib/currency-store";
 import { FloatingAuth } from "@/components/landing/FloatingAuth";
 import { CookieNotice } from "@/components/CookieNotice";
 import { StatusStrip } from "@/components/StatusStrip";
+import { Cursor } from "@/components/Cursor";
 
 export const metadata: Metadata = {
   title: {
@@ -68,6 +69,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <FloatingAuth />
               <CookieNotice />
               <StatusStrip />
+              <Cursor />
             </CurrencyProvider>
           </ThemeProvider>
         </ToastProvider>

@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 type Variant = "primary" | "outline" | "ghost" | "danger" | "soft";
@@ -43,12 +43,31 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) {
+    const onMouseDown = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+      if (typeof window !== "undefined") {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        if (!window.matchMedia("(pointer: fine)").matches) return;
+      }
+      const el = e.currentTarget;
+      const rect = el.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height) * 0.6;
+      const span = document.createElement("span");
+      span.className = "btn-ripple";
+      span.style.width = `${size}px`;
+      span.style.height = `${size}px`;
+      span.style.left = `${e.clientX - rect.left - size / 2}px`;
+      span.style.top = `${e.clientY - rect.top - size / 2}px`;
+      el.appendChild(span);
+      window.setTimeout(() => span.remove(), 550);
+    }, []);
+
     return (
       <button
         ref={ref}
         disabled={disabled || loading}
+        onMouseDown={onMouseDown}
         className={cn(
-          "inline-flex items-center justify-center font-medium select-none",
+          "relative inline-flex items-center justify-center overflow-hidden font-medium select-none",
           "transition-[transform,box-shadow,background-color,color,border-color] duration-200",
           "active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none",
           variants[variant],

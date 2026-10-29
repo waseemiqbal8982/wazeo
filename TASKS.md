@@ -12,8 +12,12 @@
 - [x] Shared chart module `components/charts/ChartShell.tsx` (Chart.js + react-chartjs-2, lazy client component): theme-aware (reads --accent / data-mode; 8-accent palette + light), 320px-safe responsive, smooth draw-in animation, rich tooltips + index crosshair interaction, clickable legend to hide/show series, date-range chips (Today/7d/30d/90d), compare-with-previous % delta, drag-to-zoom with Reset, PNG + CSV export, skeleton loading + empty state with zero baseline ("Your chart will grow with your first order"), and a pulsing "Live" badge with 20s poll that pauses when the tab is hidden.
 - [x] Integrated into Admin Overview (`/admin`) with real order data: Orders-per-day (last 7 days) line + Order-status bar chart.
 - [ ] Remaining: wire remaining admin charts (revenue vs profit, new users, signup funnel, users-by-country flags, platform split, top services, deposits per method, provider failure rate, tickets over time, keys generated vs used) and customer charts (views/likes per platform tabs, spend, planned vs delivered); Supabase Realtime subscription for live data.
-### Item 4 — Glass look + live cursor (MISSING)
-### Item 5 — Interactive elements (MISSING)
+### Item 4 — Glass look + live cursor (PARTIAL)
+- [x] Custom cursor `components/Cursor.tsx` (desktop only via `(hover:hover) and (pointer:fine)`; disabled on touch + `prefers-reduced-motion`): soft ring + dot follow pointer with easing in one rAF loop, transform-only, pointer-events none; re-colors to current accent (reads `--accent`); grows/colours over buttons/links, text-bar over inputs, shrinks on press, small ripple on click, stays over modals, paused while tab hidden, native cursor kept visible.
+- [~] Glass design tokens already exist in globals.css (--glass-*, .glass-strong, .glass-glow, --glow) and are applied to the pill/More sheet/modals/dropdowns; backend `backdrop-filter` fallback + low-power device detection (hardwareConcurrency/deviceMemory) for cheap phones still pending.
+### Item 5 — Interactive elements (PARTIAL)
+- [x] Button click ripple (transform/opacity only, respects reduced motion + pointer:fine), animated Toggle switch (`components/ui/Toggle.tsx`), existing active:scale press feedback.
+- [ ] Remaining: magnetic hover on primary buttons (desktop), animated checkboxes, expandable cards, drag-and-drop reordering, swipe-to-reveal rows, animated tabs/segmented controls, progress/success animations, hover tilt on desktop cards.
 ### Item 6 — Finish (MISSING)
 
 ## Prompt 27 — Public site + home page + admin content

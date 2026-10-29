@@ -1,5 +1,10 @@
 # 📊 STATUS — Wazeo (Stage 0 audit)
 
+## Update (prompt 28 — Items 4 & 5, PARTIAL)
+- **Item 4:** custom desktop cursor `components/Cursor.tsx` mounted in root layout. Enabled only for `(hover:hover) and (pointer:fine)` and not reduced motion. One requestAnimationFrame loop, transform-only movement with easing, pointer-events none, native cursor kept. Re-colors to the active accent, grows/colours over buttons & links, becomes a text-bar over inputs, shrinks on press, small ripple on click, pauses while the tab is hidden. Glass tokens (`--glass-*`, `.glass-strong`, `.glass-glow`, `--glow`) already exist in globals.css and are applied to the pill / More sheet / modals / dropdowns.
+- **Item 5:** Button click ripple (transform/opacity only; respects reduced motion and `pointer:fine`), new animated `Toggle` switch (`components/ui/Toggle.tsx`), existing press-scale feedback.
+- Checks: `npm run lint` 0 errors; `npm run build` pass.
+
 ## Update (prompt 28 — Item 3 chart module, PARTIAL)
 - **Shared chart module** `components/charts/ChartShell.tsx` added (Chart.js + react-chartjs-2, client component). Theme-aware: reads `--accent`/`data-mode` at render; 8-accent palette + light. Features: responsive down to 320px, smooth draw-in animation, index crosshair/rich tooltips, clickable legend (hide/show series), date-range chips, compare-with-previous % delta, drag-to-zoom with Reset, PNG + CSV export, skeleton + empty state with zero baseline ("Your chart will grow with your first order"), and a pulsing "Live" badge with a 20s poll that pauses while the tab is hidden. No scores/risk indicators.
 - **Wired into Admin Overview** `/admin` with real order data: "Orders per day" (last 7 days, line) + "Order status" (bar).
