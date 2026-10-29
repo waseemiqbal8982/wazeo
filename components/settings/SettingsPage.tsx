@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
 import { THEMES } from "@/lib/constants";
+import { ThemeModeToggle } from "@/components/ui/ThemeModeToggle";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -97,6 +98,11 @@ export function SettingsPage() {
                 <span className="text-xs font-medium">{t.label}</span>
               </button>
             ))}
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-[var(--text-muted)]">Color scheme</p>
+            <ThemeModeToggle />
+          </div>
+
           </div>
           <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-white/[0.02] p-3">
             <p className="text-sm font-medium">Reduce animations</p>

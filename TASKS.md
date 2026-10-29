@@ -9,7 +9,7 @@
 - [x] `Input`/`Chip`/`Badge` now use semantic tokens (readable placeholders, disabled states, status chips in light).
 - [x] `npm run test:contrast` harness created (`scripts/test-contrast.mjs`): Playwright + axe-core color-contrast rule + custom input-border (3:1) check, over landing/sign-in/dashboard/new-order/orders/services/wallet/support/settings + admin pages, in light+dark, for all 9 themes. FAST smoke mode via `CONTRAST_FAST=1`. Lint + build pass.
 - [ ] Full contrast scan executed to zero violations across every page×theme×mode (harness written; comprehensive live run pending in this session — app’s Supabase realtime/live indicator connections make networkidle stalls; verified up to harness launch/navigation).
-- [ ] Three-way toggle also surfaced on the Settings page (currently in AppShell header + HomeHeader).
+- [x] Three-way toggle surfaced on the Settings page (ThemeModeToggle in Appearance card) + AppShell header + HomeHeader.
 
 ## Prompt 30 — Admin lockout rescue + admin security + key gen + more
 ### Item 1 — Admin lockout rescue & admin security (PARTIAL)
