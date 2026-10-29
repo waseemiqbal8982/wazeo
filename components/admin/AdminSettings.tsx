@@ -15,12 +15,25 @@ export function AdminSettings() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [refreshBusy, setRefreshBusy] = useState(false);
+  const [markAllBusy, setMarkAllBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from("settings").select("*");
       const map: Record<string, string> = {};
-      (data || []).forEach((s) => { map[s.key] = s.value; });
+      (data || []).forEach((s) => {
+        // The disposable-domain setting is stored as a JSON array; show it as
+        // a comma-separated list for easy editing.
+        if (s.key === "disposable_email_domains" && s.value) {
+          try {
+            const arr = JSON.parse(s.value);
+            if (Array.isArray(arr)) map[s.key] = arr.join(", ");
+            else map[s.key] = s.value;
+            return;
+          } catch {}
+        }
+        map[s.key] = s.value;
+      });
       setValues(map);
     })();
   }, []);
@@ -60,7 +73,17 @@ export function AdminSettings() {
 
   async function save() {
     setBusy(true);
-    const rows = Object.entries(values).map(([key, value]) => ({ key, value }));
+    const rows = Object.entries(values).map(([key, value]) => {
+      // Convert the editable comma-separated domain list back into a JSON array.
+      if (key === "disposable_email_domains") {
+        const domains = String(value || "")
+          .split(",")
+          .map((d) => d.trim().toLowerCase().replace(/^\./, ""))
+          .filter(Boolean);
+        return { key, value: JSON.stringify(domains) };
+      }
+      return { key, value };
+    });
     const { error } = await supabase.from("settings").upsert(rows);
     setBusy(false);
     if (error) return toast({ title: error.message, variant: "danger" });
@@ -82,6 +105,20 @@ export function AdminSettings() {
       toast({ title: "Network error", variant: "danger" });
     } finally {
       setRefreshBusy(false);
+    }
+  }
+
+  async function markAllVerified() {
+    setMarkAllBusy(true);
+    try {
+      const res = await fetch("/api/admin/users/mark-all-verified", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) return toast({ title: data.error || "Failed", variant: "danger" });
+      toast({ title: `Marked ${data.updated ?? 0} user(s) verified`, variant: "success" });
+    } catch {
+      toast({ title: "Failed", variant: "danger" });
+    } finally {
+      setMarkAllBusy(false);
     }
   }
 
@@ -201,6 +238,64 @@ export function AdminSettings() {
             </button>
           </div>
         </div>
+
+        <div className="border-t border-[var(--border)] pt-4">
+          <p className="mb-3 text-sm font-semibold">Security</p>
+
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium">Require email verification at sign-up</p>
+              <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                When ON, sign-up must confirm their email (OTP/link) before entering.
+                When OFF (default), sign-up creates a confirmed user — no verification email.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={values.require_email_verify_at_signup === "true"}
+              onClick={() =>
+                setValues((v) => ({
+                  ...v,
+                  require_email_verify_at_signup: v.require_email_verify_at_signup === "true" ? "false" : "true",
+                }))
+              }
+              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 ${
+                values.require_email_verify_at_signup === "true" ? "bg-[var(--accent)]" : "bg-white/[0.1]"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ${
+                  values.require_email_verify_at_signup === "true" ? "translate-x-5" : "translate-x-0.5"
+                }`}
+              />
+            </button>
+          </div>
+
+          <div className="mt-4">
+            <p className="text-sm font-medium">Disposable email domains to reject at sign-up</p>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+              Comma-separated list. Sign-ups using these domains are blocked.
+            </p>
+            <textarea
+              value={values.disposable_email_domains ?? ""}
+              onChange={(e) => setValues((v) => ({ ...v, disposable_email_domains: e.target.value }))}
+              rows={3}
+              className="mt-2 w-full rounded-xl border border-[var(--border)] bg-white/[0.03] p-3 font-mono text-xs text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
+              placeholder="mailinator.com, 10minutemail.com, guerrillamail.com"
+            />
+          </div>
+
+          <div className="mt-4">
+            <Button variant="outline" size="sm" loading={markAllBusy} onClick={markAllVerified}>
+              Mark all existing users as verified
+            </Button>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              Bulk action, audit-logged. Safe when verification is off — it only confirms emails.
+            </p>
+          </div>
+        </div>
+
         <Button loading={busy} onClick={save}>Save settings</Button>
       </Card>
     </div>

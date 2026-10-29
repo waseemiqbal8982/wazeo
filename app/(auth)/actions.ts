@@ -6,6 +6,7 @@ import { authErrorMessage } from "@/lib/authMessages";
 import { rateLimit } from "@/lib/rateLimit";
 import { headers } from "next/headers";
 import { createHash } from "node:crypto";
+import { requireEmailVerifyAtSignup } from "@/lib/authPolicy";
 
 export async function signIn(_prevState: unknown, formData: FormData) {
   const h = await headers();
@@ -31,8 +32,8 @@ export async function signIn(_prevState: unknown, formData: FormData) {
 
   let dest = next;
   if (data.user) {
-    // ENFORCE verification: unverified users get sent to verification.
-    if (!data.user.email_confirmed_at) {
+    // ENFORCE verification only when the admin requires it at sign-up (default OFF).
+    if (!data.user.email_confirmed_at && (await requireEmailVerifyAtSignup())) {
       return { verify: true, email };
     }
     // Ensure a profile row exists (root-cause fix for the sign-in loop).

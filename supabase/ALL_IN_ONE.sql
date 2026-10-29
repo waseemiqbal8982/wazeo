@@ -1987,3 +1987,11 @@ insert into public.settings (key, value) values
   ('require_key_email_verify', 'false')
 on conflict (key) do nothing;
 
+insert into public.settings (key, value) values
+  ('require_email_verify_at_signup', 'false')
+on conflict (key) do nothing;
+
+insert into public.settings (key, value) values
+  ('disposable_email_domains', '["mailinator.com","10minutemail.com","guerrillamail.com","sharklasers.com","temp-mail.org","throwawaymail.com"]')
+on conflict (key) do nothing;
+

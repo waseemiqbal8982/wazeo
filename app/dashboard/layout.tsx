@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/shell/AppShell";
+import { requireEmailVerifyAtSignup } from "@/lib/authPolicy";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
-  if (!user.email_confirmed_at) redirect("/verify-email");
+  if (!user.email_confirmed_at) {
+    const requireVerify = await requireEmailVerifyAtSignup();
+    if (requireVerify) redirect("/verify-email");
+  }
 
   const { data: profile } = await supabase
     .from("profiles")

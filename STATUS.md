@@ -24,6 +24,27 @@
 - **Manual:** `MANUAL_STEPS.md` — check Supabase → Authentication → Sessions has no
   inactivity timeout / time-box.
 
+## Update (prompt 26 — Item 2: no email at sign-up, email only for reset)
+- **Admin Settings → Security:** "Require email verification at sign-up" switch (default
+  OFF via `settings` key `require_email_verify_at_signup`), "Mark all existing users as
+  verified" bulk action (`/api/admin/users/mark-all-verified`, audit-logged), and an
+  editable disposable-email domain list (`disposable_email_domains`, JSON array).
+- **Switch OFF (default):** sign-up (`/api/auth/signup`) creates the user via the admin
+  API with `email_confirm: true` (no verification email), signs the user in
+  (`signInWithPassword`), and opens the dashboard. `/verify-email` is skipped.
+- **All gates read the switch:** proxy (redirects only when ON), dashboard layout, sign-in
+  server action, and API routes `orders/place`, `support/ticket`, `user/currency` only
+  block unverified users when the switch is ON.
+- **Abuse protection (always on):** 5 sign-ups / hour per IP hash; hidden honeypot field;
+  minimum form-fill time (2s, `form_start`); disposable-email domain rejection.
+- **Password reset:** "Forgot password" (`/api/auth/forgot`) now rate-limits 3 / hour per
+  email and always returns the generic "If this email exists, we sent a link" message; the
+  link routes through `/auth/callback?next=/reset-password`. `/reset-password` has a
+  strength bar and lands the user signed-in on the dashboard. `docs/EMAIL_TEMPLATE_RESET.html`
+  (branded, dark, `{{ .ConfirmationURL }}`) added; MANUAL_STEPS.md updated with Supabase
+  email-template + redirect-URL steps.
+- **Checks:** `npm run lint` → 0 errors; `npm run build` → pass.
+
 ## Update (prompt 25 — sign-in / sign-up / access-key screens + key data)
 - Tag `stable-before-prompt25` created + pushed.
 - **Item 1 — Load then sign-in:** SplashLoader (spinning ring, no text, ≥600ms) already in root layout → fades into sign-in. Sign-in page reordered: form first (email/password/show-hide/forgot/Sign in) → round social buttons (Google/X/GitHub; unconfigured providers disabled with "Not set up yet" tooltip via new `/api/meta/oauth`) → two clear options "Create an account" / "I have an access key". Ref: `app/(auth)/sign-in`, `components/auth/SocialLogin`.

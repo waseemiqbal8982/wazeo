@@ -5,6 +5,10 @@ import { rateLimit, getClientIp } from "@/lib/rateLimit";
 import { authErrorMessage, isValidEmail } from "@/lib/authMessages";
 import { createHash } from "node:crypto";
 import { runHooks } from "@/lib/hooks";
+import {
+  requireEmailVerifyAtSignup,
+  isDisposableEmail,
+} from "@/lib/authPolicy";
 
 /** Generate a unique username from the email prefix (base + digits if taken). */
 async function makeUniqueUsername(base: string, admin: ReturnType<typeof createAdminClient>): Promise<string> {
@@ -21,20 +25,29 @@ async function makeUniqueUsername(base: string, admin: ReturnType<typeof createA
 }
 
 export async function POST(req: Request) {
-  const rl = rateLimit(`signup:${getClientIp(req)}`, 6, 60_000);
+  // Abuse protection (always applies): 5 sign-ups / hour per IP hash.
+  const rl = rateLimit(`signup:${getClientIp(req)}`, 5, 3600_000);
   if (!rl.ok) {
-    return NextResponse.json({ error: "Too many attempts. Please wait a moment." }, { status: 429 });
+    return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
   }
 
-  let body: { email?: string; password?: string; website?: string; phone?: string };
+  let body: { email?: string; password?: string; website?: string; phone?: string; form_start?: number; started_at?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
+  // Honeypot: humans never see this field; bots auto-fill it.
   if (body.website) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
+
+  // Minimum form-fill time (a human takes >2s to fill the form).
+  const fillStarted = Number(body.form_start ?? body.started_at ?? 0);
+  const fillMs = fillStarted && Number.isFinite(fillStarted) ? Date.now() - fillStarted : NaN;
+  if (!Number.isFinite(fillMs) || fillMs < 2000) {
+    return NextResponse.json({ error: "Invalid request. Please fill the form again." }, { status: 400 });
   }
 
   const email = (body.email || "").trim().toLowerCase();
@@ -44,6 +57,11 @@ export async function POST(req: Request) {
   }
   if (password.length < 8) {
     return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
+  }
+
+  // Reject disposable-email domains (always applies).
+  if (await isDisposableEmail(email)) {
+    return NextResponse.json({ error: "Please use a permanent email address." }, { status: 400 });
   }
 
   // Invite-only gate: when ON, plain signup is blocked (access keys are used instead).
@@ -77,6 +95,46 @@ export async function POST(req: Request) {
 
   const origin = new URL(req.url).origin;
   const supabase = await createClient();
+
+  // Does the admin require email verification at sign-up? Default OFF.
+  const requireVerify = await requireEmailVerifyAtSignup();
+
+  if (!requireVerify) {
+    // ---- Switch OFF: create a confirmed user via the admin API (no email
+    // sent), sign the user in, and open the dashboard. ---------------------
+    const { data: created, error: ce } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        username,
+        referral: referral || undefined,
+        ip_hash: ipHash,
+        country,
+        language: defaultLang,
+      },
+    });
+    if (ce || !created?.user?.id) {
+      return NextResponse.json({ error: authErrorMessage(ce || { message: "Could not create account." }) }, { status: 400 });
+    }
+    const uid = created.user.id;
+    try {
+      await runHooks("user.signup", { userId: uid, referralCode: referral || undefined });
+    } catch {}
+    try {
+      await admin.from("profiles").upsert(
+        { id: uid, username, signup_ip_hash: ipHash, country, language: defaultLang, referral_used: referral || null },
+        { onConflict: "id" }
+      );
+    } catch {}
+    // Establish a session so the user lands signed-in on the dashboard.
+    try {
+      await supabase.auth.signInWithPassword({ email, password });
+    } catch {}
+    return NextResponse.json({ ok: true, needsConfirm: false });
+  }
+
+  // ---- Switch ON: legacy signup flow (confirmation link/OTP). ------------
   const { data, error } = await supabase.auth.signUp({
     email,
     password,

@@ -24,10 +24,22 @@ Manually verify / configure things that need a live project or a human.
 
 ## Item 2 — No email at sign-up (switch OFF)
 
+### Admin Settings → Security
+1. Admin → **Settings → Security**.
+2. **Require email verification at sign-up** — default OFF. When OFF, sign-up
+   creates a confirmed user (admin API, `email_confirm` true), no verification email
+   is sent, and the user lands signed-in on the dashboard.
+3. **Mark all existing users as verified** — bulk action (audit-logged); use it
+   when turning the switch off so previously-unverified users aren't stuck.
+4. **Disposable email domains** — comma-separated list; sign-ups using these are
+   blocked (always on).
+
 ### Supabase Redirect URLs
 1. Supabase Dashboard → **Authentication → URL Configuration → Redirect URLs**.
 2. Add your site URL (e.g. `https://wazeo.vercel.app`).
 3. Add `https://wazeo.vercel.app/reset-password` (and the same for localhost in dev).
+   - The reset email link goes through `/auth/callback?next=/reset-password`, so
+     `/auth/callback` must also be allowed (it is).
 
 ### Reset password email template
 1. Supabase Dashboard → **Authentication → Email Templates → Reset Password**.
@@ -37,8 +49,9 @@ Manually verify / configure things that need a live project or a human.
 
 ### Test password reset
 - "Forgot password" → generic "If this email exists, we sent a link" message.
+- Rate limit: 3 requests per hour per email.
 - Open the link → it opens `/reset-password` through `/auth/callback`.
-- Set a new password, strength bar shows, user is signed in.
+- Set a new password, strength bar shows, user is signed in → dashboard.
 
 ---
 

@@ -75,12 +75,26 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // ENFORCE email verification: unconfirmed users cannot open any protected page.
+  // ENFORCE email verification only when the admin requires it at sign-up
+  // (default OFF). When OFF, unverified users are not blocked here.
   if (!user.email_confirmed_at) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/verify-email";
-    url.searchParams.set("next", request.nextUrl.pathname);
-    return NextResponse.redirect(url);
+    let requireVerify = false;
+    try {
+      const { data: row } = await supabase
+        .from("settings")
+        .select("value")
+        .eq("key", "require_email_verify_at_signup")
+        .maybeSingle();
+      requireVerify = row?.value === "true";
+    } catch {
+      requireVerify = false;
+    }
+    if (requireVerify) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/verify-email";
+      url.searchParams.set("next", request.nextUrl.pathname);
+      return NextResponse.redirect(url);
+    }
   }
 
   // Admin 2FA enforcement (server-side). Only applies once an admin has opted in.

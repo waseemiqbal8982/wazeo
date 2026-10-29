@@ -6,6 +6,7 @@ import { buildSchedule } from "@/lib/schedule";
 import { validateLink } from "@/lib/validation";
 import { runHooks } from "@/lib/hooks";
 import { logProviderCall } from "@/lib/providerLog";
+import { requireEmailVerifyAtSignup } from "@/lib/authPolicy";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,9 @@ export async function POST(req: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
-  if (!user.email_confirmed_at) return NextResponse.json({ error: "Please verify your email first." }, { status: 403 });
+  if (!user.email_confirmed_at && (await requireEmailVerifyAtSignup())) {
+    return NextResponse.json({ error: "Please verify your email first." }, { status: 403 });
+  }
 
   // Access-expiry guard: only NEW orders are blocked. History & renewal remain.
   const { data: prof } = await supabase.from("profiles").select("access_expires_at").eq("id", user.id).single();

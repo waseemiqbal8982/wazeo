@@ -49,6 +49,8 @@ export default function SignUpPage() {
   const [resendIn, setResendIn] = useState(0);
   const [resendBusy, setResendBusy] = useState(false);
   const [expiresIn, setExpiresIn] = useState(0);
+  const [formStart] = useState(() => Date.now());
+  const [honeypot, setHoneypot] = useState("");
 
   useEffect(() => {
     if (!done) return;
@@ -81,7 +83,7 @@ export default function SignUpPage() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, website: honeypot, form_start: formStart }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -251,6 +253,18 @@ export default function SignUpPage() {
 
       <div key={errTick} className={error ? "animate-shake" : ""}>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
+          <div className="absolute -left-[9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+            <label htmlFor="hp-website">Website</label>
+            <input
+              id="hp-website"
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+            />
+          </div>
           <Input
             label={t("auth.email")}
             type="email"

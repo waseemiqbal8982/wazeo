@@ -6,7 +6,16 @@
       pattern; `lib/sessionCookie.ts`; 400-day maxAge; "Keep me signed in" checkbox
       (default ON); token refresh in proxy returns renewed cookies; `npm run test:session`
       added. lint 0 errors, build pass.
-- [ ] **Item 2 — No email at sign-up, email only for password reset**
+- [x] **Item 2 — No email at sign-up, email only for password reset:** admin Settings→Security
+      "Require email verification at sign-up" switch (default OFF) + "Mark all existing
+      users as verified" (audit-logged) + editable disposable-domain list. Switch OFF:
+      sign-up creates a confirmed user via admin API (`email_confirm` true), signs in,
+      opens dashboard (no email). All gates (proxy, dashboard layout, actions, orders/place,
+      support/ticket, user/currency) read the setting. Abuse protection always on: 5
+      sign-ups/hr per IP hash, honeypot, min fill-time (2s), disposable-domain reject.
+      Password reset: generic "If this email exists" message, 3/hr per email rate limit,
+      link goes through /auth/callback → /reset-password with strength bar, signs in.
+      `docs/EMAIL_TEMPLATE_RESET.html` added; MANUAL_STEPS updated. lint 0 errors, build pass.
 - [ ] **Item 3 — Login methods controlled from admin**
 - [ ] **Item 4 — No instant orders, draw your own delivery curve**
 - [ ] **Item 5 — Complete UI redesign**
