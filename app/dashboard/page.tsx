@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatMoney, formatDateTime } from "@/lib/currency";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
+import { CustomerCharts } from "@/components/dashboard/CustomerCharts";
 
 function statusTone(status: string): "success" | "danger" | "warning" | "muted" {
   if (status === "completed") return "success";
@@ -82,6 +83,8 @@ export default async function DashboardOverview() {
         <StatCard label="Total spent" value={totalSpent} format="money" />
         <StatCard label="Active orders" value={activeOrders} />
       </div>
+
+      <CustomerCharts />
 
       <section className="grid gap-4 lg:grid-cols-3">
         <Card glow className="flex flex-col justify-between">
