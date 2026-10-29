@@ -1959,6 +1959,34 @@ on conflict (key) do update set value = excluded.value, description = excluded.d
 -- Drop the risk_config table (bot-likelihood / detection-safety tuning).
 drop table if exists public.risk_config;
 
+-- Ensure engagement_orders exists (created originally in a separate migration;
+-- ALL_IN_ONE.sql must be self-contained so db:setup works on a fresh DB).
+create table if not exists public.engagement_orders (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  org_link text not null,
+  platform text not null default 'instagram',
+  preset_id text not null default 'auto_safe',
+  window_id text not null default '24h',
+  window_minutes integer not null default 1440,
+  variance_percent integer not null default 10,
+  peak_hours boolean not null default true,
+  organic_mode boolean not null default true,
+  risk_score numeric not null default 0,
+  band text not null default 'safe',
+  organic_score numeric not null default 0,
+  re_rolls integer not null default 0,
+  total_qty integer not null default 0,
+  algorithm_json jsonb not null default '{}'::jsonb,
+  status text not null default 'scheduled'
+    check (status in ('draft','scheduled','running','paused','completed','cancelled','failed')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists idx_eo_user on public.engagement_orders(user_id);
+create index if not exists idx_eo_status on public.engagement_orders(status);
+alter table public.engagement_orders enable row level security;
+
 -- Drop risk-scoring columns from engagement_orders (no longer used).
 alter table public.engagement_orders drop column if exists risk_score;
 alter table public.engagement_orders drop column if exists band;
@@ -2070,4 +2098,49 @@ on conflict (key) do nothing;
 insert into public.settings (key, value) values
   ('support_whatsapp', ''), ('support_telegram', ''), ('support_email', ''),
   ('working_hours', ''), ('working_tz', 'UTC'), ('support_welcome', '')
+on conflict (key) do nothing;
+
+-- ============================================================
+-- Wazeo — schema_v22 (Admin PIN security)
+-- Adds: admin_pins, admin_recovery_codes + security option settings.
+-- Re-runnable: IF EXISTS guards on every statement.
+-- ============================================================
+
+-- Admin PIN (6-8 digit, stored as salted slow hash).
+create table if not exists public.admin_pins (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  pin_hash text not null,
+  salt text not null,
+  algo text not null default 'scrypt',
+  failed_attempts integer not null default 0,
+  locked_until timestamptz,
+  last_verified_at timestamptz,
+  setup_pending boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.admin_pins enable row level security;
+drop policy if exists "Admin pins owner" on public.admin_pins;
+create policy "Admin pins owner" on public.admin_pins
+  for all using (auth.uid() = user_id or public.get_current_role() in ('admin','support'));
+
+-- One-time recovery codes (stored hashed, consumed once).
+create table if not exists public.admin_recovery_codes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  code_hash text not null,
+  used_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_admin_recovery_user on public.admin_recovery_codes(user_id);
+alter table public.admin_recovery_codes enable row level security;
+drop policy if exists "Recovery codes owner" on public.admin_recovery_codes;
+create policy "Recovery codes owner" on public.admin_recovery_codes
+  for all using (auth.uid() = user_id or public.get_current_role() in ('admin','support'));
+
+-- Optional security switches (default OFF).
+insert into public.settings (key, value) values
+  ('admin_pin_trusted_devices_enabled', 'false'),
+  ('admin_login_alerts_enabled', 'false'),
+  ('admin_country_allowlist', '')
 on conflict (key) do nothing;
