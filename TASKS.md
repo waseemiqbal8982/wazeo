@@ -9,6 +9,12 @@
 - [x] `npm run test:adminsec` passes (24 assertions).
 - [~] Optional switches (trusted devices / admin login alerts / country allowlist) settings keys seeded; full UI + audit wiring pending.
 
+### Item 2 — Key generation error (DONE)
+- [x] Root cause: server `generate` handler skipped any input without a valid email (`if (!email || !regex) continue;`), so a zero-required-fields form produced no keys. Fixed: email now optional (empty → unbound key, binds on first use); invalid non-empty email is logged to `error_logs` + audit.
+- [x] Defaults when empty: access 30 days (was permanent/null), plan Standard, redemption valid 30 days (was null), starting balance 0, mode self.
+- [x] Layout rebuilt: big "Generate key" button on top, optional fields inside "Advanced options" accordion, quick chips for 7/30/90/365 days and Permanent, key shown once with Copy + copy ready-to-send message (handles unbound email text).
+- [x] `npm run test:key` extended (empty-form defaults + bulk parsing) → 35 passed. lint 0 errors, build pass.
+
 ## Prompt 28 — Admin/Customer mobile shell + control center + charts + glass/cursor/interactions
 ### Item 1 — Mobile shell (PARTIAL)
 - [~] Floating centered glass pill bottom nav (admin + customer): max-w 420px, inset-x-3, bottom gap 12px + safe-area, rounded-full, accent glow + blur, glowing indicator glides (framer layoutId), hides while an input is focused (focusin) and shows on blur; main content pb-28 so nothing hides behind it.

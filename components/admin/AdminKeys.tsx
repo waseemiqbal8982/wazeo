@@ -70,7 +70,7 @@ export function AdminKeys() {
   // single form
   const [email, setEmail] = useState("");
   const [label, setLabel] = useState("");
-  const [expiryDays, setExpiryDays] = useState("7");
+  const [expiryDays, setExpiryDays] = useState("30");
   const [balance, setBalance] = useState("");
   const [note, setNote] = useState("");
   const [mode, setMode] = useState("self");
@@ -81,6 +81,7 @@ export function AdminKeys() {
   const [planName, setPlanName] = useState("Standard");
   const [features, setFeatures] = useState<string[]>([]);
   const [redemptionExpiresAt, setRedemptionExpiresAt] = useState("");
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const MODULES = [
     "Combo",
@@ -109,11 +110,11 @@ export function AdminKeys() {
   };
 
   const keyInput = (email: string) => ({
-    email,
+    email: email.trim(),
     label,
-    expiresAt: new Date(Date.now() + (Number(expiryDays) || 7) * 86400000).toISOString(),
+    expiresAt: new Date(Date.now() + (Number(expiryDays) || 30) * 86400000).toISOString(),
     accessDays: resolveAccessDays(),
-    planName,
+    planName: planName.trim() || "Standard",
     features,
     redemptionExpiresAt: redemptionExpiresAt || undefined,
     startingBalance: Number(balance) || 0,
@@ -200,11 +201,10 @@ export function AdminKeys() {
   }
 
   async function generate() {
-    const list = (email || "").trim().split(/[\s,;]+/).filter(Boolean);
-    if (!list.length) {
-      setFeedback("Enter at least one email.");
-      return;
-    }
+    const raw = (email || "").trim();
+    const list = raw
+      ? raw.split(/[\s,;]+/).filter(Boolean)
+      : [""]; // zero required fields → one unbound key
     setBusy(true);
     setFeedback("");
     try {
@@ -296,7 +296,8 @@ export function AdminKeys() {
   const readyMessage = (r: GeneratedResult) => {
     const days = resolveAccessDays();
     const accessText = days === "permanent" ? "Permanent access" : `${days} days of access`;
-    return `Welcome to Wazeo! Your access key: ${r.key} (email: ${r.email}). Plan: ${planName || "Standard"} — ${accessText}. Create your account at innvera.shop and enter this key to get started.`;
+    const emailText = r.email ? ` (email: ${r.email})` : " (binds on first use)";
+    return `Welcome to Wazeo! Your access key: ${r.key}${emailText}. Plan: ${planName.trim() || "Standard"} — ${accessText}. Create your account at innvera.shop and enter this key to get started.`;
   };
 
   return (
@@ -372,67 +373,78 @@ export function AdminKeys() {
       </Card>
 
       <Card className="p-5">
-        <h2 className="mb-3 text-sm font-semibold">Generate keys</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Input label="Email" placeholder="user@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <Input label="Label (optional)" placeholder="e.g. Free promo" value={label} onChange={(e) => setLabel(e.target.value)} />
-          <Input label="Starting balance (USD)" type="number" min={0} value={balance} onChange={(e) => setBalance(e.target.value)} />
-          <Input label="Plan name" placeholder="e.g. Starter" value={planName} onChange={(e) => setPlanName(e.target.value)} />
-        </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Access days</label>
-            <Select
-              value={accessDays}
-              onChange={(e) => setAccessDays(e.target.value)}
-              options={[
-                { value: "7", label: "7 days" },
-                { value: "30", label: "30 days" },
-                { value: "90", label: "90 days" },
-                { value: "365", label: "365 days" },
-                { value: "permanent", label: "Permanent" },
-                { value: "custom", label: "Custom…" },
-              ]}
-            />
-            {accessDays === "custom" && (
-              <Input className="mt-2" label="Custom days" type="number" min={1} value={customDays} onChange={(e) => setCustomDays(e.target.value)} />
-            )}
-          </div>
-          <Input
-            label="Redemption deadline (optional)"
-            type="datetime-local"
-            value={redemptionExpiresAt}
-            onChange={(e) => setRedemptionExpiresAt(e.target.value)}
-          />
-        </div>
-        <div className="mt-3">
-          <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Features it unlocks</label>
-          <div className="flex flex-wrap gap-1.5">
-            {MODULES.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => toggleFeature(m)}
-                className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
-                  features.includes(m)
-                    ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
-                    : "border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]"
-                }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Input label="Redemption expiry (key expiry, days)" type="number" min={1} value={expiryDays} onChange={(e) => setExpiryDays(e.target.value)} />
-          <Input label="Note (optional)" placeholder="Internal note" value={note} onChange={(e) => setNote(e.target.value)} />
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button loading={busy} onClick={generate}>
-            Generate key(s)
+        <h2 className="mb-3 text-sm font-semibold">Generate key</h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <Input label="Email (optional — empty binds on first use)" placeholder="user@example.com" className="min-w-[220px] flex-1" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Button size="lg" loading={busy} onClick={generate} className="mt-1">
+            Generate key
           </Button>
         </div>
+        <p className="mt-2 text-xs text-[var(--text-muted)]">
+          Koi field zaroori nahi. Defaults: access 30 days, plan Standard, redemption 30 days, balance 0.
+        </p>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-[var(--text-muted)]">Access</span>
+          {["7", "30", "90", "365", "permanent"].map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setAccessDays(d)}
+              className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                accessDays === d
+                  ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
+                  : "border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]"
+              }`}
+            >
+              {d === "permanent" ? "Permanent" : `${d} days`}
+            </button>
+          ))}
+          {accessDays === "custom" && (
+            <Input className="w-28" label="Custom" type="number" min={1} value={customDays} onChange={(e) => setCustomDays(e.target.value)} />
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setAdvancedOpen((v) => !v)}
+          className="mt-4 flex w-full items-center justify-between rounded-xl border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--text)]"
+        >
+          Advanced options
+          <span className={`transition-transform ${advancedOpen ? "rotate-180" : ""}`}>▾</span>
+        </button>
+        {advancedOpen && (
+          <div className="mt-3 space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <Input label="Label (optional)" placeholder="e.g. Free promo" value={label} onChange={(e) => setLabel(e.target.value)} />
+              <Input label="Starting balance (USD)" type="number" min={0} value={balance} onChange={(e) => setBalance(e.target.value)} />
+              <Input label="Plan name" placeholder="e.g. Starter" value={planName} onChange={(e) => setPlanName(e.target.value)} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input label="Redemption expiry (days)" type="number" min={1} value={expiryDays} onChange={(e) => setExpiryDays(e.target.value)} />
+              <Input label="Note (optional)" placeholder="Internal note" value={note} onChange={(e) => setNote(e.target.value)} />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Features it unlocks</label>
+              <div className="flex flex-wrap gap-1.5">
+                {MODULES.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => toggleFeature(m)}
+                    className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                      features.includes(m)
+                        ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
+                        : "border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]"
+                    }`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 border-t border-[var(--border)] pt-4">
           <h3 className="mb-2 text-sm font-semibold">Bulk generate</h3>
@@ -440,7 +452,7 @@ export function AdminKeys() {
             value={bulk}
             onChange={(e) => setBulk(e.target.value)}
             rows={4}
-            placeholder={"One email per line:\nuser1@example.com\nuser2@example.com"}
+            placeholder={"One email per line (khali line = unbound key):\nuser1@example.com"}
             className="w-full rounded-xl border border-[var(--border)] bg-white/[0.03] p-3 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)]/60 focus:border-[var(--accent)] focus:outline-none"
           />
           <div className="mt-3">

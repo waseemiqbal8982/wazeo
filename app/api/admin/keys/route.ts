@@ -85,6 +85,13 @@ export async function POST(req: Request) {
       // never throw for logging failures
     }
   };
+  const logError = async (message: string) => {
+    try {
+      await admin.from("error_logs").insert({ level: "error", source: "admin/keys", message });
+    } catch {
+      // never throw for logging failures
+    }
+  };
 
   if (action === "generate") {
     const inputs: any[] = body.inputs || [body];
@@ -97,29 +104,36 @@ export async function POST(req: Request) {
       const note = (inp.note || "").trim();
       const mode = inp.mode === "admin" ? "admin" : "self";
       const startingBalance = Math.max(0, Number(inp.startingBalance) || 0);
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) continue;
+
+      // Email optional: empty → unbound key (binds on first use).
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        await audit("admin_key_generate_failed", { email, error: "invalid email format" });
+        await logError("Invalid email format for key generation: " + email);
+        continue;
+      }
 
       const key = makeKey();
+      // Defaults when empty: redemption valid 30 days.
       const expiresAt = inp.expiresAt
         ? new Date(inp.expiresAt).toISOString()
-        : new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+        : new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
 
-      // access days: null/number = permanent; default 30 when not supplied
-      let accessDays: number | null = null;
-      if (inp.accessDays === "permanent" || inp.accessDays == null || inp.accessDays === "") {
+      // access days: default 30 when not supplied; "permanent" stays permanent.
+      let accessDays: number | null = 30;
+      if (inp.accessDays === "permanent") {
         accessDays = null;
-      } else {
+      } else if (inp.accessDays != null && inp.accessDays !== "") {
         const n = Number(inp.accessDays);
-        accessDays = Number.isFinite(n) && n > 0 ? Math.floor(n) : null;
+        accessDays = Number.isFinite(n) && n > 0 ? Math.floor(n) : 30;
       }
       const planName = (inp.planName || "").trim() || "Standard";
       const features = Array.isArray(inp.features) ? inp.features.filter((f: unknown) => typeof f === "string" && (f as string).trim()) : [];
       const redemptionExpiresAt = inp.redemptionExpiresAt
         ? new Date(inp.redemptionExpiresAt).toISOString()
-        : null;
+        : new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
 
       const created = {
-        email, label, note, mode,
+        email: email || null, label, note, mode,
         code: hashKey(key),
         hash: hashKey(key),
         last4: last4(key),

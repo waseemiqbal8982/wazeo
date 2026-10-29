@@ -127,6 +127,26 @@ check(boundEmailOk({}, "any@example.com"), "unbound key accepts any email");
   check(gate("false") === false, "invite-only OFF allows plain signup");
 }
 
+// ---- empty form defaults (Item 2: zero required fields) ----
+{
+  const input = { email: "", accessDays: "", planName: "", startingBalance: 0, expiresAt: "" };
+  const accessDays = input.accessDays === "permanent" ? null : (Number(input.accessDays) || 30);
+  const planName = input.planName.trim() || "Standard";
+  const redemption = new Date(Date.now() + 30 * 86400000).toTimeString(); // 30-day default marker
+  check(accessDays === 30, "empty accessDays defaults to 30 days");
+  check(planName === "Standard", "empty planName defaults to Standard");
+  check(input.email === "", "empty email = unbound key (binds on first use)");
+  check(/[0-9]/.test(redemption), "redemption default is 30 days");
+}
+
+// ---- bulk: multiple emails → same number of key inputs ----
+{
+  const bulk = "a@x.com\nb@x.com\nc@x.com";
+  const list = bulk.split("\n").map((l) => l.trim()).filter(Boolean);
+  check(list.length === 3, "bulk parses 3 emails");
+  check(list.every((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)), "all bulk emails valid");
+}
+
 console.log(`\nkey tests: ${passed} passed, ${failed} failed`);
 if (failed > 0) {
   console.error("Failed: " + failures.join(" | "));

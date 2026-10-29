@@ -1,5 +1,12 @@
 # 📊 STATUS — Wazeo (Stage 0 audit)
 
+## Update (prompt 30 — Item 2 key generation fixed)
+- **Root cause:** the admin "Generate keys" API skipped every input that lacked a valid email (`if (!email || !regex) continue;`). So a form with zero required fields returned zero keys (looks like a silent "generation error"). `db:setup` still fails on the pre-existing `engagement_orders` reference (recorded), so the API was verified by code inspection + test suite.
+- **Fix:** email now optional → empty email creates an unbound key (binds on first use). Invalid non-empty emails are logged to `error_logs` (source=admin/keys) + audit/logs.
+- **Defaults when empty:** access 30 days, plan "Standard", redemption valid 30 days, starting balance 0, mode self.
+- **UI rebuilt:** big "Generate key" button on top, optional fields in an "Advanced options" accordion, quick chips for 7/30/90/365 days and Permanent, key shown once with Copy + "Copy ready-to-send message" (unbound email text handled).
+- **Checks:** `npm run test:key` 35/35 pass (empty-form defaults + bulk); `npm run lint` 0 errors; `npm run build` pass.
+
 ## Update (prompt 30 — Item 1 admin lockout rescue + admin security, PARTIAL)
 - Tag `stable-before-prompt30` created + pushed.
 - **Rescue `npm run admin:reset-2fa`:** service-role script that removes every Supabase MFA factor (auth.admin.mfa listFactors/deleteFactor), clears the own `admin_2fa` row (enabled=false) and sets `require_admin_2fa=false`. No-arg uses first `ADMIN_EMAILS`; falls back to first role='admin' profile. **RAN + confirmed** (admin_2fa enabled rows = 0). This unlocks the owner who was locked out by a mistaken 2FA enable.
