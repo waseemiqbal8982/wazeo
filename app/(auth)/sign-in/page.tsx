@@ -14,6 +14,7 @@ import { signIn } from "../actions";
 import { useI18n } from "@/lib/i18n";
 import { AccessKeyRedeem } from "@/components/auth/AccessKeyRedeem";
 import { SocialLogin } from "@/components/auth/SocialLogin";
+import { Tabs } from "@/components/ui/Tabs";
 import {
   STAY_SIGNED_IN_COOKIE,
   SESSION_MAX_AGE,
@@ -90,6 +91,16 @@ export default function SignInPage() {
         <Logo size={40} showText textClassName="text-2xl" />
         <p className="mt-2 text-sm text-[var(--text-muted)]">{t("auth.login.title")}</p>
       </div>
+
+      <Tabs
+        tabs={[
+          { id: "signin", label: "Email" },
+          { id: "key", label: "Access Key" },
+        ]}
+        value={mode}
+        onChange={(m) => setMode(m as "signin" | "key")}
+        className="mb-6"
+      />
 
       {mode === "key" ? (
         <>

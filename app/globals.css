@@ -398,9 +398,9 @@ html[data-mode="light"] .btn-glow {
   --radius-2xl: 1.5rem;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px -12px rgba(0, 0, 0, 0.35);
   --shadow-pop: 0 12px 40px -8px rgba(0, 0, 0, 0.5);
-  --glass-bg: rgba(18, 18, 31, 0.72);
-  --glass-bg-strong: rgba(23, 23, 40, 0.9);
-  --glass-blur: 14px;
+  --glass-bg: rgba(15, 16, 28, 0.60);
+  --glass-bg-strong: rgba(20, 20, 34, 0.82);
+  --glass-blur: 18px;
 }
 
 [data-theme="cyan"] {
@@ -433,8 +433,18 @@ html[data-mode="light"] {
   --shadow-pop: 0 12px 40px -8px rgba(15,20,40,0.18);
 }
 
-.glass { background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); }
-.glass-strong { background: var(--glass-bg-strong); backdrop-filter: blur(calc(var(--glass-blur) + 4px)); -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 4px)); }
+.glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015)), var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.10);
+}
+.glass-strong {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)), var(--glass-bg-strong);
+  backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(160%);
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+}
 .shadow-card { box-shadow: var(--shadow-card); }
 .shadow-pop { box-shadow: var(--shadow-pop); }
 

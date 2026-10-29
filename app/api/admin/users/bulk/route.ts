@@ -31,9 +31,6 @@ export async function POST(req: Request) {
 
   for (const id of ids) {
     try {
-      const { data: prof } = await admin.from("profiles").select("role,banned").eq("id", id).maybeSingle();
-      const currentRole = prof?.role || "user";
-
       if (action === "ban") {
         await admin.from("profiles").update({ banned: true }).eq("id", id);
       } else if (action === "unban") {
@@ -53,7 +50,6 @@ export async function POST(req: Request) {
         const role = String(body.value || "");
         if (!ALLOWED_ROLES.includes(role)) throw new Error("Invalid role");
         if (id === myId) throw new Error("Cannot change your own role");
-        if (currentRole === "admin" && role !== "admin") throw new Error("Cannot demote an admin");
         await admin.from("profiles").update({ role }).eq("id", id);
       } else {
         throw new Error("Unknown action");

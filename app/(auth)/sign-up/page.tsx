@@ -11,6 +11,8 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { OtpInput } from "@/components/auth/OtpInput";
 import { passwordStrength } from "@/lib/validation";
 import { useI18n } from "@/lib/i18n";
+import { Tabs } from "@/components/ui/Tabs";
+import { AccessKeyRedeem } from "@/components/auth/AccessKeyRedeem";
 
 const Checkmark = () => (
   <div className="auth-check-pop mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--success)]/15">
@@ -40,6 +42,7 @@ export default function SignUpPage() {
   const [error, setError] = useState("");
   const [errTick, setErrTick] = useState(0);
   const [done, setDone] = useState(false);
+  const [mode, setMode] = useState<"signup" | "key">("signup");
 
   const [otp, setOtp] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -251,6 +254,19 @@ export default function SignUpPage() {
         <p className="mt-2 text-sm text-[var(--text-muted)]">{t("auth.signup.title")}</p>
       </div>
 
+      <Tabs
+        tabs={[
+          { id: "signup", label: "Email" },
+          { id: "key", label: "Access Key" },
+        ]}
+        value={mode}
+        onChange={(m) => setMode(m as "signup" | "key")}
+        className="mb-6"
+      />
+
+      {mode === "key" ? (
+        <AccessKeyRedeem />
+      ) : (
       <div key={errTick} className={error ? "animate-shake" : ""}>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <div className="absolute -left-[9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
@@ -335,6 +351,7 @@ export default function SignUpPage() {
           </Button>
         </form>
       </div>
+      )}
 
       <p className="mt-4 text-center text-sm text-[var(--text-muted)]">
         {t("auth.existing_account")}{" "}

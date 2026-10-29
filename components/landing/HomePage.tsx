@@ -6,6 +6,7 @@ import { HeroSection } from "./HeroSection";
 import { StatsSection, HowSection, ServicesSection, FeaturesSection, WhyGradualSection } from "./HomeSections";
 import { DemoSection, ReviewsSection } from "./HomeExtras";
 import { TrustSection, FaqSection, TickerBar, HomeFooter } from "./HomeFooter";
+import { TrustStrip } from "./TrustStrip";
 
 export function HomePage({ data }: { data: HomeData }) {
   const c = data.content;
@@ -15,6 +16,7 @@ export function HomePage({ data }: { data: HomeData }) {
       <main className="flex-1">
         {c.showHero && <HeroSection content={c} />}
         {c.showStats && <div className="mt-14"><StatsSection stats={data.stats} thresholds={data.thresholds} /></div>}
+        <TrustStrip />
         {c.showHow && <HowSection content={c} />}
         <WhyGradualSection />
         {c.showServices && <ServicesSection services={data.services} />}

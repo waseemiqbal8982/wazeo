@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import AuthVisual from "@/components/auth/AuthVisual";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const split = pathname === "/sign-in" || pathname === "/sign-up";
 
   return (
@@ -14,9 +15,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="fixed left-4 top-4 z-40 flex items-center gap-2">
         <button
           type="button"
-          onClick={() => (typeof history !== "undefined" ? history.back() : null)}
+          onClick={() => {
+            try {
+              if (typeof window !== "undefined" && window.history.length > 2) window.history.back();
+              else router.replace("/");
+            } catch {
+              router.replace("/");
+            }
+          }}
           aria-label="Go back"
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] glass-strong text-[var(--text)] active:scale-95"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] glass-strong text-[var(--text)] active:scale-95 hover:border-[var(--accent)]"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -24,11 +32,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </button>
         <Link
           href="/"
-          className="hidden items-center gap-1.5 rounded-full border border-[var(--border)] glass-strong px-3.5 py-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] sm:flex"
+          className="flex items-center gap-1.5 rounded-full border border-[var(--border)] glass-strong px-3 py-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--accent)]"
           aria-label="Home"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12l9-9 9 9M5 10v10h14V10" /></svg>
-          Home
+          <span className="hidden sm:inline">Home</span>
         </Link>
       </div>
 
