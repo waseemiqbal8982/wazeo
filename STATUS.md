@@ -61,6 +61,28 @@
   Wazeo admin, enable in Login methods).
 - **Checks:** `npm run lint` → 0 errors; `npm run build` → pass.
 
+## Update (prompt 26 — Item 4: no instant orders, draw your own curve (PARTIAL))
+- **No instant orders:** `app/api/orders/place` forces gradual mode (`mode="drip"`);
+  the Instant option is removed from New Order UI; old orders keep their stored mode.
+- **Admin settings / schema:** `min_delivery_duration` (default 15) + per-service
+  `run_min`/`run_max` columns (schema_v20 + ALL_IN_ONE.sql). Orders curve check allows
+  `'custom'`.
+- **Delivery controls on New Order:** duration (15m–72h), start delay, natural variation
+  0–30%, min/max per run, preset curve, and **"Draw my curve"** touch canvas editor
+  (`components/newOrder/CurveCanvas.tsx`: 6–12 control points, drag/freehand, undo,
+  reset, smooth) feeding `lib/schedule.ts`.
+- **Scheduler extended:** `buildSchedule` supports `curve === "custom"` (interpolated
+  control points), `minRun`/`maxRun` (with exact-total redistribution), and
+  `startDelayMinutes`. Guarantees preserved: exact sum, min, cumulative non-decreasing,
+  no overlap, determinism. `npm run test:schedule` extended → **2512 assertions PASS**.
+- **Live preview:** cumulative line + interval bars + summary ("about every X to Y
+  minutes, finishing in about Z hours") + price in OrderForm.
+- **Remaining (not yet done):** live real-data graphs on the order page (planned vs
+  delivered, progress ring, ETA) and dashboard (views/likes over time per platform),
+  with Realtime + 20s polling fallback; admin Settings UI wiring for min-duration and
+  per-service run sizes.
+- **Checks:** `npm run lint` → 0 errors; `npm run build` → pass; `npm run test:schedule` → pass.
+
 ## Update (prompt 25 — sign-in / sign-up / access-key screens + key data)
 - Tag `stable-before-prompt25` created + pushed.
 - **Item 1 — Load then sign-in:** SplashLoader (spinning ring, no text, ≥600ms) already in root layout → fades into sign-in. Sign-in page reordered: form first (email/password/show-hide/forgot/Sign in) → round social buttons (Google/X/GitHub; unconfigured providers disabled with "Not set up yet" tooltip via new `/api/meta/oauth`) → two clear options "Create an account" / "I have an access key". Ref: `app/(auth)/sign-in`, `components/auth/SocialLogin`.

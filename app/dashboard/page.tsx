@@ -88,7 +88,7 @@ export default async function DashboardOverview() {
           <div>
             <h2 className="text-base font-semibold">Place a new order</h2>
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              Pick a platform and service to get started. Instant or drip-feed.
+              Pick a platform and service to get started. Gradual, natural delivery.
             </p>
           </div>
           <Link href="/dashboard/new-order" className="mt-4">

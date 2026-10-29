@@ -1,7 +1,7 @@
 // Deterministic seeded scheduler tests. Run: npm run test:schedule
 import { buildSchedule, lagRuns, type CurveType } from "../lib/schedule";
 
-const CURVES: CurveType[] = ["steady", "slow_start", "bell_peak", "natural_wave"];
+const CURVES: CurveType[] = ["steady", "slow_start", "bell_peak", "natural_wave", "custom"];
 
 let passed = 0;
 let failed = 0;
@@ -43,7 +43,12 @@ for (const total of [10, 25, 100, 999, 5000, 100000, 1234567]) {
   for (const duration of [15, 60, 180, 4320]) {
     for (const curve of CURVES) {
       for (const min of [1, 10, 50]) {
-        const runs = buildSchedule(total, duration, curve, min, { seed: `ord-${combo}`, variation: 20 });
+        const opts: Parameters<typeof buildSchedule>[4] = {
+          seed: `ord-${combo}`,
+          variation: 20,
+          ...(curve === "custom" ? { curvePoints: [0.2, 0.8, 0.5, 1, 0.3] } : {}),
+        };
+        const runs = buildSchedule(total, duration, curve, min, opts);
         combo++;
         check(runs.length >= 1, `has runs total=${total} dur=${duration} ${curve} min=${min}`);
         check(sum(runs) === total, `exact sum ${total} (got ${sum(runs)}) ${curve}`);
@@ -101,7 +106,25 @@ for (const v of [0, 30]) {
   check(sum(runs) === 777, `variation ${v} exact sum`);
 }
 
-// 8. lagRuns shifts minutes but keeps quantities.
+// 8. maxRun cap redistributes without changing total or min.
+{
+  const runs = buildSchedule(1000, 600, "steady", 10, { seed: "maxrun", maxRun: 120 });
+  check(sum(runs) === 1000, "maxRun exact sum");
+  check(runs.every((r) => r.quantity >= 10), "maxRun min respected");
+  check(runs.every((r) => r.quantity <= 120), "maxRun cap respected");
+}
+
+// 9. Custom curve determinism + distinct from steady.
+{
+  const a = buildSchedule(3000, 720, "custom", 10, { seed: "custom1", curvePoints: [0.1, 0.9, 0.3, 1, 0.2] });
+  const b = buildSchedule(3000, 720, "custom", 10, { seed: "custom1", curvePoints: [0.1, 0.9, 0.3, 1, 0.2] });
+  check(JSON.stringify(a) === JSON.stringify(b), "custom curve determinism");
+  check(sum(a) === 3000, "custom curve exact sum");
+  const s = buildSchedule(3000, 720, "steady", 10, { seed: "custom1" });
+  check(JSON.stringify(a) !== JSON.stringify(s), "custom curve differs from steady");
+}
+
+// 10. lagRuns shifts minutes but keeps quantities.
 {
   const runs = buildSchedule(100, 60, "steady", 10, { seed: "lag" });
   const lagged = lagRuns(runs, 5);

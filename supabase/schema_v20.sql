@@ -22,3 +22,16 @@ insert into public.settings (key, value) values
   ('login_github_enabled', 'false'),
   ('login_email_password_enabled', 'true')
 on conflict (key) do nothing;
+
+-- Per-service delivery run-size bounds (optional overrides of quantity min/max).
+alter table public.services add column if not exists run_min numeric;
+alter table public.services add column if not exists run_max numeric;
+
+-- Minimum delivery duration (minutes) for gradual orders (default 15).
+insert into public.settings (key, value) values
+  ('min_delivery_duration', '15')
+on conflict (key) do nothing;
+
+-- Allow the custom (drawn) curve value in stored orders.
+alter table public.orders drop constraint if exists orders_curve_check;
+alter table public.orders add constraint orders_curve_check check (curve in ('steady','slow_start','bell_peak','natural_wave','custom'));

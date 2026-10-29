@@ -70,7 +70,7 @@ create table if not exists public.orders (
   status text not null default 'pending',
   mode text not null default 'instant' check (mode in ('instant','drip')),
   duration_minutes integer,
-  curve text check (curve in ('steady','slow_start','bell_peak','natural_wave')),
+  curve text check (curve in ('steady','slow_start','bell_peak','natural_wave','custom')),
   provider_order_id text,
   created_at timestamptz not null default now()
 );
@@ -2000,5 +2000,12 @@ insert into public.settings (key, value) values
   ('login_twitter_enabled', 'false'),
   ('login_github_enabled', 'false'),
   ('login_email_password_enabled', 'true')
+on conflict (key) do nothing;
+
+alter table public.services add column if not exists run_min numeric;
+alter table public.services add column if not exists run_max numeric;
+
+insert into public.settings (key, value) values
+  ('min_delivery_duration', '15')
 on conflict (key) do nothing;
 

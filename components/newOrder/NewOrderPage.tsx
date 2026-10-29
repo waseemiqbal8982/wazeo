@@ -33,13 +33,17 @@ export function NewOrderPage() {
 
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState("instant");
   const [platform, setPlatform] = useState("instagram");
   const [selected, setSelected] = useState<Service | null>(null);
   const [link, setLink] = useState("");
   const [quantity, setQuantity] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("60");
+  const [startDelayMinutes, setStartDelayMinutes] = useState("0");
+  const [variation, setVariation] = useState("10");
+  const [minRun, setMinRun] = useState("");
+  const [maxRun, setMaxRun] = useState("");
   const [curve, setCurve] = useState("steady");
+  const [curvePoints, setCurvePoints] = useState<number[]>([0.2, 0.8, 0.5, 1, 0.3]);
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState("");
@@ -62,9 +66,28 @@ export function NewOrderPage() {
   const linkError = link ? validateLink(platform, link) : null;
 
   const schedule = useMemo(() => {
-    if (mode !== "drip" || !selected || qty <= 0) return [];
-    return buildSchedule(qty, Number(durationMinutes) || 60, curve as any, Number(selected.min));
-  }, [mode, selected, qty, durationMinutes, curve]);
+    if (!selected || qty <= 0) return [];
+    const rMin = Number(minRun) > 0 ? Number(minRun) : Number(selected.min) || 10;
+    const rMax = Number(maxRun) > 0 ? Number(maxRun) : 0;
+    return buildSchedule(qty, Number(durationMinutes) || 60, curve as any, rMin, {
+      variation: Math.min(30, Math.max(0, Number(variation) || 0)),
+      startDelayMinutes: Math.max(0, Number(startDelayMinutes) || 0),
+      minRun: rMin,
+      ...(rMax > rMin ? { maxRun: rMax } : {}),
+      ...(curve === "custom" ? { curvePoints } : {}),
+    });
+  }, [selected, qty, durationMinutes, curve, minRun, maxRun, variation, startDelayMinutes, curvePoints]);
+
+  const summary = useMemo(() => {
+    if (schedule.length < 2) return "";
+    const gaps = schedule.slice(1).map((c, i) => c.minutes - schedule[i].minutes);
+    const minGap = Math.max(1, Math.floor(Math.min(...gaps)));
+    const maxGap = Math.max(minGap, Math.ceil(Math.max(...gaps)));
+    const totalMinutes = schedule[schedule.length - 1].minutes;
+    const hours = totalMinutes / 60;
+    const finish = hours < 1 ? `${Math.round(totalMinutes)} minutes` : `${Math.round(hours * 10) / 10} hours`;
+    return `about every ${minGap} to ${maxGap} minutes, finishing in about ${finish}`;
+  }, [schedule]);
 
   function validate(): string | null {
     if (!selected) return "Please choose a service.";
@@ -74,11 +97,11 @@ export function NewOrderPage() {
     if (qty < Number(selected.min) || qty > Number(selected.max)) {
       return `Quantity must be between ${selected.min} and ${selected.max}.`;
     }
-    if (mode === "drip") {
-      const dur = Number(durationMinutes);
-      if (!dur || dur < 15 || dur > 72 * 60) return "Duration must be 15 min – 72 hours.";
-      if (qty < Math.min(10, Number(selected.min))) return "Drip-feed quantity minimum is 10.";
-    }
+    const dur = Number(durationMinutes);
+    if (!dur || dur < 15 || dur > 72 * 60) return "Duration must be 15 min – 72 hours.";
+    const delay = Number(startDelayMinutes) || 0;
+    if (delay >= dur) return "Start delay must be shorter than the duration.";
+    if (curve === "custom" && curvePoints.length < 2) return "Draw your delivery curve.";
     if (estCost > balance) return "Insufficient balance for this order.";
     return null;
   }
@@ -105,9 +128,13 @@ export function NewOrderPage() {
           serviceId: selected!.id,
           link: link.trim(),
           quantity: qty,
-          mode,
-          durationMinutes: mode === "drip" ? Number(durationMinutes) : undefined,
-          curve: mode === "drip" ? curve : undefined,
+          durationMinutes: Number(durationMinutes),
+          curve,
+          curvePoints: curve === "custom" ? curvePoints : undefined,
+          startDelayMinutes: Number(startDelayMinutes) || 0,
+          variation: Number(variation) || 0,
+          minRun: Number(minRun) > 0 ? Number(minRun) : undefined,
+          maxRun: Number(maxRun) > 0 ? Number(maxRun) : undefined,
         }),
       });
       const data = await res.json();
@@ -116,7 +143,7 @@ export function NewOrderPage() {
         return;
       }
       setBalance(Number(data.balance));
-      toast({ title: mode === "drip" ? "Drip order placed" : "Order placed", description: "We're now processing your order.", variant: "success" });
+      toast({ title: "Delivery order placed", description: "We're now processing your order.", variant: "success" });
       router.push("/dashboard/orders");
       router.refresh();
     } catch {
@@ -143,8 +170,6 @@ export function NewOrderPage() {
       />
 
       <OrderForm
-        mode={mode}
-        onMode={setMode}
         platform={platform}
         link={link}
         onLink={setLink}
@@ -153,9 +178,20 @@ export function NewOrderPage() {
         onQuantity={setQuantity}
         durationMinutes={durationMinutes}
         onDuration={setDurationMinutes}
+        startDelayMinutes={startDelayMinutes}
+        onStartDelay={setStartDelayMinutes}
+        variation={variation}
+        onVariation={setVariation}
+        minRun={minRun}
+        onMinRun={setMinRun}
+        maxRun={maxRun}
+        onMaxRun={setMaxRun}
         curve={curve}
         onCurve={setCurve}
+        curvePoints={curvePoints}
+        onCurvePoints={setCurvePoints}
         schedule={schedule}
+        summary={summary}
         selected={selected}
         estCost={estCost}
         balance={balance}
@@ -177,8 +213,8 @@ export function NewOrderPage() {
                 <p className="mt-1 font-semibold">{qty}</p>
               </div>
               <div className="rounded-xl border border-[var(--border)] bg-white/[0.02] p-3">
-                <p className="text-xs text-[var(--text-muted)]">Mode</p>
-                <p className="mt-1 font-semibold capitalize">{mode}</p>
+                <p className="text-xs text-[var(--text-muted)]">Delivery</p>
+                <p className="mt-1 font-semibold">{Math.round(Number(durationMinutes) / 60 * 10) / 10}h</p>
               </div>
               <div className="col-span-2 rounded-xl border border-[var(--border)] bg-white/[0.02] p-3">
                 <p className="text-xs text-[var(--text-muted)]">Cost</p>

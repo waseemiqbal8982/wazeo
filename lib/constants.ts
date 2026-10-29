@@ -23,6 +23,7 @@ export const CURVES = [
   { id: "slow_start", label: "Slow start" },
   { id: "bell_peak", label: "Bell peak" },
   { id: "natural_wave", label: "Natural wave" },
+  { id: "custom", label: "Draw my curve" },
 ] as const;
 
 export const THEMES = [

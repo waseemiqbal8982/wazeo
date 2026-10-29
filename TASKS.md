@@ -22,7 +22,16 @@
       button shows only when enabled AND keys configured. `app/api/meta/oauth` returns enabled+configured
       + emailPassword; SocialLogin filters buttons; sign-in page hides email form / create-account when
       email+password disabled. `docs/OAUTH_SETUP.md` added (Roman Urdu). lint 0 errors, build pass.
-- [ ] **Item 4 — No instant orders, draw your own delivery curve**
+- [~] **Item 4 — No instant orders, draw your own delivery curve (PARTIAL):** instant mode removed from
+      New Order UI and API (`place_order` forces gradual; old orders keep stored mode). Admin setting
+      `min_delivery_duration` (default 15) + per-service `run_min`/`run_max` columns. New Order controls:
+      duration (15m–72h), start delay, natural variation 0–30%, min/max per run, preset curve AND "Draw
+      my curve" touch canvas editor (6–12 points, undo/reset/smooth/snap) feeding `lib/schedule.ts`
+      (custom curve + maxRun redistribute; exact total, min, cumulative non-decreasing, no overlap).
+      Live preview: cumulative line + bars + "about every X to Y minutes, finishing in about Z hours"
+      summary + price. `npm run test:schedule` extended for custom curves + maxRun (2512 assertions PASS).
+      Remaining: live real-data graphs on order page / dashboard (Realtime + 20s polling), admin min
+      duration + per-service run-size settings UI wiring. lint 0 errors, build pass.
 - [ ] **Item 5 — Complete UI redesign**
 - [ ] **Item 6 — Finish (locales, tests, docs, seed)**
 

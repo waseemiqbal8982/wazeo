@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { providerAddOrder, providerGetServices } from "@/lib/provider";
 import { buildSchedule } from "@/lib/schedule";
 import { validateLink } from "@/lib/validation";
 import { runHooks } from "@/lib/hooks";
-import { logProviderCall } from "@/lib/providerLog";
 import { requireEmailVerifyAtSignup } from "@/lib/authPolicy";
+import { getSettingInt } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +13,14 @@ interface PlaceBody {
   serviceId: string;
   link: string;
   quantity: number;
-  mode?: string;
   durationMinutes?: number;
   curve?: string;
+  curvePoints?: number[];
+  startDelayMinutes?: number;
+  variation?: number;
+  minRun?: number;
+  maxRun?: number;
+  endAt?: string;
 }
 
 export async function POST(req: Request) {
@@ -27,7 +31,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const { serviceId, link, quantity, mode = "instant", durationMinutes, curve } = body;
+  // Gradual mode is the only supported mode — no instant orders.
+  const mode = "drip";
+  const {
+    serviceId,
+    link,
+    quantity,
+    durationMinutes,
+    curve = "steady",
+    curvePoints,
+    startDelayMinutes = 0,
+    variation = 10,
+    minRun,
+    maxRun,
+    endAt,
+  } = body;
 
   if (!serviceId || !link || !quantity || quantity <= 0) {
     return NextResponse.json({ error: "Service, link and a positive quantity are required." }, { status: 400 });
@@ -76,11 +94,32 @@ export async function POST(req: Request) {
     );
   }
 
-  if (mode === "drip") {
-    if (!durationMinutes || durationMinutes < 15 || durationMinutes > 72 * 60) {
-      return NextResponse.json({ error: "Drip duration must be between 15 minutes and 72 hours." }, { status: 400 });
+  // Validate delivery controls (always gradual).
+  const minDuration = await getSettingInt("min_delivery_duration", 15);
+  if (!durationMinutes || durationMinutes < Math.max(1, minDuration) || durationMinutes > 72 * 60) {
+    return NextResponse.json(
+      { error: `Delivery duration must be between ${Math.max(1, minDuration)} minutes and 72 hours.` },
+      { status: 400 }
+    );
+  }
+  const validCurves = ["steady", "slow_start", "bell_peak", "natural_wave", "custom"];
+  if (!validCurves.includes(curve)) {
+    return NextResponse.json({ error: "Choose a valid delivery curve." }, { status: 400 });
+  }
+  if (curve === "custom" && (!Array.isArray(curvePoints) || curvePoints.length < 2)) {
+    return NextResponse.json({ error: "Draw your delivery curve with at least 2 points." }, { status: 400 });
+  }
+  const v = Math.min(30, Math.max(0, Number(variation) || 0));
+  const delay = Math.max(0, Math.floor(Number(startDelayMinutes) || 0));
+  if (delay >= durationMinutes) {
+    return NextResponse.json({ error: "Start delay must be shorter than the delivery duration." }, { status: 400 });
+  }
+  if (endAt) {
+    const end = new Date(endAt).getTime();
+    const start = Date.now() + delay * 60000;
+    if (!Number.isFinite(end) || end <= start) {
+      return NextResponse.json({ error: "End time must be in the future after the start." }, { status: 400 });
     }
-    if (!curve) return NextResponse.json({ error: "Choose a drip curve." }, { status: 400 });
   }
 
   // Order guard: reject duplicate active orders for the same link.
@@ -105,8 +144,8 @@ export async function POST(req: Request) {
     p_link: link,
     p_quantity: quantity,
     p_mode: mode,
-    p_duration_minutes: mode === "drip" ? durationMinutes : null,
-    p_curve: mode === "drip" ? curve : null,
+    p_duration_minutes: durationMinutes,
+    p_curve: curve,
   });
 
   if (placeErr) {
@@ -119,39 +158,26 @@ export async function POST(req: Request) {
   const orderId = placed.order_id;
   const admin = createAdminClient();
 
-  if (mode === "instant") {
-    try {
-      const providerServices = await providerGetServices();
-      const match = providerServices.find((s) => s.provider_service_id === service.provider_service_id);
-      const providerId = match ? match.provider_service_id : service.provider_service_id;
-      const t0 = Date.now();
-      const { orderId: providerOrderId } = await providerAddOrder({
-        service: providerId,
-        link,
-        quantity,
-      });
-      await admin.from("orders").update({ provider_order_id: providerOrderId, status: "processing" }).eq("id", orderId);
-      await logProviderCall({ action: "add", ok: true, duration_ms: Date.now() - t0, response_masked: JSON.stringify({ order: providerOrderId }) });
-    } catch (e) {
-      await logProviderCall({ action: "add", ok: false, error: String(e) });
-      // refund automatically
-      try { await admin.rpc("cancel_and_refund", { p_order_id: orderId }); } catch {}
-      return NextResponse.json(
-        { error: "We couldn't reach the provider. Your payment was refunded automatically. Please try again." },
-        { status: 502 }
-      );
-    }
-  } else {
-    // drip: build schedule and save chunks
-    const schedule = buildSchedule(quantity, durationMinutes!, curve as any, Number(service.min));
-    const rows = schedule.map((c) => ({
-      order_id: orderId,
-      run_at: new Date(Date.now() + c.minutes * 60000).toISOString(),
-      quantity: c.quantity,
-    }));
-    await admin.from("order_chunks").insert(rows);
-    await admin.from("orders").update({ status: "pending" }).eq("id", orderId);
-  }
+  // Gradual delivery: build the schedule and save chunks.
+  const runMin = Number(minRun) > 0 ? Number(minRun) : (Number(service.run_min) > 0 ? Number(service.run_min) : Number(service.min) || 10);
+  const runMax = Number(maxRun) > 0 ? Number(maxRun) : (Number(service.run_max) > 0 ? Number(service.run_max) : 0);
+  const schedule = buildSchedule(quantity, durationMinutes!, curve as any, runMin, {
+    seed: orderId,
+    variation: v,
+    startDelayMinutes: delay,
+    minRun: runMin,
+    ...(runMax > runMin ? { maxRun: runMax } : {}),
+    ...(curve === "custom" ? { curvePoints } : {}),
+  });
+
+  const startBase = Date.now() + delay * 60000;
+  const rows = schedule.map((c) => ({
+    order_id: orderId,
+    run_at: new Date(startBase + c.minutes * 60000).toISOString(),
+    quantity: c.quantity,
+  }));
+  await admin.from("order_chunks").insert(rows);
+  await admin.from("orders").update({ status: "pending" }).eq("id", orderId);
 
   await runHooks("order.created", { orderId, quantity, serviceName: service.name, userId: user.id });
 
