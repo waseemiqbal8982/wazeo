@@ -97,25 +97,29 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Admin 2FA enforcement (server-side). Only applies once an admin has opted in.
-  if (path.startsWith("/admin") && !path.startsWith("/admin/2fa")) {
+  // Admin PIN enforcement (server-side). Only applies once an admin has set a
+  // PIN and confirmed setup with a recovery code. Asks once per device session
+  // and again after 12 hours of inactivity.
+  if (path.startsWith("/admin") && !path.startsWith("/admin/pin")) {
     try {
-      const { data: tf } = await supabase
-        .from("admin_2fa")
-        .select("enabled")
+      const { data: pin } = await supabase
+        .from("admin_pins")
+        .select("setup_pending")
         .eq("user_id", user.id)
         .maybeSingle();
-      if (tf?.enabled) {
-        const ok2fa = request.cookies.get(`wazeo-2fa-ok-${user.id}`)?.value === "1";
-        if (!ok2fa) {
+      if (pin && !pin.setup_pending) {
+        const cookieVal = request.cookies.get(`wazeo-adminpin-ok-${user.id}`)?.value;
+        const lastOk = cookieVal ? parseInt(cookieVal, 10) : 0;
+        const stale = !lastOk || Date.now() - lastOk > 12 * 60 * 60 * 1000;
+        if (stale) {
           const url = request.nextUrl.clone();
-          url.pathname = "/admin/2fa";
+          url.pathname = "/admin/pin";
           url.searchParams.set("next", path);
           return NextResponse.redirect(url);
         }
       }
     } catch {
-      // never block access on a 2FA lookup error
+      // never block access on a PIN lookup error
     }
   }
 

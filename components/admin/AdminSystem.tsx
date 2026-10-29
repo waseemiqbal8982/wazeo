@@ -16,10 +16,7 @@ export function AdminSystem() {
   const [errors, setErrors] = useState<any[]>([]);
   const [filter, setFilter] = useState("");
   const [status, setStatus] = useState({ db: "check", provider: isMockMode() ? "mock" : "live", ai: isMercuryConfigured() ? "green" : "off" });
-  const [twofa, setTwofa] = useState<{ enabled: boolean; method?: string }>({ enabled: false });
   const [pluginExecs, setPluginExecs] = useState<any[]>([]);
-  const [twofaBusy, setTwofaBusy] = useState(false);
-  const [twofaResult, setTwofaResult] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -35,30 +32,8 @@ export function AdminSystem() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/admin/2fa").then((r) => r.json()).then((d) => { if (typeof d.enabled === "boolean") setTwofa({ enabled: d.enabled, method: d.method }); }).catch(() => {});
     sb.from("plugin_executions").select("*").order("created_at", { ascending: false }).limit(30).then(({ data }) => setPluginExecs(data || []));
   }, []);
-
-  async function toggle2fa() {
-    setTwofaBusy(true);
-    setTwofaResult("");
-    const res = await fetch("/api/admin/2fa", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(twofa.enabled ? { enable: false } : { enable: true, method: "email" }),
-    });
-    const d = await res.json().catch(() => ({}));
-    setTwofaBusy(false);
-    if (!res.ok) { setTwofaResult(`❌ ${d.error || "Failed"}`); return; }
-    setTwofa({ enabled: d.enabled, method: d.method });
-    if (d.enabled) {
-      setTwofaResult(`✅ 2FA enabled.`);
-      if (d.devCode) setTwofaResult(`✅ 2FA enabled. Demo code (no SMTP configured): ${d.devCode}`);
-      if (d.recovery) setTwofaResult((prev) => `${prev} Save recovery code: ${d.recovery}`);
-    } else {
-      setTwofaResult("2FA disabled.");
-    }
-  }
 
   const filteredAudits = audits.filter((x) => !filter || x.action.includes(filter));
 
@@ -131,17 +106,10 @@ export function AdminSystem() {
       </Card>
 
       <Card className="space-y-3">
-        <p className="text-sm font-semibold">Admin security — two-factor authentication</p>
+        <p className="text-sm font-semibold">Admin security</p>
         <p className="text-sm text-[var(--text-muted)]">
-          Status: <Badge tone={twofa.enabled ? "success" : "muted"}>{twofa.enabled ? "Enabled" : "Disabled"}</Badge>
-          {twofa.enabled && twofa.method ? ` · method: ${twofa.method}` : ""}
-        </p>
-        <Button size="sm" variant={twofa.enabled ? "danger" : "soft"} loading={twofaBusy} onClick={toggle2fa}>
-          {twofa.enabled ? "Disable 2FA" : "Enable 2FA (email OTP)"}
-        </Button>
-        {twofaResult && <p className="text-xs text-[var(--text-muted)]">{twofaResult}</p>}
-        <p className="text-xs text-[var(--text-muted)]">
-          After enabling, you will be asked for a code on your next admin page load. A recovery code is shown once — save it.
+          Two-factor (email/TOTP) 2FA default se hidden/disabled hai. Ab Admin PIN use hota hai —
+          Admin → Settings → Security me set karo.
         </p>
       </Card>
 

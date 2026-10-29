@@ -1,5 +1,14 @@
 # TASKS — Wazeo (Roman Urdu)
 
+## Prompt 30 — Admin lockout rescue + admin security + key gen + more
+### Item 1 — Admin lockout rescue & admin security (PARTIAL)
+- [x] Rescue script `npm run admin:reset-2fa -- [email]` (service role): removes every Supabase MFA factor (auth.admin.mfa listFactors/deleteFactor), clears admin_2fa row (enabled=false) and sets require_admin_2fa=false; no-arg uses first ADMIN_EMAILS (or falls back to first role='admin' profile). RAN + confirmed (admin_2fa enabled rows = 0).
+- [x] Email/TOTP 2FA hidden & disabled by default (AdminSystem card replaced). App never demands a second factor unless a verified working factor exists.
+- [x] Admin PIN (6–8 digit, salted scrypt slow hash) — `lib/adminPin.ts`, `/api/admin/pin`, `verify`, `confirm`; proxy enforces once per device session + after 12h inactivity; 5 wrong tries → 15 min lock (in DB); no email for PIN.
+- [x] Recovery: 8 one-time codes shown once, stored hashed; setup completes only after typing one code back (consumed). `npm run admin:reset-pin -- [email]` (service role).
+- [x] `npm run test:adminsec` passes (24 assertions).
+- [~] Optional switches (trusted devices / admin login alerts / country allowlist) settings keys seeded; full UI + audit wiring pending.
+
 ## Prompt 28 — Admin/Customer mobile shell + control center + charts + glass/cursor/interactions
 ### Item 1 — Mobile shell (PARTIAL)
 - [~] Floating centered glass pill bottom nav (admin + customer): max-w 420px, inset-x-3, bottom gap 12px + safe-area, rounded-full, accent glow + blur, glowing indicator glides (framer layoutId), hides while an input is focused (focusin) and shows on blur; main content pb-28 so nothing hides behind it.

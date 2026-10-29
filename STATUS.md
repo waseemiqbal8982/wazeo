@@ -1,5 +1,14 @@
 # 📊 STATUS — Wazeo (Stage 0 audit)
 
+## Update (prompt 30 — Item 1 admin lockout rescue + admin security, PARTIAL)
+- Tag `stable-before-prompt30` created + pushed.
+- **Rescue `npm run admin:reset-2fa`:** service-role script that removes every Supabase MFA factor (auth.admin.mfa listFactors/deleteFactor), clears the own `admin_2fa` row (enabled=false) and sets `require_admin_2fa=false`. No-arg uses first `ADMIN_EMAILS`; falls back to first role='admin' profile. **RAN + confirmed** (admin_2fa enabled rows = 0). This unlocks the owner who was locked out by a mistaken 2FA enable.
+- **Email/TOTP 2FA hidden & disabled by default** — the old enable/disable card in AdminSystem was replaced with a note pointing to Admin PIN.
+- **Admin PIN system (new):** 6–8 digit PIN stored as salted scrypt slow hash (`lib/adminPin.ts`). API routes: `/api/admin/pin` (status/setup), `/api/admin/pin/verify`, `/api/admin/pin/confirm`. `proxy.ts` enforces the PIN once per device session and again after 12h inactivity (cookie timestamp). 5 wrong tries lock the PIN screen 15 minutes per user (in DB). No email is ever sent for the PIN.
+- **Recovery:** enabling the PIN generates 8 one-time codes (shown once, stored hashed); setup completes only after the admin types one valid code back (then consumed). `npm run admin:reset-pin -- [email]` (service role) clears PIN + codes.
+- **Checks:** `npm run lint` 0 errors; `npm run build` pass; `npm run test:adminsec` 24/24 pass.
+- Still pending: optional switches UI/audit wiring (trusted devices, admin login alerts, country allowlist — settings keys seeded).
+
 ## Update (prompt 28 — Items 4 & 5, PARTIAL)
 - **Item 4:** custom desktop cursor `components/Cursor.tsx` mounted in root layout. Enabled only for `(hover:hover) and (pointer:fine)` and not reduced motion. One requestAnimationFrame loop, transform-only movement with easing, pointer-events none, native cursor kept. Re-colors to the active accent, grows/colours over buttons & links, becomes a text-bar over inputs, shrinks on press, small ripple on click, pauses while the tab is hidden. Glass tokens (`--glass-*`, `.glass-strong`, `.glass-glow`, `--glow`) already exist in globals.css and are applied to the pill / More sheet / modals / dropdowns.
 - **Item 5:** Button click ripple (transform/opacity only; respects reduced motion and `pointer:fine`), new animated `Toggle` switch (`components/ui/Toggle.tsx`), existing press-scale feedback.
