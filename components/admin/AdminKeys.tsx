@@ -212,7 +212,12 @@ export function AdminKeys() {
         action: "generate",
         inputs: list.map((e) => keyInput(e)),
       });
-      if (!res.ok) throw new Error(data.error || "Generate failed");
+      if (!res.ok)
+        throw new Error(
+          res.status === 403
+            ? "Not authorized to generate keys (admin only). Ensure your email is in ADMIN_EMAILS and role = admin."
+            : data.error || "Generate failed"
+        );
       setResults(data.keys || []);
       setFeedback(`Generated ${(data.keys || []).length} key(s). Full keys shown once below.`);
       setEmail("");
@@ -238,7 +243,12 @@ export function AdminKeys() {
         action: "generate",
         inputs: list.map((e) => keyInput(e)),
       });
-      if (!res.ok) throw new Error(data.error || "Bulk generate failed");
+      if (!res.ok)
+        throw new Error(
+          res.status === 403
+            ? "Not authorized to generate keys (admin only)."
+            : data.error || "Bulk generate failed"
+        );
       setResults(data.keys || []);
       setFeedback(`Generated ${(data.keys || []).length} key(s).`);
       setBulk("");
@@ -256,7 +266,12 @@ export function AdminKeys() {
       const payload: any = { action: kind };
       if (id) payload.id = id;
       const { res, data } = await api(payload);
-      if (!res.ok) throw new Error(data.error || "Action failed");
+      if (!res.ok)
+        throw new Error(
+          res.status === 403
+            ? "Not authorized to manage keys (admin only)."
+            : data.error || "Action failed"
+        );
       if (kind === "regenerate" && data.key) {
         setResults((r) => [{ id: data.id, email: "", key: data.key, last4: data.last4 }, ...r]);
       }

@@ -12,11 +12,24 @@ export function FloatingAuth() {
 
   useEffect(() => {
     const sb = createClient();
-    sb.auth.getUser().then(({ data }) => setSignedIn(Boolean(data.user)));
-    const { data: sub } = sb.auth.onAuthStateChange((_e, session) =>
-      setSignedIn(Boolean(session))
-    );
-    return () => sub.subscription.unsubscribe();
+    let active = true;
+    // getSession() is more reliable than getUser() for a persisted/cached session,
+    // which avoids the wrong "Sign in / Dashboard" flash on mobile.
+    (async () => {
+      try {
+        const { data } = await sb.auth.getSession();
+        if (active) setSignedIn(Boolean(data?.session));
+      } catch {
+        if (active) setSignedIn(false);
+      }
+    })();
+    const { data: sub } = sb.auth.onAuthStateChange((_e, session) => {
+      if (active) setSignedIn(Boolean(session));
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   return (
