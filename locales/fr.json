@@ -111,5 +111,6 @@
   "auth.access_key.welcome": "Bienvenue sur Wazeo !",
   "auth.access_key.to_dashboard": "Redirection vers votre tableau de bord…",
   "auth.social.not_setup": "Pas encore configuré",
-  "auth.social.or_email": "ou continuer avec l'e-mail"
+  "auth.social.or_email": "ou continuer avec l'e-mail",
+  "auth.stay_signed_in": "Rester connecté"
 }

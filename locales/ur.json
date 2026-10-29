@@ -111,5 +111,6 @@
   "auth.access_key.welcome": "ویزیو میں خوش آمدید!",
   "auth.access_key.to_dashboard": "آپ کو ڈیش بورڈ پر لے جایا جا رہا ہے…",
   "auth.social.not_setup": "ابھی سیٹ اپ نہیں ہوا",
-  "auth.social.or_email": "یا ای میل کے ساتھ جاری رکھیں"
+  "auth.social.or_email": "یا ای میل کے ساتھ جاری رکھیں",
+  "auth.stay_signed_in": "مجھے سائن ان رکھیں"
 }

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import {
+  STAY_SIGNED_IN_COOKIE,
+  staySignedInEnabled,
+  sessionMaxAge,
+} from "@/lib/sessionCookie";
 
 export const config = {
   matcher: ["/dashboard/:path*", "/admin/:path*", "/api/:path*"],
@@ -32,6 +37,11 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  const stay = staySignedInEnabled(
+    request.cookies.get(STAY_SIGNED_IN_COOKIE)?.value
+  );
+  const maxAge = sessionMaxAge(stay);
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -44,7 +54,10 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            response.cookies.set(name, value, {
+              ...options,
+              ...(maxAge ? { maxAge } : {}),
+            })
           );
         },
       },

@@ -111,5 +111,6 @@
   "auth.access_key.welcome": "वेज़ीओ में स्वागत है!",
   "auth.access_key.to_dashboard": "आपको डैशबोर्ड पर भेजा जा रहा है…",
   "auth.social.not_setup": "अभी सेट अप नहीं हुआ",
-  "auth.social.or_email": "या ईमेल से जारी रखें"
+  "auth.social.or_email": "या ईमेल से जारी रखें",
+  "auth.stay_signed_in": "मुझे साइन इन रखें"
 }

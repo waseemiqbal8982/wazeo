@@ -1,3 +1,18 @@
+# TASKS — Wazeo (Roman Urdu)
+
+## Prompt 26 — Items 1–6
+- [x] **Item 1 — Users stay signed in:** root cause (session cookies, no long maxAge,
+      no explicit persistSession/autoRefreshToken) fixed with official @supabase/ssr
+      pattern; `lib/sessionCookie.ts`; 400-day maxAge; "Keep me signed in" checkbox
+      (default ON); token refresh in proxy returns renewed cookies; `npm run test:session`
+      added. lint 0 errors, build pass.
+- [ ] **Item 2 — No email at sign-up, email only for password reset**
+- [ ] **Item 3 — Login methods controlled from admin**
+- [ ] **Item 4 — No instant orders, draw your own delivery curve**
+- [ ] **Item 5 — Complete UI redesign**
+- [ ] **Item 6 — Finish (locales, tests, docs, seed)**
+
+## Prompt 23 — (previous)
 # TASKS — Wazeo prompt 23 (Roman Urdu)
 
 Workflow: tag `stable-before-prompt23` ✅ (created + pushed). Har item ke baad `npm run lint` + `npm run build`, tick, STATUS.md update, commit.

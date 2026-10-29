@@ -111,5 +111,6 @@
   "auth.access_key.welcome": "Welcome to Wazeo!",
   "auth.access_key.to_dashboard": "Taking you to your dashboard…",
   "auth.social.not_setup": "Not set up yet",
-  "auth.social.or_email": "or continue with email"
+  "auth.social.or_email": "or continue with email",
+  "auth.stay_signed_in": "Keep me signed in"
 }

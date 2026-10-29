@@ -14,6 +14,19 @@ import { signIn } from "../actions";
 import { useI18n } from "@/lib/i18n";
 import { AccessKeyRedeem } from "@/components/auth/AccessKeyRedeem";
 import { SocialLogin } from "@/components/auth/SocialLogin";
+import {
+  STAY_SIGNED_IN_COOKIE,
+  SESSION_MAX_AGE,
+} from "@/lib/sessionCookie";
+
+const STAY_ON = `max-age=${SESSION_MAX_AGE}; path=/; samesite=lax`;
+const STAY_OFF = "max-age=0; path=/; samesite=lax";
+
+function setStaySignedIn(on: boolean) {
+  try {
+    document.cookie = `${STAY_SIGNED_IN_COOKIE}=${on ? "1" : "0"}; ${on ? STAY_ON : STAY_OFF}`;
+  } catch {}
+}
 
 export default function SignInPage() {
   const router = useRouter();
@@ -112,6 +125,16 @@ export default function SignInPage() {
                   </Link>
                 </div>
               </div>
+              <label className="flex cursor-pointer select-none items-center gap-2.5 text-sm text-[var(--text-muted)]">
+                <input
+                  type="checkbox"
+                  name="stay_signed_in"
+                  defaultChecked
+                  onChange={(e) => setStaySignedIn(e.target.checked)}
+                  className="h-4 w-4 rounded border-[var(--border)] bg-white/[0.03] accent-[var(--accent)]"
+                />
+                {t("auth.stay_signed_in")}
+              </label>
               <Button full loading={pending} type="submit">
                 {pending ? t("auth.signin_progress") : t("auth.signin_button")}
               </Button>

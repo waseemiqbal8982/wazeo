@@ -1,5 +1,29 @@
 # 📊 STATUS — Wazeo (Stage 0 audit)
 
+## Update (prompt 26 — Item 1: users stay signed in)
+- Tag `stable-before-prompt26` created + pushed.
+- **Root cause:** auth cookies were written as session cookies (no long maxAge)
+  and the browser client didn't explicitly enable `persistSession`/`autoRefreshToken`;
+  there was no "Stay signed in" (default ON) control, so sessions were dropped on
+  browser restart / not reliably renewed.
+- **Fix (official @supabase/ssr pattern):** new `lib/sessionCookie.ts`
+  (`STAY_SIGNED_IN_COOKIE`, `SESSION_MAX_AGE` ≈ 400 days, `staySignedInEnabled`,
+  `sessionMaxAge`). `lib/supabase/client.ts` now sets `persistSession: true`,
+  `autoRefreshToken: true`, and a 400-day `cookieOptions.maxAge` when Stay-signed-in
+  is on (default). `lib/supabase/server.ts` stays read-only in Server Components but
+  applies the long maxAge when writing cookies. `proxy.ts` reads the stay cookie and
+  writes renewed cookies (refresh happens here) with the long maxAge on the response.
+  Sign-in form adds a "Keep me signed in" checkbox (default checked) that sets the
+  stay cookie. No silent sign-out code exists (only intentional banned/exit/logout).
+- **`npm run test:session`** added (`scripts/test-session.mjs`): signs in, expires the
+  access token artificially while keeping a valid refresh token, requests a protected
+  page `/dashboard` and API route `/api/user/currency`, and proves the user stays
+  signed in and cookies are renewed. Requires a live DB + running server (TEST_BASE_URL),
+  same as test:otp.
+- **Checks:** `npm run lint` → 0 errors; `npm run build` → pass.
+- **Manual:** `MANUAL_STEPS.md` — check Supabase → Authentication → Sessions has no
+  inactivity timeout / time-box.
+
 ## Update (prompt 25 — sign-in / sign-up / access-key screens + key data)
 - Tag `stable-before-prompt25` created + pushed.
 - **Item 1 — Load then sign-in:** SplashLoader (spinning ring, no text, ≥600ms) already in root layout → fades into sign-in. Sign-in page reordered: form first (email/password/show-hide/forgot/Sign in) → round social buttons (Google/X/GitHub; unconfigured providers disabled with "Not set up yet" tooltip via new `/api/meta/oauth`) → two clear options "Create an account" / "I have an access key". Ref: `app/(auth)/sign-in`, `components/auth/SocialLogin`.

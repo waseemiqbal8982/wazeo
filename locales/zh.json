@@ -111,5 +111,6 @@
   "auth.access_key.welcome": "欢迎使用 Wazeo！",
   "auth.access_key.to_dashboard": "正在将您带到仪表盘…",
   "auth.social.not_setup": "尚未设置",
-  "auth.social.or_email": "或使用邮箱继续"
+  "auth.social.or_email": "或使用邮箱继续",
+  "auth.stay_signed_in": "保持登录状态"
 }
