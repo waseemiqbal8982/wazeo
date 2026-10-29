@@ -296,6 +296,78 @@ export function AdminSettings() {
           </div>
         </div>
 
+        <div className="border-t border-[var(--border)] pt-4">
+          <p className="mb-1 text-sm font-semibold">Login methods</p>
+          <p className="mb-3 text-xs text-[var(--text-muted)]">
+            A provider&apos;s button shows on the sign-in screen only when it is both
+            enabled here AND its OAuth keys are configured below.
+          </p>
+          {[
+            { key: "login_google_enabled", label: "Google", configuredKey: "oauth_google_client_id" },
+            { key: "login_twitter_enabled", label: "X (Twitter)", configuredKey: "oauth_twitter_client_id" },
+            { key: "login_github_enabled", label: "GitHub", configuredKey: "oauth_github_client_id" },
+          ].map((item) => {
+            const on = values[item.key] === "true";
+            const configured = Boolean(values[item.configuredKey]);
+            return (
+              <div key={item.key} className="flex items-center justify-between gap-4 py-2">
+                <div>
+                  <p className="text-sm font-medium">{item.label}</p>
+                  <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                    {configured ? "Keys configured" : "Keys not configured"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={on}
+                  onClick={() =>
+                    setValues((v) => ({ ...v, [item.key]: on ? "false" : "true" }))
+                  }
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 ${
+                    on ? "bg-[var(--accent)]" : "bg-white/[0.1]"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ${
+                      on ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
+              </div>
+            );
+          })}
+          <div className="flex items-center justify-between gap-4 py-2">
+            <div>
+              <p className="text-sm font-medium">Email and password</p>
+              <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                Allow email + password sign-in / sign-up.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={values.login_email_password_enabled !== "false"}
+              onClick={() =>
+                setValues((v) => ({
+                  ...v,
+                  login_email_password_enabled:
+                    v.login_email_password_enabled === "false" ? "true" : "false",
+                }))
+              }
+              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 ${
+                values.login_email_password_enabled !== "false" ? "bg-[var(--accent)]" : "bg-white/[0.1]"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ${
+                  values.login_email_password_enabled !== "false" ? "translate-x-5" : "translate-x-0.5"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
         <Button loading={busy} onClick={save}>Save settings</Button>
       </Card>
     </div>

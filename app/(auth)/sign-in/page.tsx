@@ -36,11 +36,19 @@ export default function SignInPage() {
   const [state, formAction, pending] = useActionState(signIn, undefined);
   const [errTick, setErrTick] = useState(0);
   const [mode, setMode] = useState<"signin" | "key">("signin");
+  const [emailEnabled, setEmailEnabled] = useState(true);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     setNext(p.get("next") || "/dashboard");
     setBanned(p.get("error") === "banned");
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/meta/oauth")
+      .then((r) => r.json())
+      .then((d) => setEmailEnabled(d?.emailPassword !== false))
+      .catch(() => {});
   }, []);
 
   // If a session already exists (e.g. after a middleware bounce), go straight
@@ -86,60 +94,67 @@ export default function SignInPage() {
       {mode === "key" ? (
         <>
           <AccessKeyRedeem />
-          <div className="mt-4 text-center text-sm">
-            <button type="button" onClick={() => setMode("signin")} className="font-medium text-[var(--accent)] hover:brightness-110">
-              ← Use email &amp; password instead
-            </button>
-          </div>
+          {emailEnabled && (
+            <div className="mt-4 text-center text-sm">
+              <button type="button" onClick={() => setMode("signin")} className="font-medium text-[var(--accent)] hover:brightness-110">
+                ← Use email &amp; password instead
+              </button>
+            </div>
+          )}
         </>
       ) : (
         <>
-          {/* 1. Sign-in form first */}
-          <div key={errTick} className={showError ? "animate-shake" : ""}>
-            {showError && (
-              <div role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
-                {state?.error || t("auth.error.banned")}
-              </div>
-            )}
-            <form action={formAction} className="space-y-4" noValidate>
-              <input type="hidden" name="next" value={next} />
-              <Input
-                name="email"
-                label={t("auth.email")}
-                type="email"
-                placeholder={t("auth.ph.email")}
-                autoComplete="email"
-                required
-              />
-              <div>
-                <PasswordInput
-                  name="password"
-                  label={t("auth.password")}
-                  placeholder="••••••••"
-                  autoComplete="current-password"
+          {/* 1. Sign-in form first (hidden when email+password is disabled) */}
+          {emailEnabled && (
+            <div key={errTick} className={showError ? "animate-shake" : ""}>
+              {showError && (
+                <div role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                  {state?.error || t("auth.error.banned")}
+                </div>
+              )}
+              <form action={formAction} className="space-y-4" noValidate>
+                <input type="hidden" name="next" value={next} />
+                <Input
+                  name="email"
+                  label={t("auth.email")}
+                  type="email"
+                  placeholder={t("auth.ph.email")}
+                  autoComplete="email"
                   required
                 />
-                <div className="mt-2 flex justify-end text-sm">
-                  <Link href="/forgot-password" className="text-[var(--text-muted)] hover:text-[var(--accent)]">
-                    {t("auth.forgot")}
-                  </Link>
+                <div>
+                  <PasswordInput
+                    name="password"
+                    label={t("auth.password")}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    required
+                  />
+                  <div className="mt-2 flex justify-end text-sm">
+                    <Link href="/forgot-password" className="text-[var(--text-muted)] hover:text-[var(--accent)]">
+                      {t("auth.forgot")}
+                    </Link>
+                  </div>
                 </div>
-              </div>
-              <label className="flex cursor-pointer select-none items-center gap-2.5 text-sm text-[var(--text-muted)]">
-                <input
-                  type="checkbox"
-                  name="stay_signed_in"
-                  defaultChecked
-                  onChange={(e) => setStaySignedIn(e.target.checked)}
-                  className="h-4 w-4 rounded border-[var(--border)] bg-white/[0.03] accent-[var(--accent)]"
-                />
-                {t("auth.stay_signed_in")}
-              </label>
-              <Button full loading={pending} type="submit">
-                {pending ? t("auth.signin_progress") : t("auth.signin_button")}
-              </Button>
-            </form>
-          </div>
+                <label className="flex cursor-pointer select-none items-center gap-2.5 text-sm text-[var(--text-muted)]">
+                  <input
+                    type="checkbox"
+                    name="stay_signed_in"
+                    defaultChecked
+                    onChange={(e) => setStaySignedIn(e.target.checked)}
+                    className="h-4 w-4 rounded border-[var(--border)] bg-white/[0.03] accent-[var(--accent)]"
+                  />
+                  {t("auth.stay_signed_in")}
+                </label>
+                <Button full loading={pending} type="submit">
+                  {pending ? t("auth.signin_progress") : t("auth.signin_button")}
+                </Button>
+              </form>
+            </div>
+          )}
+          {!emailEnabled && !state?.error && (
+            <p className="text-sm text-[var(--text-muted)]">Email &amp; password sign-in is currently disabled.</p>
+          )}
 
           {/* 2. Round social buttons */}
           <div className="mt-6">
@@ -148,12 +163,14 @@ export default function SignInPage() {
 
           {/* 3. Two clear options */}
           <div className="mt-6 space-y-2.5 border-t border-[var(--border)] pt-5">
-            <Link
-              href="/sign-up"
-              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-[var(--accent)] bg-[var(--accent-soft)] px-3 text-sm font-medium text-[var(--accent)] transition-colors hover:brightness-110"
-            >
-              Create an account
-            </Link>
+            {emailEnabled && (
+              <Link
+                href="/sign-up"
+                className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-[var(--accent)] bg-[var(--accent-soft)] px-3 text-sm font-medium text-[var(--accent)] transition-colors hover:brightness-110"
+              >
+                Create an account
+              </Link>
+            )}
             <button
               type="button"
               onClick={() => setMode("key")}

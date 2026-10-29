@@ -1995,3 +1995,10 @@ insert into public.settings (key, value) values
   ('disposable_email_domains', '["mailinator.com","10minutemail.com","guerrillamail.com","sharklasers.com","temp-mail.org","throwawaymail.com"]')
 on conflict (key) do nothing;
 
+insert into public.settings (key, value) values
+  ('login_google_enabled', 'false'),
+  ('login_twitter_enabled', 'false'),
+  ('login_github_enabled', 'false'),
+  ('login_email_password_enabled', 'true')
+on conflict (key) do nothing;
+

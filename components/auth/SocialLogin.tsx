@@ -40,9 +40,14 @@ const BrandIcon = ({ provider }: { provider: Provider }) => {
   );
 };
 
+interface ProviderConfig {
+  configured: boolean;
+  enabled: boolean;
+}
+
 export function SocialLogin({ next = "/dashboard" }: SocialLoginProps) {
   const [busy, setBusy] = useState<Provider | null>(null);
-  const [config, setConfig] = useState<Record<string, boolean>>({});
+  const [config, setConfig] = useState<Record<string, ProviderConfig>>({});
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -75,19 +80,23 @@ export function SocialLogin({ next = "/dashboard" }: SocialLoginProps) {
     }
   }
 
+  const visibleProviders = PROVIDERS.filter((p) => {
+    const c = config[p.id];
+    return !!c && c.enabled && c.configured;
+  });
+
   return (
     <div>
-      <div className="flex items-center justify-center gap-4">
-        {PROVIDERS.map((p) => {
-          const enabled = !!config[p.id];
-          return (
+      {visibleProviders.length > 0 && (
+        <div className="flex items-center justify-center gap-4">
+          {visibleProviders.map((p) => (
             <button
               key={p.id}
               type="button"
-              disabled={!enabled || !!busy}
+              disabled={!!busy}
               onClick={() => signInWith(p.id)}
-              title={enabled ? `Continue with ${p.label}` : "Not set up yet"}
-              aria-label={enabled ? `Continue with ${p.label}` : `${p.label} not set up yet`}
+              title={`Continue with ${p.label}`}
+              aria-label={`Continue with ${p.label}`}
               className="group relative flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-white/[0.03] text-[var(--text)] transition-colors hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/[0.03]"
             >
               {busy === p.id ? (
@@ -96,9 +105,9 @@ export function SocialLogin({ next = "/dashboard" }: SocialLoginProps) {
                 <BrandIcon provider={p.id} />
               )}
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
       {error && (
         <div role="alert" className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-center text-sm text-red-300">
@@ -106,11 +115,13 @@ export function SocialLogin({ next = "/dashboard" }: SocialLoginProps) {
         </div>
       )}
 
-      <div className="mt-5 flex items-center gap-3">
-        <span className="h-px flex-1 bg-[var(--border)]" />
-        <span className="text-xs text-[var(--text-muted)]">or continue with email</span>
-        <span className="h-px flex-1 bg-[var(--border)]" />
-      </div>
+      {visibleProviders.length > 0 && (
+        <div className="mt-5 flex items-center gap-3">
+          <span className="h-px flex-1 bg-[var(--border)]" />
+          <span className="text-xs text-[var(--text-muted)]">or continue with email</span>
+          <span className="h-px flex-1 bg-[var(--border)]" />
+        </div>
+      )}
     </div>
   );
 }

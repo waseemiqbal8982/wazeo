@@ -16,7 +16,12 @@
       Password reset: generic "If this email exists" message, 3/hr per email rate limit,
       link goes through /auth/callback → /reset-password with strength bar, signs in.
       `docs/EMAIL_TEMPLATE_RESET.html` added; MANUAL_STEPS updated. lint 0 errors, build pass.
-- [ ] **Item 3 — Login methods controlled from admin**
+- [x] **Item 3 — Login methods controlled from admin:** Google/X/GitHub buttons hidden by default.
+      Admin Settings → Login methods: per-provider switches (all OFF default) with a status note
+      (keys configured / not configured) + "Email and password" switch (default ON). A provider's
+      button shows only when enabled AND keys configured. `app/api/meta/oauth` returns enabled+configured
+      + emailPassword; SocialLogin filters buttons; sign-in page hides email form / create-account when
+      email+password disabled. `docs/OAUTH_SETUP.md` added (Roman Urdu). lint 0 errors, build pass.
 - [ ] **Item 4 — No instant orders, draw your own delivery curve**
 - [ ] **Item 5 — Complete UI redesign**
 - [ ] **Item 6 — Finish (locales, tests, docs, seed)**

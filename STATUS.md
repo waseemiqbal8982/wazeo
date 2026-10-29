@@ -45,6 +45,22 @@
   email-template + redirect-URL steps.
 - **Checks:** `npm run lint` → 0 errors; `npm run build` → pass.
 
+## Update (prompt 26 — Item 3: login methods controlled from admin)
+- Google / X / GitHub sign-in buttons are hidden by default. `app/api/meta/oauth`
+  now returns `{ google/twitter/github: { configured, enabled }, emailPassword }`.
+- Admin → Settings → **Login methods**: a switch per provider (all OFF by default)
+  with a status note ("Keys configured" / "Keys not configured"), plus an "Email and
+  password" switch (default ON). Settings keys: `login_google_enabled`,
+  `login_twitter_enabled`, `login_github_enabled`, `login_email_password_enabled` (added
+  to schema_v20 + ALL_IN_ONE.sql).
+- A provider's button shows on sign-in only when it is both **enabled** (admin switch)
+  and **configured** (OAuth keys filled). `components/auth/SocialLogin.tsx` filters on
+  both; divider hides when no buttons show. The sign-in page hides the email+password
+  form and "Create an account" when email+password is disabled.
+- `docs/OAUTH_SETUP.md` added (Roman Urdu: create OAuth apps, enter keys in Supabase +
+  Wazeo admin, enable in Login methods).
+- **Checks:** `npm run lint` → 0 errors; `npm run build` → pass.
+
 ## Update (prompt 25 — sign-in / sign-up / access-key screens + key data)
 - Tag `stable-before-prompt25` created + pushed.
 - **Item 1 — Load then sign-in:** SplashLoader (spinning ring, no text, ≥600ms) already in root layout → fades into sign-in. Sign-in page reordered: form first (email/password/show-hide/forgot/Sign in) → round social buttons (Google/X/GitHub; unconfigured providers disabled with "Not set up yet" tooltip via new `/api/meta/oauth`) → two clear options "Create an account" / "I have an access key". Ref: `app/(auth)/sign-in`, `components/auth/SocialLogin`.
