@@ -37,11 +37,13 @@ export const metadata: Metadata = {
 };
 
 const preloadScript = `(function(){try{
-var tt=['purple','cyan','emerald','rose','amber','ocean','crimson','amoled'];
+var tt=['purple','cyan','emerald','rose','amber','ocean','crimson','amoled','neutral'];
 var t=localStorage.getItem('wazeo-theme')||'';if(!t){var m=document.cookie.match(/(?:^|; )wazeo-theme=([^;]*)/);t=m?decodeURIComponent(m[1]):'';}
 if(!t){t=tt[Math.floor(Math.random()*tt.length)];try{localStorage.setItem('wazeo-theme',t);document.cookie='wazeo-theme='+encodeURIComponent(t)+'; path=/; max-age=31536000';}catch(e){}}
 if(tt.indexOf(t)<0)t='purple';
-var md=localStorage.getItem('wazeo-mode')||'';if(!md){var cm=document.cookie.match(/(?:^|; )wazeo-mode=([^;]*)/);md=cm?decodeURIComponent(cm[1]):'';}if(md!=='light'&&md!=='dark')md='dark';
+var md=localStorage.getItem('wazeo-mode')||'';if(!md){var cm=document.cookie.match(/(?:^|; )wazeo-mode=([^;]*)/);md=cm?decodeURIComponent(cm[1]):'';}
+if(md!=='light'&&md!=='dark'&&md!=='auto')md='auto';
+if(md==='auto'){md=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}
 var r=localStorage.getItem('wazeo-reduce')==='true';
 document.documentElement.dataset.theme=t;document.documentElement.dataset.mode=md;document.documentElement.dataset.reduceMotion=r?'true':'false';
 }catch(e){document.documentElement.dataset.theme='purple';document.documentElement.dataset.mode='dark';}})();`;

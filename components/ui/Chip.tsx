@@ -5,12 +5,12 @@ import { cn } from "@/lib/utils";
 type Tone = "default" | "accent" | "success" | "warning" | "danger" | "neutral";
 
 const tones: Record<Tone, string> = {
-  default: "bg-white/[0.06] text-[var(--text)] border-[var(--border)]",
+  default: "bg-[var(--surface-2)] text-[var(--text)] border-[var(--border)]",
   accent: "bg-[var(--accent-soft)] text-[var(--accent)] border-transparent",
-  success: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  warning: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  danger: "bg-red-500/10 text-red-400 border-red-500/20",
-  neutral: "bg-white/[0.04] text-[var(--text-muted)] border-[var(--border)]",
+  success: "bg-[var(--success-bg)] text-[var(--success-text)] border-[var(--success-border)]",
+  warning: "bg-[var(--warning-bg)] text-[var(--warning-text)] border-[var(--warning-border)]",
+  danger: "bg-[var(--danger-bg)] text-[var(--danger-text)] border-[var(--danger-border)]",
+  neutral: "bg-[var(--surface-2)] text-[var(--text-2)] border-[var(--border)]",
 };
 
 interface ChipProps extends React.HTMLAttributes<HTMLSpanElement> {

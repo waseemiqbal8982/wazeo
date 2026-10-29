@@ -1,5 +1,16 @@
 # TASKS — Wazeo (Roman Urdu)
 
+## Prompt 31 — Heavy upgrade (PARTIAL — Item 1 foundation done)
+### Item 1 — Light mode visibility (PARTIAL)
+- [x] Semantic light palette rebuilt in `app/globals.css`: separate surface levels (--surface/2/3), text levels (--text/1/2/3), border + border-input, divider, icon, chart tokens (--chart-grid, tooltip bg/text), focus ring, overlay, and status tokens (success/warning/danger text/bg/border). Light values meet WCAG AA (4.5:1 text, 3:1 input borders). Glass in light uses stronger tint + border; shadows replace glow.
+- [x] Neutral theme added (dark + light accent) + added to `THEMES` (lib/constants.ts) and the inline preload list (app/layout.tsx).
+- [x] Three-way mode Light / Dark / Auto (follows system): `ThemeProvider` upgraded (modePref + resolved mode + matchMedia listener); inline preload script resolves `auto` to system before first paint (no flash); persisted to localStorage + cookie. Toggle UI: new shared `components/ui/ThemeModeToggle.tsx` in AppShell; HomeHeader icon button cycles dark→light→auto.
+- [x] `ChartShell` light palette: token-driven gridlines, tooltip bg/text/border, card surface, status colors (no hardcoded dark rgba).
+- [x] `Input`/`Chip`/`Badge` now use semantic tokens (readable placeholders, disabled states, status chips in light).
+- [x] `npm run test:contrast` harness created (`scripts/test-contrast.mjs`): Playwright + axe-core color-contrast rule + custom input-border (3:1) check, over landing/sign-in/dashboard/new-order/orders/services/wallet/support/settings + admin pages, in light+dark, for all 9 themes. FAST smoke mode via `CONTRAST_FAST=1`. Lint + build pass.
+- [ ] Full contrast scan executed to zero violations across every page×theme×mode (harness written; comprehensive live run pending in this session — app’s Supabase realtime/live indicator connections make networkidle stalls; verified up to harness launch/navigation).
+- [ ] Three-way toggle also surfaced on the Settings page (currently in AppShell header + HomeHeader).
+
 ## Prompt 30 — Admin lockout rescue + admin security + key gen + more
 ### Item 1 — Admin lockout rescue & admin security (PARTIAL)
 - [x] Rescue script `npm run admin:reset-2fa -- [email]` (service role): removes every Supabase MFA factor (auth.admin.mfa listFactors/deleteFactor), clears admin_2fa row (enabled=false) and sets require_admin_2fa=false; no-arg uses first ADMIN_EMAILS (or falls back to first role='admin' profile). RAN + confirmed (admin_2fa enabled rows = 0).

@@ -76,13 +76,17 @@ export function ChartShell({
   const [zoomed, setZoomed] = useState<[number, number] | null>(null);
 
   // theme-aware styling
-  const { accent, dark, textMuted } = useMemo(() => {
-    if (typeof window === "undefined") return { accent: ACCENT_PALETTE[0], dark: false, textMuted: "#9ca3af" };
+  const { accent, dark, textMuted, gridColor, tooltipBg, tooltipText } = useMemo(() => {
+    if (typeof window === "undefined")
+      return { accent: ACCENT_PALETTE[0], dark: false, textMuted: "#9ca3af", gridColor: "rgba(0,0,0,0.08)", tooltipBg: "#ffffff", tooltipText: "#111827" };
     const styles = getComputedStyle(document.documentElement);
     const accent = styles.getPropertyValue("--accent").trim() || ACCENT_PALETTE[0];
     const dark = document.documentElement.getAttribute("data-mode") !== "light";
     const textMuted = dark ? "#9ca3af" : "#6b7280";
-    return { accent, dark, textMuted };
+    const gridColor = styles.getPropertyValue("--chart-grid").trim() || (dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)");
+    const tooltipBg = styles.getPropertyValue("--chart-tooltip-bg").trim() || (dark ? "#1a1a2e" : "#ffffff");
+    const tooltipText = styles.getPropertyValue("--chart-tooltip-text").trim() || (dark ? "#e5e7eb" : "#111827");
+    return { accent, dark, textMuted, gridColor, tooltipBg, tooltipText };
   }, [tick]);
 
   // pause live updates when tab hidden
@@ -138,10 +142,10 @@ export function ChartShell({
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: dark ? "#181826" : "#ffffff",
-        titleColor: dark ? "#e5e7eb" : "#111827",
+        backgroundColor: tooltipBg,
+        titleColor: tooltipText,
         bodyColor: textMuted,
-        borderColor: "rgba(128,128,160,0.25)",
+        borderColor: dark ? "rgba(128,128,160,0.25)" : "rgba(15,20,40,0.14)",
         borderWidth: 1,
         padding: 10,
         cornerRadius: 10,
@@ -158,7 +162,7 @@ export function ChartShell({
       y: {
         beginAtZero: true,
         ticks: { color: textMuted, font: { size: 10 } },
-        grid: { color: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" },
+        grid: { color: dark ? "rgba(255,255,255,0.06)" : gridColor },
         border: { display: false },
       },
     },
@@ -206,14 +210,14 @@ export function ChartShell({
   }
 
   return (
-    <div ref={containerRef} className={cn("rounded-2xl border border-[var(--border)] bg-white/[0.02] p-4", className)}>
+    <div ref={containerRef} className={cn("rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-4", className)}>
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-sm font-semibold text-[var(--text)]">{title}</h3>
           {compare && delta != null && (
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">
               vs previous period:{" "}
-              <span className={delta >= 0 ? "text-emerald-400" : "text-rose-400"}>
+              <span className={delta >= 0 ? "text-[var(--success-text)]" : "text-[var(--danger-text)]"}>
                 {delta >= 0 ? "+" : ""}{delta}%
               </span>
             </p>

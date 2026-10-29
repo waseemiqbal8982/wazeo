@@ -1,5 +1,14 @@
 # 📊 STATUS — Wazeo (Stage 0 audit)
 
+## Update (prompt 31 — Item 1 light mode visibility, PARTIAL)
+- Tag `stable-before-prompt31` created + pushed.
+- **Light palette rebuilt** (`app/globals.css`): full semantic token set for light — surface levels, text levels, border + `--border-input`, divider, icon, chart (grid/tooltip), focus ring, overlay, status tokens. Adjusted to WCAG AA (4.5:1 text, 3:1 essential borders/icons). Light glass uses stronger tints + borders; shadows replace glow.
+- **Neutral theme** added (dark + light accent) and registered in `THEMES`, preload list, and chart/theme surfaces.
+- **Three-way mode (Light/Dark/Auto):** `ThemeProvider` now stores a preference incl. `auto` and resolves against the system via `matchMedia` (listener updates live). The inline preload script resolves `auto` *before first paint* → no theme flash. Persisted in localStorage + cookie. UI: shared `ThemeModeToggle` (segmented) wired into AppShell; HomeHeader icon button cycles dark→light→auto.
+- **Charts:** `ChartShell` uses token-driven gridlines/tooltip bg-text/border, surface card, and status colors — readable in light; distinguishable series retained.
+- **Inputs/chips/badges:** read `--input-bg`, `--border-input`, `--placeholder`, `--surface-2`, and status tokens (contrast-safe in light/dark).
+- **`npm run test:contrast`:** added harness (`scripts/test-contrast.mjs`) = Playwright + axe-core `color-contrast` + custom input-border (3:1) checks over landing/sign-in/dashboard/orders/services/wallet/support/settings/admin pages × all themes × light/dark; `CONTRAST_FAST=1` for a quick smoke run. The full audit run is defined; completing it to zero across every combo requires a stable env/network (Supabase realtime/live connections stall `networkidle`), so it is recorded as PARTIAL this session. Lint 0 errors, build pass.
+
 ## Update (prompt 30 — Item 2 key generation fixed)
 - **Root cause:** the admin "Generate keys" API skipped every input that lacked a valid email (`if (!email || !regex) continue;`). So a form with zero required fields returned zero keys (looks like a silent "generation error"). `db:setup` still fails on the pre-existing `engagement_orders` reference (recorded), so the API was verified by code inspection + test suite.
 - **Fix:** email now optional → empty email creates an unbound key (binds on first use). Invalid non-empty emails are logged to `error_logs` (source=admin/keys) + audit/logs.

@@ -15,6 +15,7 @@ import { THEMES } from "@/lib/constants";
 import { useI18n, LANGS } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import { Select } from "@/components/ui/Select";
+import { ThemeModeToggle } from "@/components/ui/ThemeModeToggle";
 import { accessLeftLabel } from "@/lib/access";
 import { ShareWazeo } from "@/components/ShareWazeo";
 
@@ -145,7 +146,7 @@ export function AppShell({
   const [q, setQ] = useState("");
   const [walletOpen, setWalletOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
-  const { theme, setTheme, mode: themeMode, setMode } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { currency, rates, setCurrency, fmt } = useCurrency();
   const { lang, setLang } = useI18n();
   const [inputFocused, setInputFocused] = useState(false);
@@ -665,28 +666,7 @@ export function AppShell({
                         </button>
                       ))}
                     </div>
-                    <div className="flex gap-1.5">
-                      <button
-                        onClick={() => setMode("dark")}
-                        className={cn(
-                          "flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors",
-                          themeMode === "dark" ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]" : "border-[var(--border)] text-[var(--text-muted)]"
-                        )}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg>
-                        Dark
-                      </button>
-                      <button
-                        onClick={() => setMode("light")}
-                        className={cn(
-                          "flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors",
-                          themeMode === "light" ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]" : "border-[var(--border)] text-[var(--text-muted)]"
-                        )}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
-                        Light
-                      </button>
-                    </div>
+                    <ThemeModeToggle className="flex gap-1.5" />
                     <div className="flex flex-wrap gap-1.5">
                       {THEMES.map((t) => (
                         <button
