@@ -1,5 +1,18 @@
 # TASKS — Wazeo (Roman Urdu)
 
+## Prompt 28 — Admin/Customer mobile shell + control center + charts + glass/cursor/interactions
+### Item 1 — Mobile shell (PARTIAL)
+- [~] Floating centered glass pill bottom nav (admin + customer): max-w 420px, inset-x-3, bottom gap 12px + safe-area, rounded-full, accent glow + blur, glowing indicator glides (framer layoutId), hides while an input is focused (focusin) and shows on blur; main content pb-28 so nothing hides behind it.
+- [~] More bottom sheet (glass): search box filtering grouped admin menu (Operations/Customers/Money/Content/System), large tap targets (min-h 64px), closes on navigation.
+- [~] Slim glass top header: logo (mobile), page title, admin search, wallet/currency, theme, notifications bell + dropdown, avatar menu.
+- [ ] Full 320–430px page-by-page mobile audit (tables→cards, filters bottom sheet, sticky save bar, sticky bulk action bar, no horizontal scroll, safe-area modals, RTL) across Overview/Users/Orders/Services/Providers/Payments/Deposit methods/Tickets/Keys/Coupons/Content/Settings/Modules/Logs/System.
+- [x] check:layout extended — fails if bottom pill touches screen edge (inset-x-0 bottom-0) or missing centered/cap/gap gates; still passes.
+### Item 2 — Control center + staff/permissions (MISSING)
+### Item 3 — Live charts (MISSING)
+### Item 4 — Glass look + live cursor (MISSING)
+### Item 5 — Interactive elements (MISSING)
+### Item 6 — Finish (MISSING)
+
 ## Prompt 27 — Public site + home page + admin content
 - [x] **Item 1 — New home page (/):** full rebuild. Server-rendered (`force-dynamic`), lazy + inline SVG/CSS only. Sticky header (logo, menu, lang/currency switchers, Sign in / Get started, mobile full-screen menu, dark/light toggle). Hero with animated example curve (morphs Steady/Slow start/Bell peak/Natural wave) + platform chips. Live numbers from DB with count-up + admin-editable hide thresholds. How it works (3 steps). Services showcase (real "from" price per platform → /services?platform=). Honest feature grid. Interactive delivery demo (duration slider + curve picker, example-only). Reviews carousel showing ONLY approved reviews; empty state + guarantee strip when none; average shown only when ≥5 approved. Trust section (HTTPS, encrypted passwords, policies, real support channels + hours). FAQ accordion (admin-editable). Real-activity ticker (anonymized recent orders, hidden unless ≥10 in 7 days). Per-visit random accent theme (saved after first choice; respects reduce-motion).
 - [x] **Item 2 — Logo / back nav / access everywhere:** logo in headers/footers/auth/public/dashboard/admin (already present, links home). Back arrow + Home link on auth pages and public sub-pages (44px tap target on phones); browser back works. Floating Sign in / Dashboard button on mobile (bottom-left, doesn't overlap ContactFab).

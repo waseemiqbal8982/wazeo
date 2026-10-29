@@ -76,17 +76,17 @@ export const CUSTOMER_BOTTOM = [
 ];
 
 export const ADMIN_GROUPS: NavGroup[] = [
-  { title: "Main", items: [
+  { title: "Operations", items: [
     { href: "/admin", label: "Overview", icon: P.overview },
-    { href: "/admin/users", label: "Users", icon: P.users },
     { href: "/admin/orders", label: "Orders", icon: P.orders },
     { href: "/admin/tickets", label: "Tickets", icon: P.tickets },
-  ] },
-  { title: "Catalog", items: [
-    { href: "/admin/services", label: "Services & Categories", icon: P.services },
+    { href: "/admin/services", label: "Services", icon: P.services },
     { href: "/admin/providers", label: "Providers", icon: P.providers },
   ] },
-  { title: "Finance", items: [
+  { title: "Customers", items: [
+    { href: "/admin/users", label: "Users", icon: P.users },
+  ] },
+  { title: "Money", items: [
     { href: "/admin/payments", label: "Payments", icon: P.payments },
     { href: "/admin/coupons", label: "Coupons & Loyalty", icon: P.coupons },
   ] },
@@ -94,7 +94,7 @@ export const ADMIN_GROUPS: NavGroup[] = [
     { href: "/admin/cms", label: "Content", icon: P.cms },
     { href: "/admin/announcements", label: "Announcements", icon: P.announcements },
   ] },
-  { title: "Manage", items: [
+  { title: "System", items: [
     { href: "/admin/keys", label: "Access Keys", icon: P.keys },
     { href: "/admin/settings", label: "Settings", icon: P.settings },
     { href: "/admin/translations", label: "Translations", icon: P.translations },
@@ -148,6 +148,9 @@ export function AppShell({
   const { theme, setTheme, mode: themeMode, setMode } = useTheme();
   const { currency, rates, setCurrency, fmt } = useCurrency();
   const { lang, setLang } = useI18n();
+  const [inputFocused, setInputFocused] = useState(false);
+  const [sheetQuery, setSheetQuery] = useState("");
+  const [notifOpen, setNotifOpen] = useState(false);
 
   useEffect(() => {
     if (mode === "admin") return;
@@ -163,7 +166,20 @@ export function AppShell({
     setRailOpen(false);
     setMenuOpen(false);
     setSearchOpen(false);
+    setNotifOpen(false);
   }, [pathname]);
+
+  // hide the floating pill while an input is focused; show again on blur
+  useEffect(() => {
+    const onFocusIn = (e: FocusEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      const tag = t.tagName;
+      setInputFocused(tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || t.isContentEditable);
+    };
+    document.addEventListener("focusin", onFocusIn);
+    return () => document.removeEventListener("focusin", onFocusIn);
+  }, []);
 
   async function signOut() {
     await createClient().auth.signOut();
@@ -448,6 +464,31 @@ export function AppShell({
                 </AnimatePresence>
               </div>
 
+              {/* notifications bell */}
+              <div className="relative">
+                <button
+                  onClick={() => { setNotifOpen((v) => !v); setMenuOpen(false); setWalletOpen(false); setThemeOpen(false); }}
+                  className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-white/[0.03] transition-colors hover:bg-white/[0.06]"
+                  aria-label="Notifications"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" /></svg>
+                  <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
+                </button>
+                <AnimatePresence>
+                  {notifOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="absolute right-0 top-11 z-40 w-64 rounded-xl border border-[var(--border)] bg-[#12121f] p-3 shadow-xl"
+                    >
+                      <p className="text-xs font-semibold text-[var(--text-muted)]">Notifications</p>
+                      <p className="mt-2 text-sm text-[var(--text-muted)]">You&apos;re all caught up ✨</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               {/* user menu */}
               <div className="relative">
                 <button
@@ -485,34 +526,54 @@ export function AppShell({
           </main>
         </div>
 
-        {/* ---------- PHONE BOTTOM BAR (<md) ---------- */}
+        {/* ---------- PHONE FLOATING PILL NAV (<md) ---------- */}
         <div
-          className="fixed inset-x-0 bottom-0 z-30 md:hidden"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          className={cn(
+            "fixed inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))] z-30 transition-all duration-300 md:hidden",
+            inputFocused && "pointer-events-none translate-y-6 opacity-0"
+          )}
         >
-          <nav className="flex items-center gap-1 rounded-t-2xl border-t border-[var(--border-strong)] bg-[#12121f]/95 px-2 py-1.5 backdrop-blur-xl">
+          <nav className="mx-auto flex w-full max-w-[420px] items-center gap-1 rounded-full border border-[var(--border-strong)] bg-[#12121f]/85 px-2 py-1.5 shadow-[0_10px_40px_-10px_var(--glow),0_2px_12px_rgba(0,0,0,0.4)] backdrop-blur-xl">
             {bottom.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative flex min-w-[52px] flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-medium transition-colors",
+                  "relative flex min-w-[52px] flex-1 flex-col items-center gap-0.5 rounded-full py-1.5 text-[10px] font-medium transition-colors",
                   isActive(pathname, item.href) ? "text-[var(--accent)]" : "text-[var(--text-muted)]"
                 )}
               >
-                <DIcon d={item.icon} />
-                {item.label}
+                {isActive(pathname, item.href) && (
+                  <motion.span
+                    layoutId="pill-active"
+                    className="absolute inset-0 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)]"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  />
+                )}
+                <span className="relative z-10 flex flex-col items-center gap-0.5">
+                  <DIcon d={item.icon} />
+                  {item.label}
+                </span>
               </Link>
             ))}
             <button
-              onClick={() => setSheetOpen(true)}
+              onClick={() => { setSheetOpen((v) => !v); setSheetQuery(""); }}
               className={cn(
-                "relative flex min-w-[52px] flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-medium transition-colors",
+                "relative flex min-w-[52px] flex-1 flex-col items-center gap-0.5 rounded-full py-1.5 text-[10px] font-medium transition-colors",
                 sheetOpen ? "text-[var(--accent)]" : "text-[var(--text-muted)]"
               )}
             >
-              <DIcon d="M5 12h.01M12 12h.01M19 12h.01" />
-              More
+              {sheetOpen && (
+                <motion.span
+                  layoutId="pill-active"
+                  className="absolute inset-0 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)]"
+                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                />
+              )}
+              <span className="relative z-10 flex flex-col items-center gap-0.5">
+                <DIcon d="M5 12h.01M12 12h.01M19 12h.01" />
+                More
+              </span>
             </button>
           </nav>
         </div>
@@ -543,15 +604,35 @@ export function AppShell({
                   </button>
                 </div>
 
+                <div className="mb-3">
+                  <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white/[0.03] px-3">
+                    <span className="text-[var(--text-muted)]"><DIcon d="M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.35-4.35" /></span>
+                    <input
+                      value={sheetQuery}
+                      onChange={(e) => setSheetQuery(e.target.value)}
+                      placeholder="Search menu…"
+                      className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-[var(--text-muted)]/60"
+                    />
+                    {sheetQuery && (
+                      <button onClick={() => setSheetQuery("")} className="text-[var(--text-muted)]" aria-label="Clear search">
+                        <DIcon d="M18 6L6 18M6 6l12 12" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 <div className="space-y-3">
-                  {groups.map((g) => (
+                  {groups
+                    .map((g) => ({ ...g, items: g.items.filter((i) => i.label.toLowerCase().includes(sheetQuery.trim().toLowerCase())) }))
+                    .filter((g) => g.items.length > 0)
+                    .map((g) => (
                     <div key={g.title}>
                       <p className="px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{g.title}</p>
                       <div className="grid grid-cols-3 gap-2">
                         {g.items.map((item) => (
-                          <Link key={item.href} href={item.href} onClick={() => setSheetOpen(false)}>
+                          <Link key={item.href} href={item.href} onClick={() => { setSheetOpen(false); setSheetQuery(""); }}>
                             <div className={cn(
-                              "flex h-20 flex-col items-center justify-center gap-2 rounded-2xl border px-1 py-2 text-center text-xs font-medium transition-colors",
+                              "flex min-h-[64px] flex-col items-center justify-center gap-1.5 rounded-2xl border px-1 py-2 text-center text-xs font-medium transition-colors",
                               isActive(pathname, item.href)
                                 ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
                                 : "border-[var(--border)] bg-white/[0.03] text-[var(--text)] hover:bg-white/[0.06]"

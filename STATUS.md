@@ -1,5 +1,13 @@
 # 📊 STATUS — Wazeo (Stage 0 audit)
 
+## Update (prompt 28 — Item 1 mobile shell, PARTIAL)
+- Tag `stable-before-prompt28` created + pushed.
+- **Floating pill bottom nav** (admin + customer, phones <768px): replaced the old edge-to-edge attached bar with a centered, floating, fully-rounded glass pill — `inset-x-3`, `max-w-[420px]`, bottom gap `max(12px, env(safe-area-inset-bottom))`, accent-glow shadow + backdrop blur. A glowing active indicator glides between items (framer `layoutId`). The pill hides while any input is focused (Focus listener) and returns on blur. Main content already carries `pb-28` so nothing hides behind the pill.
+- **More bottom sheet** upgraded: search box that filters the grouped admin menu, regrouped into Operations / Customers / Money / Content / System with large (64px+) tap targets; closes on navigation and clears search.
+- **Slim glass top header**: mobile logo, page title, admin Ctrl+K search, wallet/currency, theme, a new notifications bell (with dropdown) and the avatar menu.
+- **check:layout** extended: now fails if the phone nav stretches edge-to-edge (`inset-x-0 bottom-0`) or if the pill is missing the centered/cap/gap gates; `npm run check:layout` passes. `npm run lint` 0 errors; `npm run build` pass.
+- **Still pending for Item 1:** the full per-page 320–430px mobile CSS audit (tables→cards, filters bottom-sheet, sticky save/bulk bars, no horizontal scroll, safe-area modals/drawers, RTL) across every admin page, and real-device verification of the pill at 320/360/390/430/768/1024/1280 px.
+
 ## Update (prompt 27 — public site + home page + admin content)
 - Tag `stable-before-prompt27` created + pushed.
 - **Home page rebuilt** (server-rendered, mobile-first): sticky header with animated logo/menu/lang/currency/dark-toggle, hero with morphing example delivery curve + platform chips, live DB numbers with count-up and admin-editable hide thresholds, how-it-works, services showcase with real per-platform "from" prices, honest feature grid, interactive "example" delivery demo, reviews carousel (only approved reviews; empty-state + guarantee when none; average only when ≥5 approved), trust section with real support channels + hours, admin-editable FAQ accordion, anonymized real-order ticker (hidden under 10 in 7 days), per-visit random accent theme (saved after first choice).
