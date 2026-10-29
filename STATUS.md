@@ -1,5 +1,11 @@
 # 📊 STATUS — Wazeo (Stage 0 audit)
 
+## Update (prompt 28 — Item 3 chart module, PARTIAL)
+- **Shared chart module** `components/charts/ChartShell.tsx` added (Chart.js + react-chartjs-2, client component). Theme-aware: reads `--accent`/`data-mode` at render; 8-accent palette + light. Features: responsive down to 320px, smooth draw-in animation, index crosshair/rich tooltips, clickable legend (hide/show series), date-range chips, compare-with-previous % delta, drag-to-zoom with Reset, PNG + CSV export, skeleton + empty state with zero baseline ("Your chart will grow with your first order"), and a pulsing "Live" badge with a 20s poll that pauses while the tab is hidden. No scores/risk indicators.
+- **Wired into Admin Overview** `/admin` with real order data: "Orders per day" (last 7 days, line) + "Order status" (bar).
+- Checks: `npm run lint` 0 errors; `npm run build` pass.
+- Remaining for Item 3: wire the rest of admin charts (revenue vs profit, new users, signup funnel, users-by-country flags, platform split, top services, deposits per method, provider failure rate, tickets over time, keys generated vs used) and customer charts (views/likes per platform tabs, spend, planned vs delivered), plus Supabase Realtime subscription.
+
 ## Update (prompt 28 — Item 1 mobile shell, PARTIAL)
 - Tag `stable-before-prompt28` created + pushed.
 - **Floating pill bottom nav** (admin + customer, phones <768px): replaced the old edge-to-edge attached bar with a centered, floating, fully-rounded glass pill — `inset-x-3`, `max-w-[420px]`, bottom gap `max(12px, env(safe-area-inset-bottom))`, accent-glow shadow + backdrop blur. A glowing active indicator glides between items (framer `layoutId`). The pill hides while any input is focused (Focus listener) and returns on blur. Main content already carries `pb-28` so nothing hides behind the pill.

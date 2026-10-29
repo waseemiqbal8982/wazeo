@@ -7,6 +7,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
+import { ChartShell } from "@/components/charts/ChartShell";
 import { isMockMode } from "@/lib/provider";
 
 export function AdminOverview() {
@@ -27,7 +28,7 @@ export function AdminOverview() {
     (async () => {
       const [users, orders, payments, tickets] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
-        supabase.from("orders").select("charge, status"),
+        supabase.from("orders").select("charge, status, created_at"),
         supabase.from("payments").select("id").eq("status", "pending"),
         supabase.from("tickets").select("id").eq("status", "open"),
       ]);
@@ -44,6 +45,19 @@ export function AdminOverview() {
 
   const volume = stats.orders.reduce((s: number, o: any) => s + Number(o.charge || 0), 0);
   const active = stats.orders.filter((o: any) => !["completed", "cancelled", "refunded"].includes(o.status)).length;
+
+  // charts (real order data)
+  const dayLabels: string[] = [];
+  const dayCounts: number[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    dayLabels.push(d.toLocaleDateString(undefined, { weekday: "short" }));
+    dayCounts.push(stats.orders.filter((o: any) => o.created_at && o.created_at.slice(0, 10) === key).length);
+  }
+  const statusNames = ["pending", "in_progress", "completed", "cancelled", "refunded"];
+  const statusCounts = statusNames.map((s) => stats.orders.filter((o: any) => o.status === s).length);
 
   return (
     <div className="space-y-5">
@@ -78,6 +92,13 @@ export function AdminOverview() {
             <p className="text-xs text-[var(--text-muted)]">First deposit</p>
             <p className="mt-1 text-2xl font-bold">{stats.pendingPayments}</p>
           </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <ChartShell title="Orders per day" labels={dayLabels} series={[{ label: "Orders", data: dayCounts }]} dateRanges={false} exportName="orders-per-day" />
+          <ChartShell title="Order status" labels={statusNames} series={[{ label: "Orders", data: statusCounts, type: "bar" }]} dateRanges={false} exportName="order-status" />
         </div>
       </Card>
 

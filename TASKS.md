@@ -8,7 +8,10 @@
 - [ ] Full 320–430px page-by-page mobile audit (tables→cards, filters bottom sheet, sticky save bar, sticky bulk action bar, no horizontal scroll, safe-area modals, RTL) across Overview/Users/Orders/Services/Providers/Payments/Deposit methods/Tickets/Keys/Coupons/Content/Settings/Modules/Logs/System.
 - [x] check:layout extended — fails if bottom pill touches screen edge (inset-x-0 bottom-0) or missing centered/cap/gap gates; still passes.
 ### Item 2 — Control center + staff/permissions (MISSING)
-### Item 3 — Live charts (MISSING)
+### Item 3 — Live charts (PARTIAL)
+- [x] Shared chart module `components/charts/ChartShell.tsx` (Chart.js + react-chartjs-2, lazy client component): theme-aware (reads --accent / data-mode; 8-accent palette + light), 320px-safe responsive, smooth draw-in animation, rich tooltips + index crosshair interaction, clickable legend to hide/show series, date-range chips (Today/7d/30d/90d), compare-with-previous % delta, drag-to-zoom with Reset, PNG + CSV export, skeleton loading + empty state with zero baseline ("Your chart will grow with your first order"), and a pulsing "Live" badge with 20s poll that pauses when the tab is hidden.
+- [x] Integrated into Admin Overview (`/admin`) with real order data: Orders-per-day (last 7 days) line + Order-status bar chart.
+- [ ] Remaining: wire remaining admin charts (revenue vs profit, new users, signup funnel, users-by-country flags, platform split, top services, deposits per method, provider failure rate, tickets over time, keys generated vs used) and customer charts (views/likes per platform tabs, spend, planned vs delivered); Supabase Realtime subscription for live data.
 ### Item 4 — Glass look + live cursor (MISSING)
 ### Item 5 — Interactive elements (MISSING)
 ### Item 6 — Finish (MISSING)
