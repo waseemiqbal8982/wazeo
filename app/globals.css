@@ -438,5 +438,58 @@ html[data-mode="light"] {
 .shadow-card { box-shadow: var(--shadow-card); }
 .shadow-pop { box-shadow: var(--shadow-pop); }
 
+/* ---------- Home page animations (transform/opacity only) ---------- */
+@keyframes wazeo-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: wazeo-marquee 40s linear infinite;
+  will-change: transform;
+}
+
+/* scroll-reveal: hidden by default, revealed via IntersectionObserver (JS adds .revealed) */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Gradient moving accent text */
+.text-gradient {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: wazeo-gradient 6s ease infinite;
+}
+@keyframes wazeo-gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ---- Reduced motion: downgrade all animations ---- */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee, .text-gradient, .wazeo-pulse, [data-reduce-motion="true"] .animate-marquee, [data-reduce-motion="true"] .text-gradient {
+    animation: none !important;
+  }
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+[data-reduce-motion="true"] .animate-marquee,
+[data-reduce-motion="true"] .text-gradient {
+  animation: none !important;
+}
+[data-reduce-motion="true"] .reveal {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+html:not([data-reduce-motion="true"]) [data-reduce-motion="true"] .reveal { opacity: 1 !important; }
+
 
 

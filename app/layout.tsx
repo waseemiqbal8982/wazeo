@@ -8,17 +8,42 @@ import { MaintenanceGate } from "@/components/MaintenanceGate";
 import { ContactFab } from "@/components/support/ContactFab";
 import { ImpersonateBanner } from "@/components/ImpersonateBanner";
 import { CurrencyProvider } from "@/lib/currency-store";
+import { FloatingAuth } from "@/components/landing/FloatingAuth";
+import { CookieNotice } from "@/components/CookieNotice";
+import { StatusStrip } from "@/components/StatusStrip";
 
 export const metadata: Metadata = {
   title: {
-    default: "Wazeo — SMM Panel",
+    default: "Wazeo — Gradual delivery for Instagram, TikTok & YouTube",
     template: "%s · Wazeo",
   },
-  description: "Wazeo is a fast, affordable SMM panel for Instagram, TikTok and YouTube growth.",
+  description:
+    "Wazeo delivers your social media orders gradually and naturally with curves you control. Draw your own curve, watch the live graph, and keep growth looking organic.",
   metadataBase: new URL("https://wazeo.vercel.app"),
+  openGraph: {
+    title: "Wazeo — Gradual delivery for Instagram, TikTok & YouTube",
+    description:
+      "Draw your own delivery curve. Watch your order grow gradually with a live graph. Real prices, honest features, secure sign-in.",
+    url: "https://wazeo.vercel.app",
+    siteName: "Wazeo",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Wazeo — Gradual delivery",
+    description: "Draw your own delivery curve and watch your order grow gradually.",
+  },
 };
 
-const preloadScript = `(function(){try{var t=localStorage.getItem('wazeo-theme')||'';if(!t){var m=document.cookie.match(/(?:^|; )wazeo-theme=([^;]*)/);t=m?decodeURIComponent(m[1]):'';}if(!t)t='purple';var md=localStorage.getItem('wazeo-mode')||'';if(!md){var cm=document.cookie.match(/(?:^|; )wazeo-mode=([^;]*)/);md=cm?decodeURIComponent(cm[1]):'';}if(md!=='light'&&md!=='dark')md='dark';var r=localStorage.getItem('wazeo-reduce')==='true';document.documentElement.dataset.theme=t;document.documentElement.dataset.mode=md;document.documentElement.dataset.reduceMotion=r?'true':'false';}catch(e){document.documentElement.dataset.theme='purple';document.documentElement.dataset.mode='dark';}})();`;
+const preloadScript = `(function(){try{
+var tt=['purple','cyan','emerald','rose','amber','ocean','crimson','amoled'];
+var t=localStorage.getItem('wazeo-theme')||'';if(!t){var m=document.cookie.match(/(?:^|; )wazeo-theme=([^;]*)/);t=m?decodeURIComponent(m[1]):'';}
+if(!t){t=tt[Math.floor(Math.random()*tt.length)];try{localStorage.setItem('wazeo-theme',t);document.cookie='wazeo-theme='+encodeURIComponent(t)+'; path=/; max-age=31536000';}catch(e){}}
+if(tt.indexOf(t)<0)t='purple';
+var md=localStorage.getItem('wazeo-mode')||'';if(!md){var cm=document.cookie.match(/(?:^|; )wazeo-mode=([^;]*)/);md=cm?decodeURIComponent(cm[1]):'';}if(md!=='light'&&md!=='dark')md='dark';
+var r=localStorage.getItem('wazeo-reduce')==='true';
+document.documentElement.dataset.theme=t;document.documentElement.dataset.mode=md;document.documentElement.dataset.reduceMotion=r?'true':'false';
+}catch(e){document.documentElement.dataset.theme='purple';document.documentElement.dataset.mode='dark';}})();`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
@@ -40,6 +65,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </MaintenanceGate>
               <ImpersonateBanner />
               <ContactFab />
+              <FloatingAuth />
+              <CookieNotice />
+              <StatusStrip />
             </CurrencyProvider>
           </ThemeProvider>
         </ToastProvider>

@@ -7,6 +7,7 @@ export default function PrivacyPage() {
     <div className="mx-auto max-w-2xl px-4 py-12">
       <Link href="/" className="text-sm text-[var(--accent)]">← Home</Link>
       <h1 className="mt-4 text-3xl font-bold">Privacy Policy</h1>
+      <p className="mt-2 inline-block rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-medium text-[var(--accent)]">Template — edit from Admin → Content</p>
       <p className="mt-2 text-sm text-[var(--text-muted)]">Last updated: 28 Oct 2026</p>
 
       <div className="mt-6 space-y-4 text-sm leading-relaxed text-[var(--text)]">

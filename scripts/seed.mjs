@@ -142,4 +142,22 @@ for (const s of STARTER_SERVICES) {
 }
 console.log(`✅ Starter demo services added: ${starterAdded} (${STARTER_SERVICES.length} in set)`);
 
+// ---- FAQ defaults (only when the faqs table is empty; no fake reviews) ----
+const { count: faqCount } = await sb.from("faqs").select("id", { count: "exact", head: true });
+if (!faqCount) {
+  const defaultFaqs = [
+    { question: "How fast are orders delivered?", answer: "Most orders start within minutes, but delivery is spread gradually over the duration you choose.", sort: 1, active: true },
+    { question: "What is gradual delivery?", answer: "Instead of arriving all at once, your order is spread over time using a growth curve. This looks more natural.", sort: 2, active: true },
+    { question: "Can I control the delivery speed?", answer: "Yes — you set the duration and pick a curve, or draw your own.", sort: 3, active: true },
+    { question: "Do you guarantee results or retention?", answer: "No. Delivery and retention depend on the platform and your account. We never promise guaranteed results.", sort: 4, active: true },
+    { question: "Is my payment secure?", answer: "Yes, we use HTTPS and store passwords encrypted. See our privacy policy.", sort: 5, active: true },
+    { question: "How do I contact support?", answer: "You can reach support via the contact page, email, WhatsApp or Telegram — the channels are shown on the site.", sort: 6, active: true },
+  ].map((f) => ({ ...f, lang: "en" }));
+  const { error: faqErr } = await sb.from("faqs").insert(defaultFaqs);
+  if (faqErr) console.warn("⚠️ Could not seed FAQ defaults:", faqErr.message);
+  else console.log(`✅ Seeded ${defaultFaqs.length} default FAQ items.`);
+} else {
+  console.log("ℹ️ FAQ table is not empty — skipping FAQ defaults.");
+}
+
 console.log("🎉 Seed complete.");

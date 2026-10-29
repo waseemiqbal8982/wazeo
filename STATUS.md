@@ -1,5 +1,17 @@
 # 📊 STATUS — Wazeo (Stage 0 audit)
 
+## Update (prompt 27 — public site + home page + admin content)
+- Tag `stable-before-prompt27` created + pushed.
+- **Home page rebuilt** (server-rendered, mobile-first): sticky header with animated logo/menu/lang/currency/dark-toggle, hero with morphing example delivery curve + platform chips, live DB numbers with count-up and admin-editable hide thresholds, how-it-works, services showcase with real per-platform "from" prices, honest feature grid, interactive "example" delivery demo, reviews carousel (only approved reviews; empty-state + guarantee when none; average only when ≥5 approved), trust section with real support channels + hours, admin-editable FAQ accordion, anonymized real-order ticker (hidden under 10 in 7 days), per-visit random accent theme (saved after first choice).
+- **Logo / back nav / access:** logo links home everywhere; back arrow + Home on auth pages and public sub-pages (44px tap targets); mobile floating Sign in/Dashboard button (doesn't overlap ContactFab).
+- **Public pages added:** /services (searchable price list + platform filters + currency switcher), /pricing, /how-it-works, /faq, /tracker (by order ID, no personal data), /api-docs, /about, /owner. Terms/Privacy/Refund labelled as templates. sitemap.xml + public/robots.txt + OpenGraph/twitter metadata.
+- **Admin > Content (`/admin/cms`)**: home section toggles + editable headline, reviews moderation (approve/hide/delete), FAQ manager, footer links, counter thresholds. All saves write `audit_logs`.
+- **Reviews table added** (`reviews`): RLS — customers create only for their own completed orders; public reads only approved. "Rate this order" (1–5 stars, text, show-first-name) on completed orders. Applied to live DB via new migration `20261029000002_public_home_reviews.sql`.
+- **Item 7:** cookie notice, Share Wazeo (referral link), "Why gradual delivery" explainer, dark/light toggle, status strip (maintenance/provider issue only).
+- **Checks:** `npm run lint` 0 errors; `npm run build` pass; `i18n:check` pass; `check` pass (RLS ON); `check:layout` pass.
+- **Still to do (manual / later):** push all new home/public UI text into the 5 locale files (currently hardcoded English); install Chrome + run Lighthouse CLI for real scores; full `db:setup` still fails on the pre-existing organic-era `engagement_orders` reference (schema applied via targeted migration instead).
+
+
 ## Update (prompt 26 — Item 1: users stay signed in)
 - Tag `stable-before-prompt26` created + pushed.
 - **Root cause:** auth cookies were written as session cookies (no long maxAge)

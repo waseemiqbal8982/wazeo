@@ -15,6 +15,7 @@ import { ORDER_STATUS_LABELS } from "@/lib/constants";
 import { useToast } from "@/components/ui/Toast";
 import { Stats } from "./StatBox";
 import { ChunksTable } from "./ChunksTable";
+import { RateOrder } from "./RateOrder";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler);
 
@@ -149,6 +150,8 @@ export function OrderDetail({ id }: { id: string }) {
         </div>
         <ChunksTable chunks={chunks} />
       </Card>
+
+      {order.status === "completed" && <RateOrder orderId={order.id} />}
 
       <Button variant="outline" onClick={() => router.push("/dashboard/orders")}>← Back to orders</Button>
     </div>

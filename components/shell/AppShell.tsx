@@ -16,6 +16,7 @@ import { useI18n, LANGS } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import { Select } from "@/components/ui/Select";
 import { accessLeftLabel } from "@/lib/access";
+import { ShareWazeo } from "@/components/ShareWazeo";
 
 /* ------------------------------------------------------------------ */
 /* Icons (inline SVG path `d` strings — one per menu item)             */
@@ -90,8 +91,8 @@ export const ADMIN_GROUPS: NavGroup[] = [
     { href: "/admin/coupons", label: "Coupons & Loyalty", icon: P.coupons },
   ] },
   { title: "Content", items: [
+    { href: "/admin/cms", label: "Content", icon: P.cms },
     { href: "/admin/announcements", label: "Announcements", icon: P.announcements },
-    { href: "/admin/cms", label: "Pages & FAQ", icon: P.cms },
   ] },
   { title: "Manage", items: [
     { href: "/admin/keys", label: "Access Keys", icon: P.keys },
@@ -405,6 +406,11 @@ export function AppShell({
                     </motion.div>
                   )}
                 </AnimatePresence>
+              </div>
+
+              {/* share Wazeo (referral link) — desktop only */}
+              <div className="hidden md:block">
+                <ShareWazeo />
               </div>
 
               {/* theme (desktop/tablet) */}

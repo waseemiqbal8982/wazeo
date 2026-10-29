@@ -11,6 +11,7 @@ export default function RefundPolicyPage() {
         <span className="font-bold">Wazeo</span>
       </Link>
       <h1 className="mt-8 text-3xl font-bold">Refund Policy</h1>
+      <p className="mt-2 inline-block rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-medium text-[var(--accent)]">Template — edit from Admin → Content</p>
       <div className="mt-6 space-y-4 text-sm leading-relaxed text-[var(--text-muted)]">
         <p>We want you to be happy with Wazeo. Please read this refund policy carefully.</p>
         <h2 className="text-base font-semibold text-[var(--text)]">No guarantee of delivery</h2>
