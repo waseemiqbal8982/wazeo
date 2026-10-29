@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-29T15:54:49.913Z",
+  "counts": {
+    "entries": 7,
+    "byType": {
+      "system": 1,
+      "decision": 4,
+      "issue": 1,
+      "fix": 1
+    }
+  },
+  "last": [
+    {
+      "id": "47b84102",
+      "ts": "2026-10-29T15:54:49.423Z",
+      "type": "system",
+      "actor": "memory.init",
+      "message": "Project memory system initialized",
+      "data": {
+        "purpose": "permanent context & AI handover"
+      }
+    },
+    {
+      "id": "1bab8e60",
+      "ts": "2026-10-29T15:54:49.494Z",
+      "type": "decision",
+      "actor": "admin",
+      "message": "Canonical domain shifted to innvera.shop (Supabase auth site_url, Vercel NEXT_PUBLIC_SITE_URL, code metadata/sitemap/robots)"
+    },
+    {
+      "id": "6d6fc8a3",
+      "ts": "2026-10-29T15:54:49.565Z",
+      "type": "decision",
+      "actor": "admin",
+      "message": "Added security headers (HSTS, X-Frame-Options DENY, CSP, COOP/CORP), poweredByHeader off, compression, /api/healthz, robots.txt, noindex on /admin and /api"
+    },
+    {
+      "id": "266c5251",
+      "ts": "2026-10-29T15:54:49.647Z",
+      "type": "decision",
+      "actor": "admin",
+      "message": "Added OG social image (next/og) and customer dashboard charts (spending 30d + platform split)"
+    },
+    {
+      "id": "e5f17f61",
+      "ts": "2026-10-29T15:54:49.714Z",
+      "type": "issue",
+      "actor": "admin",
+      "message": "Access-key redemption: production /api/auth/* POST routes return 405 (handlers missing from deployed build); local build contains all routes; under investigation. Supabase Auth/login confirmed working."
+    },
+    {
+      "id": "cf0ca974",
+      "ts": "2026-10-29T15:54:49.777Z",
+      "type": "fix",
+      "actor": "admin",
+      "message": "Transient Supabase Auth 503 resolved; login functional"
+    },
+    {
+      "id": "d969b178",
+      "ts": "2026-10-29T15:54:49.850Z",
+      "type": "decision",
+      "actor": "admin",
+      "message": "Implemented permanent project memory system (ledger, snapshots, backups, export/restore, admin /api/memory, generated project.html, AI handover doc)"
+    }
+  ]
+}

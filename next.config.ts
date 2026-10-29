@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   poweredByHeader: false, // do not leak server software (X-Powered-By)
   compress: true, // gzip/brotli compression on self-hosted deploys
+  reactStrictMode: true, // help surface code issues; busts stale Vercel build cache
   turbopack: {
     rules: {
       "*.css": {

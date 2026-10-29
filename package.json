@@ -22,7 +22,9 @@
         "test:schedule": "tsx scripts/test-schedule.ts",
         "test:key": "tsx scripts/test-key.ts",
         "test:session": "node scripts/test-session.mjs",
-        "test:contrast": "node scripts/test-contrast.mjs"
+        "test:contrast": "node scripts/test-contrast.mjs",
+        "memory": "node scripts/memory.mjs",
+        "memory:html": "node scripts/generate-project-html.mjs"
     },
     "devDependencies": {
         "@axe-core/playwright": "^4.14.0",
@@ -36,6 +38,7 @@
         "eslint-config-next": "16.4.3",
         "pg": "^8.23.1",
         "tailwindcss": "^4",
+        "tsx": "^4.19.2",
         "typescript": "^5"
     },
     "dependencies": {
