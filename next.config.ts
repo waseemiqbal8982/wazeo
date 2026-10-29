@@ -51,7 +51,15 @@ const nextConfig: NextConfig = {
           { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
         ],
       },
-    ];
+    {
+      source: "/admin/:path*",
+      headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+    },
+    {
+      source: "/api/:path*",
+      headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+    },
+  ];
   },
 };
 
