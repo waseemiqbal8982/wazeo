@@ -76,6 +76,51 @@ export function AdminKeys() {
   const [mode, setMode] = useState("self");
   const [bulk, setBulk] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [accessDays, setAccessDays] = useState("30");
+  const [customDays, setCustomDays] = useState("60");
+  const [planName, setPlanName] = useState("Standard");
+  const [features, setFeatures] = useState<string[]>([]);
+  const [redemptionExpiresAt, setRedemptionExpiresAt] = useState("");
+
+  const MODULES = [
+    "Combo",
+    "Bulk",
+    "Growth",
+    "Likes",
+    "Scheduler",
+    "Referral",
+    "Daily reward",
+    "Coupons",
+    "AI",
+    "Live chat",
+    "Blog",
+    "API access",
+    "Reviews",
+  ];
+
+  const toggleFeature = (f: string) => {
+    setFeatures((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]));
+  };
+
+  const resolveAccessDays = (): string => {
+    if (accessDays === "permanent") return "permanent";
+    if (accessDays === "custom") return String(Math.max(1, Number(customDays) || 1));
+    return String(Number(accessDays) || 30);
+  };
+
+  const keyInput = (email: string) => ({
+    email,
+    label,
+    expiresAt: new Date(Date.now() + (Number(expiryDays) || 7) * 86400000).toISOString(),
+    accessDays: resolveAccessDays(),
+    planName,
+    features,
+    redemptionExpiresAt: redemptionExpiresAt || undefined,
+    startingBalance: Number(balance) || 0,
+    note,
+    mode,
+  });
+
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -165,14 +210,7 @@ export function AdminKeys() {
     try {
       const { res, data } = await api({
         action: "generate",
-        inputs: list.map((e) => ({
-          email: e,
-          label,
-          expiresAt: new Date(Date.now() + (Number(expiryDays) || 7) * 86400000).toISOString(),
-          startingBalance: Number(balance) || 0,
-          note,
-          mode,
-        })),
+        inputs: list.map((e) => keyInput(e)),
       });
       if (!res.ok) throw new Error(data.error || "Generate failed");
       setResults(data.keys || []);
@@ -198,14 +236,7 @@ export function AdminKeys() {
     try {
       const { res, data } = await api({
         action: "generate",
-        inputs: list.map((e) => ({
-          email: e,
-          label,
-          expiresAt: new Date(Date.now() + (Number(expiryDays) || 7) * 86400000).toISOString(),
-          startingBalance: Number(balance) || 0,
-          note,
-          mode,
-        })),
+        inputs: list.map((e) => keyInput(e)),
       });
       if (!res.ok) throw new Error(data.error || "Bulk generate failed");
       setResults(data.keys || []);
@@ -262,8 +293,11 @@ export function AdminKeys() {
     }
   };
 
-  const readyMessage = (r: GeneratedResult) =>
-    `Welcome to Wazeo! Your access key: ${r.key} (email: ${r.email}). Create your account at innvera.shop to get started.`;
+  const readyMessage = (r: GeneratedResult) => {
+    const days = resolveAccessDays();
+    const accessText = days === "permanent" ? "Permanent access" : `${days} days of access`;
+    return `Welcome to Wazeo! Your access key: ${r.key} (email: ${r.email}). Plan: ${planName || "Standard"} — ${accessText}. Create your account at innvera.shop and enter this key to get started.`;
+  };
 
   return (
     <div className="space-y-5">
@@ -340,22 +374,59 @@ export function AdminKeys() {
       <Card className="p-5">
         <h2 className="mb-3 text-sm font-semibold">Generate keys</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Input label="Email(s)" placeholder="user@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input label="Email" placeholder="user@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           <Input label="Label (optional)" placeholder="e.g. Free promo" value={label} onChange={(e) => setLabel(e.target.value)} />
-          <Input label="Expiry (days)" type="number" min={1} value={expiryDays} onChange={(e) => setExpiryDays(e.target.value)} />
           <Input label="Starting balance (USD)" type="number" min={0} value={balance} onChange={(e) => setBalance(e.target.value)} />
+          <Input label="Plan name" placeholder="e.g. Starter" value={planName} onChange={(e) => setPlanName(e.target.value)} />
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Input label="Note (optional)" placeholder="Internal note" value={note} onChange={(e) => setNote(e.target.value)} />
-          <Select
-            label="Account mode"
-            value={mode}
-            onChange={(e) => setMode(e.target.value)}
-            options={[
-              { value: "self", label: "User sets own password" },
-              { value: "admin", label: "Admin creates account (one-time temporary password)" },
-            ]}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Access days</label>
+            <Select
+              value={accessDays}
+              onChange={(e) => setAccessDays(e.target.value)}
+              options={[
+                { value: "7", label: "7 days" },
+                { value: "30", label: "30 days" },
+                { value: "90", label: "90 days" },
+                { value: "365", label: "365 days" },
+                { value: "permanent", label: "Permanent" },
+                { value: "custom", label: "Custom…" },
+              ]}
+            />
+            {accessDays === "custom" && (
+              <Input className="mt-2" label="Custom days" type="number" min={1} value={customDays} onChange={(e) => setCustomDays(e.target.value)} />
+            )}
+          </div>
+          <Input
+            label="Redemption deadline (optional)"
+            type="datetime-local"
+            value={redemptionExpiresAt}
+            onChange={(e) => setRedemptionExpiresAt(e.target.value)}
           />
+        </div>
+        <div className="mt-3">
+          <label className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">Features it unlocks</label>
+          <div className="flex flex-wrap gap-1.5">
+            {MODULES.map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => toggleFeature(m)}
+                className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                  features.includes(m)
+                    ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
+                    : "border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Input label="Redemption expiry (key expiry, days)" type="number" min={1} value={expiryDays} onChange={(e) => setExpiryDays(e.target.value)} />
+          <Input label="Note (optional)" placeholder="Internal note" value={note} onChange={(e) => setNote(e.target.value)} />
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button loading={busy} onClick={generate}>

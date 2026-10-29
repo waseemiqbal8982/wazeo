@@ -104,12 +104,30 @@ export async function POST(req: Request) {
         ? new Date(inp.expiresAt).toISOString()
         : new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
 
+      // access days: null/number = permanent; default 30 when not supplied
+      let accessDays: number | null = null;
+      if (inp.accessDays === "permanent" || inp.accessDays == null || inp.accessDays === "") {
+        accessDays = null;
+      } else {
+        const n = Number(inp.accessDays);
+        accessDays = Number.isFinite(n) && n > 0 ? Math.floor(n) : null;
+      }
+      const planName = (inp.planName || "").trim() || "Standard";
+      const features = Array.isArray(inp.features) ? inp.features.filter((f: unknown) => typeof f === "string" && (f as string).trim()) : [];
+      const redemptionExpiresAt = inp.redemptionExpiresAt
+        ? new Date(inp.redemptionExpiresAt).toISOString()
+        : null;
+
       const created = {
         email, label, note, mode,
         code: hashKey(key),
         hash: hashKey(key),
         last4: last4(key),
         expires_at: expiresAt,
+        access_days: accessDays,
+        plan_name: planName,
+        features,
+        redemption_expires_at: redemptionExpiresAt,
         usage_limit: 1,
         starting_balance: startingBalance,
         active: true,
@@ -210,6 +228,28 @@ export async function POST(req: Request) {
   if (action === "setInvite") {
     await admin.from("settings").upsert({ key: "invite_only", value: body.value ? "true" : "false" }, { onConflict: "key" });
     await audit("admin_set_invite_only", { value: !!body.value });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === "extendAccess") {
+    const userId = body.userId;
+    if (!userId) return NextResponse.json({ error: "userId required." }, { status: 400 });
+    const days = body.days === "permanent" || body.days == null || body.days === "" ? null : Number(body.days);
+    const accessExpiresAt = days && Number.isFinite(days) && days > 0
+      ? new Date(Date.now() + days * 86400000).toISOString()
+      : null;
+    const { error: ue } = await admin.from("profiles").update({ access_expires_at: accessExpiresAt }).eq("id", userId);
+    if (ue) return NextResponse.json({ error: ue.message }, { status: 400 });
+    await audit("admin_extend_access", { userId, days: days ?? "permanent" });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === "revokeUserAccess") {
+    const userId = body.userId;
+    if (!userId) return NextResponse.json({ error: "userId required." }, { status: 400 });
+    const { error: ue } = await admin.from("profiles").update({ access_expires_at: new Date().toISOString() }).eq("id", userId);
+    if (ue) return NextResponse.json({ error: ue.message }, { status: 400 });
+    await audit("admin_revoke_user_access", { userId });
     return NextResponse.json({ ok: true });
   }
 

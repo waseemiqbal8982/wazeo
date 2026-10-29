@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { COUNTRIES, countryName } from "@/lib/countries";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -12,7 +11,6 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { OtpInput } from "@/components/auth/OtpInput";
 import { passwordStrength } from "@/lib/validation";
 import { useI18n } from "@/lib/i18n";
-import { Select } from "@/components/ui/Select";
 
 const Checkmark = () => (
   <div className="auth-check-pop mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--success)]/15">
@@ -34,19 +32,15 @@ const Checkmark = () => (
 export default function SignUpPage() {
   const router = useRouter();
   const { t } = useI18n();
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [referral, setReferral] = useState("");
-  const [country, setCountry] = useState("");
-  const [detected, setDetected] = useState("");
+  const [terms, setTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [errTick, setErrTick] = useState(0);
   const [done, setDone] = useState(false);
 
-  // OTP flow state
   const [otp, setOtp] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [otpError, setOtpError] = useState("");
@@ -56,20 +50,6 @@ export default function SignUpPage() {
   const [resendBusy, setResendBusy] = useState(false);
   const [expiresIn, setExpiresIn] = useState(0);
 
-  useEffect(() => {
-    fetch("/api/meta/country")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.country) {
-          setDetected(d.country);
-          setCountry((c) => c || d.country);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  // Start the 60s resend countdown + 5-minute expiry countdown once the
-  // check-email panel shows.
   useEffect(() => {
     if (!done) return;
     setResendIn(60);
@@ -91,17 +71,17 @@ export default function SignUpPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (username.length < 3) return fail(t("auth.error.username_short"));
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(t("auth.error.email_invalid"));
     if (password.length < 8) return fail(t("auth.error.password_short"));
     if (password !== confirm) return fail(t("auth.error.password_mismatch"));
+    if (!terms) return fail(t("auth.error.terms_required"));
 
     setLoading(true);
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password, referral: referral || undefined, country: country || undefined }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -189,6 +169,7 @@ export default function SignUpPage() {
     setResendIn(0);
   };
 
+
   if (done) {
     return (
       <Card className="glass-glow p-6 text-center sm:p-8">
@@ -206,7 +187,6 @@ export default function SignUpPage() {
             </>
           ) : (
             <>
-              {otpError && <div className="mb-3 h-1" />}
               <div className="mb-4 flex justify-center">
                 <Logo size={36} />
               </div>
@@ -261,6 +241,7 @@ export default function SignUpPage() {
     );
   }
 
+
   return (
     <Card className="glass-glow p-6 sm:p-8">
       <div className="mb-6 flex flex-col items-center text-center">
@@ -271,13 +252,6 @@ export default function SignUpPage() {
       <div key={errTick} className={error ? "animate-shake" : ""}>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <Input
-            label={t("auth.username")}
-            placeholder={t("auth.ph.username")}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
-          />
-          <Input
             label={t("auth.email")}
             type="email"
             placeholder={t("auth.ph.email")}
@@ -285,20 +259,6 @@ export default function SignUpPage() {
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
           />
-          <div>
-            <Select
-              label={t("auth.country")}
-              placeholder={t("auth.ph.country")}
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              options={COUNTRIES.map((c) => ({ value: c.code, label: `${c.name} (${c.code})` }))}
-            />
-            {detected && (
-              <p className="-mt-1 mb-1 text-xs text-[var(--text-muted)]">
-                Detected: {countryName(detected)}. Change if wrong.
-              </p>
-            )}
-          </div>
           <div>
             <PasswordInput
               label={t("auth.password")}
@@ -316,12 +276,7 @@ export default function SignUpPage() {
                         className="h-full rounded-full transition-[width] duration-200"
                         style={{
                           width: i < strength.score ? "100%" : "0%",
-                          background:
-                            strength.score >= 4
-                              ? "var(--success)"
-                              : strength.score >= 2
-                                ? "var(--accent)"
-                                : "var(--danger)",
+                          background: strength.score >= 4 ? "var(--success)" : strength.score >= 2 ? "var(--accent)" : "var(--danger)",
                         }}
                       />
                     </div>
@@ -339,12 +294,21 @@ export default function SignUpPage() {
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
           />
-          <Input
-            label={t("auth.referral")}
-            placeholder={t("auth.ph.referral")}
-            value={referral}
-            onChange={(e) => setReferral(e.target.value)}
-          />
+
+          <label className="flex items-start gap-2.5 text-sm text-[var(--text-muted)]">
+            <input
+              type="checkbox"
+              checked={terms}
+              onChange={(e) => setTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-[var(--border)] accent-[var(--accent)]"
+            />
+            <span>
+              I agree to the{" "}
+              <Link href="/terms" className="text-[var(--accent)] hover:underline">Terms</Link>{" "}
+              and{" "}
+              <Link href="/refund-policy" className="text-[var(--accent)] hover:underline">Refund Policy</Link>.
+            </span>
+          </label>
 
           {error && (
             <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">

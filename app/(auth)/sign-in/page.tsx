@@ -70,78 +70,73 @@ export default function SignInPage() {
         <p className="mt-2 text-sm text-[var(--text-muted)]">{t("auth.login.title")}</p>
       </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-2">
-        <Link
-          href="/sign-up"
-          className={`inline-flex items-center justify-center rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
-            mode === "signin"
-              ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
-              : "border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]"
-          }`}
-        >
-          {t("auth.create_link")}
-        </Link>
-        <button
-          type="button"
-          onClick={() => setMode("key")}
-          className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
-            mode === "key"
-              ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
-              : "border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]"
-          }`}
-        >
-          I have an access key
-        </button>
-      </div>
-
-      {mode === "signin" ? (
-        <>
-        <SocialLogin next={next} />
-        <div key={errTick} className={showError ? "animate-shake" : ""}>
-        {showError && (
-          <div role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
-            {state?.error || t("auth.error.banned")}
-          </div>
-        )}
-
-        <form action={formAction} className="space-y-4" noValidate>
-          <input type="hidden" name="next" value={next} />
-          <Input
-            name="email"
-            label={t("auth.email")}
-            type="email"
-            placeholder={t("auth.ph.email")}
-            autoComplete="email"
-            required
-          />
-          <PasswordInput
-            name="password"
-            label={t("auth.password")}
-            placeholder="••••••••"
-            autoComplete="current-password"
-            required
-          />
-          <Button full loading={pending} type="submit">
-            {pending ? t("auth.signin_progress") : t("auth.signin_button")}
-          </Button>
-        </form>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between text-sm">
-        <Link href="/forgot-password" className="text-[var(--text-muted)] hover:text-[var(--accent)]">
-          {t("auth.forgot")}
-        </Link>
-        <Link href="/sign-up" className="font-medium text-[var(--accent)] hover:brightness-110">
-          {t("auth.create_link")}
-        </Link>
-      </div>
-        </>
-      ) : (
+      {mode === "key" ? (
         <>
           <AccessKeyRedeem />
           <div className="mt-4 text-center text-sm">
             <button type="button" onClick={() => setMode("signin")} className="font-medium text-[var(--accent)] hover:brightness-110">
               ← Use email &amp; password instead
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* 1. Sign-in form first */}
+          <div key={errTick} className={showError ? "animate-shake" : ""}>
+            {showError && (
+              <div role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                {state?.error || t("auth.error.banned")}
+              </div>
+            )}
+            <form action={formAction} className="space-y-4" noValidate>
+              <input type="hidden" name="next" value={next} />
+              <Input
+                name="email"
+                label={t("auth.email")}
+                type="email"
+                placeholder={t("auth.ph.email")}
+                autoComplete="email"
+                required
+              />
+              <div>
+                <PasswordInput
+                  name="password"
+                  label={t("auth.password")}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  required
+                />
+                <div className="mt-2 flex justify-end text-sm">
+                  <Link href="/forgot-password" className="text-[var(--text-muted)] hover:text-[var(--accent)]">
+                    {t("auth.forgot")}
+                  </Link>
+                </div>
+              </div>
+              <Button full loading={pending} type="submit">
+                {pending ? t("auth.signin_progress") : t("auth.signin_button")}
+              </Button>
+            </form>
+          </div>
+
+          {/* 2. Round social buttons */}
+          <div className="mt-6">
+            <SocialLogin next={next} />
+          </div>
+
+          {/* 3. Two clear options */}
+          <div className="mt-6 space-y-2.5 border-t border-[var(--border)] pt-5">
+            <Link
+              href="/sign-up"
+              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-[var(--accent)] bg-[var(--accent-soft)] px-3 text-sm font-medium text-[var(--accent)] transition-colors hover:brightness-110"
+            >
+              Create an account
+            </Link>
+            <button
+              type="button"
+              onClick={() => setMode("key")}
+              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-[var(--border)] px-3 text-sm font-medium text-[var(--text)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            >
+              I have an access key
             </button>
           </div>
         </>

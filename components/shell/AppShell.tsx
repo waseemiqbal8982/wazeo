@@ -15,6 +15,7 @@ import { THEMES } from "@/lib/constants";
 import { useI18n, LANGS } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import { Select } from "@/components/ui/Select";
+import { accessLeftLabel } from "@/lib/access";
 
 /* ------------------------------------------------------------------ */
 /* Icons (inline SVG path `d` strings — one per menu item)             */
@@ -201,6 +202,11 @@ export function AppShell({
             <Logo size={28} />
             <span className="text-lg font-bold">Wazeo</span>
           </Link>
+          {!isAdmin && (
+            <div className="mb-4 rounded-xl border border-[var(--border)] bg-white/[0.03] px-3 py-2 text-xs font-medium text-[var(--text-muted)]">
+              {accessLeftLabel(user.access_expires_at)}
+            </div>
+          )}
           <nav className="flex-1 space-y-3 overflow-y-auto">
             {groups.map((g) => (
               <div key={g.title}>
@@ -356,6 +362,12 @@ export function AppShell({
                   <span className="hidden lg:inline">Search</span>
                   <kbd className="rounded bg-white/[0.06] px-1 text-[10px]">Ctrl K</kbd>
                 </button>
+              )}
+
+              {!isAdmin && (
+                <span className="hidden items-center rounded-full border border-[var(--border)] bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] md:flex">
+                  {accessLeftLabel(user.access_expires_at)}
+                </span>
               )}
 
               {/* wallet / currency */}

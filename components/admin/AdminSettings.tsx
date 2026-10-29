@@ -171,6 +171,36 @@ export function AdminSettings() {
             Refresh rates (auto)
           </Button>
         </div>
+        <div className="border-t border-[var(--border)] pt-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium">Require email verification code for key accounts</p>
+              <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                When ON, every access-key account must verify with an OTP code before entering.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={values.require_key_email_verify === "true"}
+              onClick={() =>
+                setValues((v) => ({
+                  ...v,
+                  require_key_email_verify: v.require_key_email_verify === "true" ? "false" : "true",
+                }))
+              }
+              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 ${
+                values.require_key_email_verify === "true" ? "bg-[var(--accent)]" : "bg-white/[0.1]"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ${
+                  values.require_key_email_verify === "true" ? "translate-x-5" : "translate-x-0.5"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
         <Button loading={busy} onClick={save}>Save settings</Button>
       </Card>
     </div>

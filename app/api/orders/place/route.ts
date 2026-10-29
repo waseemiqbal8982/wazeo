@@ -40,6 +40,18 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   if (!user.email_confirmed_at) return NextResponse.json({ error: "Please verify your email first." }, { status: 403 });
 
+  // Access-expiry guard: only NEW orders are blocked. History & renewal remain.
+  const { data: prof } = await supabase.from("profiles").select("access_expires_at").eq("id", user.id).single();
+  if (prof?.access_expires_at) {
+    const end = new Date(prof.access_expires_at).getTime();
+    if (Number.isFinite(end) && end <= Date.now()) {
+      return NextResponse.json(
+        { error: "Your access has expired. Renew with a new key to place new orders." },
+        { status: 403 }
+      );
+    }
+  }
+
   const { data: service } = await supabase
     .from("services")
     .select("*")

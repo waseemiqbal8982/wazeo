@@ -6,13 +6,27 @@ import { authErrorMessage, isValidEmail } from "@/lib/authMessages";
 import { createHash } from "node:crypto";
 import { runHooks } from "@/lib/hooks";
 
+/** Generate a unique username from the email prefix (base + digits if taken). */
+async function makeUniqueUsername(base: string, admin: ReturnType<typeof createAdminClient>): Promise<string> {
+  const clean = base.replace(/[^a-zA-Z0-9_.]/g, "").slice(0, 20) || "user";
+  // check if exact exists
+  const { data: exact } = await admin.from("profiles").select("id").eq("username", clean).limit(1);
+  if (!exact || exact.length === 0) return clean;
+  for (let i = 1; i <= 999; i++) {
+    const candidate = `${clean.slice(0, 17)}${i}`;
+    const { data: row } = await admin.from("profiles").select("id").eq("username", candidate).limit(1);
+    if (!row || row.length === 0) return candidate;
+  }
+  return `${clean.slice(0, 12)}_${Date.now().toString(36)}`;
+}
+
 export async function POST(req: Request) {
   const rl = rateLimit(`signup:${getClientIp(req)}`, 6, 60_000);
   if (!rl.ok) {
     return NextResponse.json({ error: "Too many attempts. Please wait a moment." }, { status: 429 });
   }
 
-  let body: { username?: string; email?: string; password?: string; referral?: string; phone?: string; website?: string; code?: string; country?: string };
+  let body: { email?: string; password?: string; website?: string; phone?: string };
   try {
     body = await req.json();
   } catch {
@@ -23,18 +37,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const username = (body.username || "").trim();
   const email = (body.email || "").trim().toLowerCase();
   const password = body.password || "";
-  const referral = (body.referral || "").trim();
-  const phone = (body.phone || "").replace(/[^0-9+]/g, "").slice(0, 20);
-
-  if (!username || !email || !password) {
-    return NextResponse.json({ error: "Username, email and password are required." }, { status: 400 });
-  }
-  if (username.length < 3) {
-    return NextResponse.json({ error: "Username must be at least 3 characters." }, { status: 400 });
-  }
   if (!isValidEmail(email)) {
     return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
   }
@@ -52,12 +56,24 @@ export async function POST(req: Request) {
   } catch {}
 
   const ipHash = createHash("sha256").update(getClientIp(req)).digest("hex").slice(0, 24);
-  const headerCountry = (req.headers.get("x-vercel-ip-country") || req.headers.get("cf-ipcountry") || "").toUpperCase().slice(0, 2);
-  const country = /^[A-Z]{2}$/.test(body.country || "") ? (body.country || "").toUpperCase() : headerCountry || null;
 
-  // Default language from country (only existing Wazeo languages)
+  // Country: server-side detection from request headers; "unknown" if it fails.
+  const headerCountry = (req.headers.get("x-vercel-ip-country") || req.headers.get("cf-ipcountry") || "").toUpperCase().slice(0, 2);
+  const country = /^[A-Z]{2}$/.test(headerCountry) ? headerCountry : "unknown";
+
   const langByCountry: Record<string, string> = { PK: "ur", IN: "hi", CN: "zh" };
-  const defaultLang = langByCountry[country || ""] || "en";
+  const defaultLang = langByCountry[country] || "en";
+
+  // Referral: read silently from the wazeo-referral cookie (set by /r/<code>).
+  let referral = "";
+  try {
+    const cookieHeader = req.headers.get("cookie") || "";
+    const match = cookieHeader.match(/(?:^|;\s*)wazeo-referral=([^;]*)/);
+    if (match) referral = decodeURIComponent(match[1]).trim();
+  } catch {}
+
+  const admin = createAdminClient();
+  const username = await makeUniqueUsername(email.split("@")[0], admin);
 
   const origin = new URL(req.url).origin;
   const supabase = await createClient();
@@ -66,7 +82,7 @@ export async function POST(req: Request) {
     password,
     options: {
       emailRedirectTo: `${origin}/auth/callback`,
-      data: { username, referral: referral || undefined, phone: phone || undefined, ip_hash: ipHash, country: country || undefined, language: defaultLang },
+      data: { username, referral: referral || undefined, ip_hash: ipHash, country, language: defaultLang },
     },
   });
 
@@ -79,12 +95,10 @@ export async function POST(req: Request) {
       await runHooks("user.signup", { userId: data.user.id, referralCode: referral || undefined });
     } catch {}
     try {
-      const admin = createAdminClient();
       await admin.from("profiles").upsert(
-        { id: data.user.id, username, phone: phone || null, signup_ip_hash: ipHash, country, language: defaultLang, referral_used: referral || null },
+        { id: data.user.id, username, signup_ip_hash: ipHash, country, language: defaultLang, referral_used: referral || null },
         { onConflict: "id" }
       );
-      // Record when the signup OTP email was sent (for expiry/cooldown).
       await admin.from("email_otps").upsert(
         {
           email,

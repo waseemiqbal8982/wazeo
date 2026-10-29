@@ -32,6 +32,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         email: profile?.email || null,
         country: profile?.country || null,
         currency: profile?.currency || null,
+        access_expires_at: profile?.access_expires_at ?? null,
       }}
     >
       {children}

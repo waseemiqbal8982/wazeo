@@ -11,6 +11,7 @@ export interface User {
   email?: string | null;
   country?: string | null;
   currency?: string | null;
+  access_expires_at?: string | null;
 }
 
 export const NAV = [

@@ -1,5 +1,17 @@
 # 📊 STATUS — Wazeo (Stage 0 audit)
 
+## Update (prompt 25 — sign-in / sign-up / access-key screens + key data)
+- Tag `stable-before-prompt25` created + pushed.
+- **Item 1 — Load then sign-in:** SplashLoader (spinning ring, no text, ≥600ms) already in root layout → fades into sign-in. Sign-in page reordered: form first (email/password/show-hide/forgot/Sign in) → round social buttons (Google/X/GitHub; unconfigured providers disabled with "Not set up yet" tooltip via new `/api/meta/oauth`) → two clear options "Create an account" / "I have an access key". Ref: `app/(auth)/sign-in`, `components/auth/SocialLogin`.
+- **Item 2 — Access-key flow (multi-step):** `components/auth/AccessKeyRedeem.tsx` rebuilt: enter key (auto-uppercase + auto-format WZ-XXXX-XXXX-XXXX) → validating popup (orbit spinner ≥1.2s) → success state (plan, days/Permanent, works-until date, feature chips) → compact activate step (email bound/read-only if bound, password + strength bar) → "Activate my access". `app/api/auth/key-redeem` rewritten: `action=validate` (returns plan/days/features/bound_email) and `action=redeem` (atomic claim, create user, `access_expires_at = now + access_days`, plan/features/access_key_id on profile, credit starting balance, audit). Verification rule: bound-email match = verified; else OTP; admin Setting `require_key_email_verify` (default OFF) forces OTP.
+- Data support: `supabase/schema_v19.sql` (+ merged into ALL_IN_ONE.sql) adds `access_codes.access_days/plan_name/features/redemption_expires_at` and `profiles.access_expires_at/plan/features`. Admin keys form now has access-days presets (7/30/90/365/Permanent/custom), plan name, feature checkboxes (Modules), starting balance, redemption deadline, note; copy + ready-to-send message. Header & sidebar show "Access left: N days / Unlimited" via `lib/access.ts`. Expired access blocks only NEW orders (`app/api/orders/place` guard); admin can **Extend/Revoke access** per user (`app/api/admin/keys` actions).
+- **Item 3 — Simpler normal signup:** form now only email/password/confirm + terms checkbox. Username auto-generated from email (dedupe on profiles) server-side; country detected from headers (stored "unknown" if missing); referral now via `/r/<code>` cookie (30d) applied silently — no code field. OTP verification stays mandatory. Ref: `app/(auth)/sign-up`, `app/api/auth/signup`, `app/r/[code]/route.ts`.
+- **Item 4 — Finish:** new text added to all 5 locales (en/ur/hi/fr/zh). `npm run lint` 0 errors, `npm run build` pass, `npm run i18n:check` pass, `npm run check:layout` pass, `npm run test:key` 29 assertions pass (new). docs/ADMIN_GUIDE.md updated.
+- **Environment caveats:** `npm run test:otp` + `npm run check` + `npm run db:setup` need a **live Supabase DB** (SUPABASE_DB_URL + SMTP); locally they fail/hang (pre-existing). schema_v19 SQL is ready to apply via `npm run db:setup` on the live project.
+- **Remaining/manual:** live DB apply; real OTP/SMTP; visual sweep at 320–1280px LTR+RTL on a real phone; OAUTH setup doc.
+
+
+
 ## Kya exists/kyaam karta hai
 - Next.js 16 (App Router) + TypeScript + Tailwind v4 + Supabase + Framer Motion + Chart.js.
 - Auth (signup/signin/reset/verify, rate limit), middleware protected /dashboard & /admin.

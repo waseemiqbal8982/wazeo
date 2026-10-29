@@ -7,17 +7,38 @@ Ye guide admin ke liye hai. Har step aasan hai.
 - Vercel par env `ADMIN_EMAILS` me apne emails comma se alga karke daalo.
 - Login karo → `/admin` par jaoge. Baki sab ko 404 milega.
 
-## 2. Access Keys (Block A) — admin ka kaam
+## 2. Access Keys — key kaise banayein, kya bhejein, customer kya dekhta hai
 - `/admin/keys` page par jao.
-- **Generate keys:** ek email daalo (ya kai emails comma/space se), label, expiry (din), starting balance (USD), note, aur mode:
-  - **User sets own password** → customer khud password banayega (recommended).
-  - **Admin creates account (temp password)** → account bana diya jayega aur ek temporary password dikhaya jayega (sirf ek baar). Customer ko force kiya jayega password badalne par.
-- **Bulk generate:** ek line par ek email paste karo → Bulk generate.
-- Naya key **sirf ek baar** dikhta hai — turant "Copy key" ya "Copy ready-to-send message" dabao aur customer ko bhejo.
-- **Actions:** Active/Expired key ko Revoke ya Regenerate kar sakte ho. "Delete expired" purani keys saaf karta hai.
-- **Invite-only toggle:** ON karo to plain signup band ho jayega — sirf key walay account bana sakenge.
-- **CSV export:** sab keys download karo.
-- Customer side: sign-in page par "I have an access key" → key, email, username, password, country, phone → redeem → OTP verify → account ready.
+
+### Generate form ke fields
+- **Email** (optional band binding ke liye), **Label**, **Plan name** (e.g. Starter/Pro).
+- **Access days**: 7 / 30 / 90 / 365 / **Permanent** / Custom (number).
+- **Features** (chip button se): modules jo key unlock karta hai (Combo, Bulk, Growth, Likes, Scheduler, Referral, etc).
+- **Starting balance (USD)**: redeem par customer ke wallet me credit hota hai.
+- **Redemption deadline** (key kabb tak redeem ho sakti hai), **Redemption expiry (din)**, **Note**.
+- Naya key **sirf ek baar** dikhta hai — "Copy key" ya "Copy ready-to-send message" dabao aur customer ko bhejo. Message me key + plan + days hote hain.
+
+### Customer kya dekhta hai (sign-in → "I have an access key")
+1. Ek chhota box: key daalo (auto-uppercase + auto-format WZ-XXXX-XXXX-XXXX) → Continue.
+2. Popup: "Validating your key..." (≥1.2s) → success: plan name, "Access: N days / Permanent", date until it works, feature chips.
+3. Doosra compact step: sirf **email + password** (strength bar). Agar key kisi email se bound hai to woh email pre-filled + read-only hai.
+4. "Activate my access" → account banta hai, key used mark hoti hai, `access_expires_at = now + access_days`, plan/features save hote hain.
+
+### Verification rule
+- Agar key email se **bound** hai aur customer ne wohi email daala → account verified (admin ne key usi ko di thi). No OTP.
+- Agar key **unbound** hai → OTP bheja jata hai (verify before dashboard).
+- Admin > Settings > **"Require email verification code for key accounts"** switch (default OFF) → ON karo to har key account par force OTP.
+
+### Key statuses
+Active / Used / Expired / Revoked. Admin **Revoke / Regenerate** kar sakta hai.
+
+### Per-user access (Access left)
+- Dashboard header + sidebar me **"Access left: N days / Unlimited"** dikhta hai.
+- Access expire hone par sirf **naye orders block** hote hain; history + "Renew with a new key" rehti hai.
+- Admin > Users drawer / Actions me **Extend access** (days ya Permanent) aur **Revoke access** kisi bhi user ke liye.
+
+### Invite-only
+- Toggle ON → plain signup band, sirf key walay account bana sakenge.
 
 ## 3. Zaroori manual steps (copy-paste)
 1. **Supabase schema apply karo** (project folder me):

@@ -38,6 +38,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         email: profile.email,
         country: profile.country,
         currency: profile.currency,
+        access_expires_at: profile.access_expires_at ?? null,
       }}
     >
       {children}

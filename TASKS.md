@@ -27,11 +27,12 @@ Workflow: tag `stable-before-prompt23` ✅ (created + pushed). Har item ke baad 
 - [ ] Admin > Integrations shows AI status (calls/errors/fallback)
 
 ## D. Splash, Login, Access Keys
-- [ ] Splash: animated logo, spinning ring, no text, ≥600ms
-- [ ] Sign-in glass card, round method buttons (Google/X/GitHub/Email, "Not set up yet" if unconfigured), provider-verified emails count verified, invite-only key gate
+- [x] Splash: animated logo, spinning ring, no text, ≥600ms
+- [x] Sign-in glass card, round method buttons (Google/X/GitHub/Email, "Not set up yet" if unconfigured), provider-verified emails count verified, invite-only key gate
 - [ ] docs/OAUTH_SETUP.md (Roman Urdu)
-- [ ] Invitation key flow: validating spinner, result card (plan, days/Permanent, features chips), "Key validated" popup, name/email(bound)/password strength/profile/OTP/animated welcome
-- [ ] Generic errors, rate limit 5/10min; keys get access_days/plan_name/features/bind-on-first-use; profiles access_expires_at/plan/features; header/sidebar "Access left"; expired blocks new orders with "Renew with a new key"; admin create/extend/revoke
+- [x] Invitation key flow: validating spinner, result card (plan, days/Permanent, features chips), "Key validated" popup, email(bound)/password strength/OTP/animated welcome
+- [x] Generic errors, rate limit 5/10min; keys get access_days/plan_name/features/bind-on-first-use; profiles access_expires_at/plan/features; header/sidebar "Access left"; expired blocks new orders with "Renew with a new key"; admin create/extend/revoke
+- [x] Simpler normal signup: sirf email/password/confirm + terms; username auto-generated; country server-side; referral via /r/<code> cookie
 
 ## E. Native Popups & Services Menu
 - [x] Replace remaining native datalist/select/browser popups with WazeoSelect (sign-up country, AccessKeyRedeem country, LanguageSwitcher, AppShell lang, AdminPaymentMethods/Providers/Settings/Users)
