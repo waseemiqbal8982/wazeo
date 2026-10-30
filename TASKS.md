@@ -1,5 +1,11 @@
 # TASKS — Wazeo (Roman Urdu)
 
+## Prompt "master-plan" — Parts A–G
+### Part A — Audit before changing (DONE → written in AUDIT_START.md)
+- [x] Wrote AUDIT_START.md with exact root cause (old prod 405 on POST key-redeem + frontend WZ-WZ7A mangle) in two lines.
+- [x] Listed last-3-days changes + risk flags (key_sessions, full-key admin decrypt, duplicate uncommitted key modules).
+- [x] Baseline checks: lint 0 errors/48 warnings; build pass; test:key 78 pass; test:license 9 pass; test:adminsec 24 pass; test:session fails (fetch failed — live/network).
+
 ## Prompt 32b — Keys: admin sees full key / customer experience / bulk tools
 ### Item 1 — Admin can see every key in full (DONE)
 - [x] Schema v25 (`supabase/schema_v25.sql` + appended to `ALL_IN_ONE.sql`, applied via `npm run db:setup`): `access_codes` += `encrypted_key`, `key_hash`, `legacy` (default true) + indexes.

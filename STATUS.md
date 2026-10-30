@@ -1,5 +1,10 @@
 # 📊 STATUS — Wazeo (Stage 0 audit)
 
+## Update (prompt master-plan — Part A: audit complete)
+- Root cause recorded (AUDIT_START.md): old Vercel prod wanted missing POST key-redeem handler → 405 → generic "invalid" in UI; plus earlier frontend WZ-WZ7A mangle (fixed). DB was clean.
+- Baseline: lint 0 err/48 warn; build pass; test:key 78 pass; test:license 9 pass; test:adminsec 24 pass; test:session fails (fetch failed in this run — live/offline).
+- Supabase OAuth connection initiated via Composio; Vercel toolkit blocked in this session.
+
 ## Update (prompt 32b — Item 1: admin can see every key in full)
 - **Encryption at rest for access keys:** new `lib/keyEncryption.ts` (AES-256-GCM + keyed HMAC-SHA256, `KEY_ENCRYPTION_SECRET`). Generation (single/bulk/regenerate) now stores `encrypted_key` + `key_hash` + `legacy=false`.
 - **Schema v25** (`schema_v25.sql` + `ALL_IN_ONE.sql`, applied via `npm run db:setup`): `access_codes` += `encrypted_key`, `key_hash`, `legacy`; index on `key_hash`.
