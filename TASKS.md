@@ -6,6 +6,19 @@
 - [x] Listed last-3-days changes + risk flags (key_sessions, full-key admin decrypt, duplicate uncommitted key modules).
 - [x] Baseline checks: lint 0 errors/48 warnings; build pass; test:key 78 pass; test:license 9 pass; test:adminsec 24 pass; test:session fails (fetch failed — live/network).
 
+### Part B — New key system (lib/keys) (PARTIAL — backend core done)
+- [x] `lib/keys/normalize.ts`: alphabet 23456789ABCDEFGHJKMNPQRSTUVWXYZ, normalizeKey (trim/upper/strip separators+zero-width/leading WZ → 12 chars or null), formatKeyDisplay, keyLast4.
+- [x] `lib/keys/generate.ts`: crypto.randomInt generation (WZ-XXXX-XXXX-XXXX).
+- [x] `lib/keys/key.ts`: deriveStatus (from dates, never stored), validateRow (not-found/revoked/expired/wrong-email/device cap), ctEqual (constant-time), computeAccessExpiresAt (renewal-aware).
+- [x] `lib/keys/rateLimit.ts`: limits by hashed IP + key prefix + email, generous thresholds, HMAC bucket keys.
+- [x] `supabase/schema_v27.sql` (appended to ALL_IN_ONE.sql): `wz_keys`, `wz_key_devices`, `wz_key_events` — RLS enabled, NO client policies (service-role only).
+- [x] `POST /api/key/check` (valid/plan/days/features; one generic failure; real reason → error_logs + key timeline).
+- [x] `POST /api/key/activate` (re-validate; find-or-create verified user; profile upsert; mark key active; credit balance once; register device; server-side magiclink+verifyOtp session; 400-day cookie; renewal adds from later of now/end; device cap; revoke blocks).
+- [x] `test:key` extended with `scripts/test-key-new.ts` (47 tests) — all pass.
+- [ ] Customer frontend flow (one box, animated validation/success, activate, "already activated" line, renewal screen).
+- [ ] Admin > Keys page (Part C) + remove old broken code paths/tables.
+- [ ] Live DB migration applied (requires Supabase connection/auth).
+
 ## Prompt 32b — Keys: admin sees full key / customer experience / bulk tools
 ### Item 1 — Admin can see every key in full (DONE)
 - [x] Schema v25 (`supabase/schema_v25.sql` + appended to `ALL_IN_ONE.sql`, applied via `npm run db:setup`): `access_codes` += `encrypted_key`, `key_hash`, `legacy` (default true) + indexes.

@@ -5,6 +5,13 @@
 - Baseline: lint 0 err/48 warn; build pass; test:key 78 pass; test:license 9 pass; test:adminsec 24 pass; test:session fails (fetch failed in this run — live/offline).
 - Supabase OAuth connection initiated via Composio; Vercel toolkit blocked in this session.
 
+## Update (prompt master-plan — Part B: new key system backend core)
+- New `lib/keys/*` module written (normalize/generate/key/rateLimit): alphabet 23456789ABCDEFGHJKMNPQRSTUVWXYZ, single normalizeKey used everywhere (trims/uppercases/strips separators+zero-width+leading WZ → 12 chars, null if invalid), constant-time compares, status derived from dates never stored, renewal adds from later of now/end.
+- New schema_v27 (`wz_keys`, `wz_key_devices`, `wz_key_events`) — RLS on, NO client policies (service-role only); appended to ALL_IN_ONE.sql. Full code stored (owner sees it).
+- New `POST /api/key/check` and `POST /api/key/activate` routes. Activate: find-or-create verified user, profile upsert, mark key active, credit balance once, register device, server-side magiclink+verifyOtp session (no email sent), 400-day cookie, device cap, revoked blocks.
+- `test:key` now runs old (78) + new (47) — all pass. Build + lint pass (0 errors).
+- Remaining (Part B): customer frontend flow, admin keys page (Part C), live DB migration (needs Supabase auth/connection).
+
 ## Update (prompt 32b — Item 1: admin can see every key in full)
 - **Encryption at rest for access keys:** new `lib/keyEncryption.ts` (AES-256-GCM + keyed HMAC-SHA256, `KEY_ENCRYPTION_SECRET`). Generation (single/bulk/regenerate) now stores `encrypted_key` + `key_hash` + `legacy=false`.
 - **Schema v25** (`schema_v25.sql` + `ALL_IN_ONE.sql`, applied via `npm run db:setup`): `access_codes` += `encrypted_key`, `key_hash`, `legacy`; index on `key_hash`.

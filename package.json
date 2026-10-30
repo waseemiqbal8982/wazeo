@@ -20,7 +20,8 @@
         "test:adminsec": "tsx scripts/test-adminsec.ts",
         "test:otp": "node scripts/test-otp.mjs",
         "test:schedule": "tsx scripts/test-schedule.ts",
-        "test:key": "tsx scripts/test-key.ts",
+        "test:key": "tsx scripts/test-key.ts && tsx scripts/test-key-new.ts",
+        "test:license": "node scripts/test-license-flow.mjs",
         "test:session": "node scripts/test-session.mjs",
         "test:contrast": "node scripts/test-contrast.mjs",
         "memory": "node scripts/memory.mjs",
@@ -38,7 +39,7 @@
         "eslint-config-next": "16.4.3",
         "pg": "^8.23.1",
         "tailwindcss": "^4",
-        "tsx": "^4.19.2",
+        "tsx": "^4.23.15",
         "typescript": "^5"
     },
     "dependencies": {
