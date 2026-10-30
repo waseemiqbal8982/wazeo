@@ -59,3 +59,9 @@ Manually verify / configure things that need a live project or a human.
 - Run `npm run db:setup` on the live Supabase project after SQL schema changes
   (e.g. the new `settings` rows for security/login-method switches and delivery
   minimums/maximums).
+- **Set `KEY_ENCRYPTION_SECRET`** (32+ chars) in Vercel project settings → Environment
+  Variables, phir Redeploy. Generate karo bina print kiye:
+  ```
+  node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+  ```
+  Agar ye set nahi to keys dev fallback se encrypt hongi (production ke liye sahi nahi).

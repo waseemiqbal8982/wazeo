@@ -1,24 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/adminAuth";
-import { createHash, randomBytes } from "node:crypto";
-
-const SEG = () =>
-  randomBytes(3)
-    .toString("hex")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .padEnd(4, "X")
-    .slice(0, 4);
-
-function makeKey() {
-  return `WZ-${SEG()}-${SEG()}-${SEG()}`;
-}
-const hashKey = (k: string) => createHash("sha256").update(k).digest("hex");
-const last4 = (k: string) => k.slice(-4);
+import { randomBytes } from "node:crypto";
+import { generateAccessKey, hashAccessKey, last4 } from "@/lib/accessKeys";
+import { encryptKey, keyedHash, decryptKey } from "@/lib/keyEncryption";
 
 function keyStatus(row: any): string {
   if (row.revoked) return "Revoked";
+  if (row.suspended) return "Suspended";
   if (row.used_at || row.uses > 0) return "Used";
   if (row.expires_at && new Date(row.expires_at) < new Date()) return "Expired";
   return "Active";
@@ -35,7 +24,14 @@ export async function GET(req: Request) {
   const csv = searchParams.get("csv") === "1";
 
   const { data } = await admin.from("access_codes").select("*, profiles(username)").order("created_at", { ascending: false });
-  let rows = (data || []).map((r) => ({ ...r, status: keyStatus(r) }));
+  // Full key is decrypted server-side for admins only. Legacy rows (hash-only,
+  // no encrypted_key) have no recoverable full key -> marked legacy.
+  let rows = (data || []).map((r) => ({
+    ...r,
+    status: keyStatus(r),
+    legacy: !r.encrypted_key || !r.key_hash,
+    full_key: r.encrypted_key ? decryptKey(r.encrypted_key) : "",
+  }));
   if (status) rows = rows.filter((r) => r.status === status);
   if (q) {
     rows = rows.filter(
@@ -62,12 +58,36 @@ export async function GET(req: Request) {
 
   const { data: setRow } = await admin.from("settings").select("value").eq("key", "invite_only").maybeSingle();
 
+  // Audit: one entry per keys-list view (no full keys in the log).
+  try {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.id) {
+      await admin.from("audit_logs").insert({
+        action: "admin_keys_view",
+        details: { actor: user.id, count: rows.length, timestamp: new Date().toISOString() },
+      });
+    }
+  } catch {
+    // never throw for logging failures
+  }
+
   return NextResponse.json({ keys: rows, inviteOnly: setRow?.value === "true" });
 }
 
 export async function POST(req: Request) {
   const ok = await isAdminUser();
   if (ok !== true) return NextResponse.json({ error: "Admins only." }, { status: 403 });
+
+  // Capture the acting admin's id (for created_by audit on generated licenses).
+  let createdBy: string | null = null;
+  try {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    createdBy = user?.id || null;
+  } catch {}
 
   let body: any;
   try {
@@ -112,7 +132,7 @@ export async function POST(req: Request) {
         continue;
       }
 
-      const key = makeKey();
+      const key = generateAccessKey();
       // Defaults when empty: redemption valid 30 days.
       const expiresAt = inp.expiresAt
         ? new Date(inp.expiresAt).toISOString()
@@ -134,8 +154,12 @@ export async function POST(req: Request) {
 
       const created = {
         email: email || null, label, note, mode,
-        code: hashKey(key),
-        hash: hashKey(key),
+        created_by: createdBy,
+        code: hashAccessKey(key),
+        hash: hashAccessKey(key),
+        key_hash: keyedHash(key),
+        encrypted_key: encryptKey(key),
+        legacy: false,
         last4: last4(key),
         expires_at: expiresAt,
         access_days: accessDays,
@@ -204,7 +228,7 @@ export async function POST(req: Request) {
     }
 
     await admin.from("access_codes").update({ revoked: true, active: false }).eq("id", id);
-    const key = makeKey();
+    const key = generateAccessKey();
     const { data: row } = await admin
       .from("access_codes")
       .insert({
@@ -212,8 +236,11 @@ export async function POST(req: Request) {
         label: existing.label,
         note: existing.note,
         mode: existing.mode || "self",
-        code: hashKey(key),
-        hash: hashKey(key),
+        code: hashAccessKey(key),
+        hash: hashAccessKey(key),
+        key_hash: keyedHash(key),
+        encrypted_key: encryptKey(key),
+        legacy: false,
         last4: last4(key),
         expires_at: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
         usage_limit: 1,
@@ -265,6 +292,76 @@ export async function POST(req: Request) {
     if (ue) return NextResponse.json({ error: ue.message }, { status: 400 });
     await audit("admin_revoke_user_access", { userId });
     return NextResponse.json({ ok: true });
+  }
+
+  // ---- License management actions (operate on access_codes by id) ----
+  const licenseActions = ["suspend", "reactivate", "resetBinding", "transfer", "adjustLicense"] as const;
+  if (licenseActions.includes(action as (typeof licenseActions)[number])) {
+    const id = body.id;
+    if (!id) return NextResponse.json({ error: "id required." }, { status: 400 });
+    const { data: existing } = await admin.from("access_codes").select("*").eq("id", id).single();
+    if (!existing) return NextResponse.json({ error: "License not found." }, { status: 404 });
+
+    if (action === "suspend") {
+      await admin.from("access_codes").update({ suspended: true }).eq("id", id);
+      await audit("admin_license_suspend", { id, email: existing.email, last4: existing.last4 });
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "reactivate") {
+      await admin.from("access_codes").update({ suspended: false }).eq("id", id);
+      await audit("admin_license_reactivate", { id, email: existing.email, last4: existing.last4 });
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "resetBinding") {
+      await admin.from("access_codes").update({
+        email: null, bound_at: null, used_by: null,
+        uses: 0, active: true, used_at: null, revoked: false, suspended: false,
+      }).eq("id", id);
+      await audit("admin_license_reset_binding", { id, previous_email: existing.email, last4: existing.last4 });
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "transfer") {
+      const newEmail = String(body.email || "").trim().toLowerCase();
+      if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(newEmail)) {
+        return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });
+      }
+      await admin.from("access_codes").update({ email: newEmail, bound_at: new Date().toISOString() }).eq("id", id);
+      await audit("admin_license_transfer", { id, from_email: existing.email, to_email: newEmail, last4: existing.last4 });
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "adjustLicense") {
+      const patch: Record<string, unknown> = {};
+      if (body.accessDays !== undefined && body.accessDays !== null) {
+        const days = body.accessDays === "permanent" ? null : Number(body.accessDays);
+        patch.access_days = days === null || (Number.isFinite(days) && days > 0) ? days : existing.access_days;
+        patch.plan_name = body.planName && String(body.planName).trim() ? String(body.planName).trim() : existing.plan_name;
+      }
+      if (body.expiresAt !== undefined && body.expiresAt !== null && body.expiresAt !== "") {
+        patch.expires_at = new Date(body.expiresAt).toISOString();
+      }
+      if (body.features !== undefined) {
+        patch.features = Array.isArray(body.features) ? body.features.filter((f: unknown) => typeof f === "string" && (f as string).trim()) : [];
+      }
+      if (body.permissions !== undefined) {
+        patch.permissions = Array.isArray(body.permissions) ? body.permissions : [];
+      }
+      if (body.quota !== undefined && typeof body.quota === "object") {
+        patch.quota = body.quota;
+      }
+      if (body.startingBalance !== undefined) {
+        patch.starting_balance = Math.max(0, Number(body.startingBalance) || 0);
+      }
+      if (Object.keys(patch).length === 0) {
+        return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
+      }
+      await admin.from("access_codes").update(patch).eq("id", id);
+      await audit("admin_license_adjust", { id, patch, email: existing.email, last4: existing.last4 });
+      return NextResponse.json({ ok: true });
+    }
   }
 
   return NextResponse.json({ error: "Unknown action." }, { status: 400 });

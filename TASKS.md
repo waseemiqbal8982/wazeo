@@ -1,5 +1,17 @@
 # TASKS — Wazeo (Roman Urdu)
 
+## Prompt 32b — Keys: admin sees full key / customer experience / bulk tools
+### Item 1 — Admin can see every key in full (DONE)
+- [x] Schema v25 (`supabase/schema_v25.sql` + appended to `ALL_IN_ONE.sql`, applied via `npm run db:setup`): `access_codes` += `encrypted_key`, `key_hash`, `legacy` (default true) + indexes.
+- [x] `lib/keyEncryption.ts`: AES-256-GCM encrypt/decrypt + keyed HMAC-SHA256 hash, key = `KEY_ENCRYPTION_SECRET` (server-only).
+- [x] `KEY_ENCRYPTION_SECRET` generated into `.env.local` if missing (not printed); name added to `.env.example`, MANUAL_STEPS.md, ADMIN_GUIDE.md (Vercel step noted).
+- [x] Generation stores `encrypted_key` + `key_hash` + `legacy=false` (single + bulk + regenerate).
+- [x] Existing hash-only rows auto-marked legacy (unrecoverable); Admin > Keys shows "Legacy" badge + one-click **Regenerate** (revokes old → creates new full key).
+- [x] Redeem lookup switched to keyed hash (`key_hash`); legacy keys don't redeem until regenerated.
+- [x] Admin > Keys table: full key in monospace column on every row with a copy button; only admins (Admin PIN gate) see it — never customer browser, never server logs.
+- [x] One audit entry per keys-list view (`admin_keys_view`, no full keys in log).
+- [x] `npm run test:key` extended (encryption round-trip, keyed hash) — 78 pass; lint 0 errors; build pass.
+
 ## Prompt 31 — Heavy upgrade (PARTIAL — Item 1 foundation done)
 ### Item 1 — Light mode visibility (PARTIAL)
 - [x] Semantic light palette rebuilt in `app/globals.css`: separate surface levels (--surface/2/3), text levels (--text/1/2/3), border + border-input, divider, icon, chart tokens (--chart-grid, tooltip bg/text), focus ring, overlay, and status tokens (success/warning/danger text/bg/border). Light values meet WCAG AA (4.5:1 text, 3:1 input borders). Glass in light uses stronger tint + border; shadows replace glow.

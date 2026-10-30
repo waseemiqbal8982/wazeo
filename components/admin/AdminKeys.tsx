@@ -30,6 +30,16 @@ interface KeyRow {
   expires_at?: string | null;
   used_at?: string | null;
   last4?: string | null;
+  legacy?: boolean;
+  full_key?: string;
+  suspended?: boolean;
+  bound_at?: string | null;
+  last_used_at?: string | null;
+  access_days?: number | null;
+  plan_name?: string | null;
+  features?: string[] | null;
+  permissions?: string[] | null;
+  quota?: Record<string, unknown> | null;
   profiles?: { username?: string | null } | null;
   used_by?: string | null;
 }
@@ -42,9 +52,10 @@ interface GeneratedResult {
   message?: string;
 }
 
-const STATUSES = ["All", "Active", "Used", "Expired", "Revoked"];
+const STATUSES = ["All", "Active", "Suspended", "Used", "Expired", "Revoked"];
 const STATUS_COLOR: Record<string, string> = {
   Active: "bg-emerald-500/15 text-emerald-300",
+  Suspended: "bg-orange-500/15 text-orange-300",
   Used: "bg-sky-500/15 text-sky-300",
   Expired: "bg-amber-500/15 text-amber-300",
   Revoked: "bg-red-500/15 text-red-300",
@@ -143,7 +154,7 @@ export function AdminKeys() {
   }, [load]);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { Active: 0, Used: 0, Expired: 0, Revoked: 0 };
+    const c: Record<string, number> = { Active: 0, Suspended: 0, Used: 0, Expired: 0, Revoked: 0 };
     keys.forEach((k) => {
       c[k.status] = (c[k.status] || 0) + 1;
     });
@@ -260,11 +271,12 @@ export function AdminKeys() {
     }
   }
 
-  async function action(kind: string, id?: string) {
+  async function action(kind: string, id?: string, extra?: Record<string, unknown>) {
     setBusy(true);
     try {
       const payload: any = { action: kind };
       if (id) payload.id = id;
+      if (extra) Object.assign(payload, extra);
       const { res, data } = await api(payload);
       if (!res.ok)
         throw new Error(
@@ -276,6 +288,11 @@ export function AdminKeys() {
         setResults((r) => [{ id: data.id, email: "", key: data.key, last4: data.last4 }, ...r]);
       }
       if (kind === "deleteExpired") setFeedback(`Deleted ${data.deleted || 0} expired key(s).`);
+      if (kind === "suspend") setFeedback("License suspended.");
+      if (kind === "reactivate") setFeedback("License reactivated.");
+      if (kind === "resetBinding") setFeedback("Email binding reset (license is unbound again).");
+      if (kind === "transfer") setFeedback("License transferred to the new email.");
+      if (kind === "adjustLicense") setFeedback("License updated.");
       setError("");
       load();
     } catch (e: any) {
@@ -539,9 +556,11 @@ export function AdminKeys() {
                   <th className="pb-2 pr-3 font-medium">Email</th>
                   <th className="pb-2 pr-3 font-medium">Label</th>
                   <th className="pb-2 pr-3 font-medium">Status</th>
+                  <th className="pb-2 pr-3 font-medium">Plan</th>
                   <th className="pb-2 pr-3 font-medium">Mode</th>
                   <th className="pb-2 pr-3 font-medium">Balance</th>
                   <th className="pb-2 pr-3 font-medium">Expires</th>
+                  <th className="pb-2 pr-3 font-medium">Full key</th>
                   <th className="pb-2 pr-3 font-medium">Last 4</th>
                   <th className="pb-2 font-medium">Actions</th>
                 </tr>
@@ -558,15 +577,84 @@ export function AdminKeys() {
                     <td className="py-2.5 pr-3">{k.label || "—"}</td>
                     <td className="py-2.5 pr-3">
                       <Badge className={STATUS_COLOR[k.status] || ""}>{k.status}</Badge>
+                      {k.legacy && (
+                        <span className="ml-1.5 inline-flex">
+                          <Badge className="bg-purple-500/15 text-purple-300">Legacy</Badge>
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 pr-3">
+                      <div className="font-medium">{k.plan_name || "Standard"}</div>
+                      {k.access_days != null ? (
+                        <div className="text-xs text-[var(--text-muted)]">{k.access_days}d</div>
+                      ) : (
+                        <div className="text-xs text-[var(--text-muted)]">Permanent</div>
+                      )}
+                      {Array.isArray(k.features) && k.features.length > 0 && (
+                        <div className="mt-0.5 flex flex-wrap gap-1">
+                          {k.features.slice(0, 3).map((f) => (
+                            <span key={f} className="rounded-full border border-[var(--border)] px-1.5 py-px text-[10px] text-[var(--text-muted)]">{f}</span>
+                          ))}
+                          {k.features.length > 3 && <span className="text-[10px] text-[var(--text-muted)]">+{k.features.length - 3}</span>}
+                        </div>
+                      )}
                     </td>
                     <td className="py-2.5 pr-3">{k.mode === "admin" ? "Admin" : "Self"}</td>
                     <td className="py-2.5 pr-3">${Number(k.starting_balance || 0).toFixed(2)}</td>
                     <td className="py-2.5 pr-3">{niceDate(k.expires_at)}</td>
                     <td className="py-2.5 pr-3">{k.last4 || "—"}</td>
+                    <td className="py-2.5 pr-3">
+                      {k.legacy ? (
+                        <span className="text-xs text-[var(--text-muted)]">not recoverable</span>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <code className="font-mono text-xs break-all text-[var(--text)]">{k.full_key}</code>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (k.full_key) copy(k.full_key);
+                            }}
+                            className="shrink-0 rounded border border-[var(--border)] px-1.5 py-0.5 text-[10px] text-[var(--text-muted)] hover:text-[var(--text)]"
+                            title="Copy full key"
+                          >
+                            ⧉
+                          </button>
+                        </div>
+                      )}
+                    </td>
                     <td className="py-2.5">
                       <div className="flex flex-wrap gap-1.5">
-                        {(k.status === "Active" || k.status === "Expired") && (
+                        {(k.status === "Active" || k.status === "Suspended" || k.status === "Expired") && (
                           <>
+                            {k.status === "Active" ? (
+                              <Button size="sm" variant="outline" disabled={busy} onClick={() => action("suspend", k.id)}>
+                                Suspend
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="outline" disabled={busy} onClick={() => action("reactivate", k.id)}>
+                                Reactivate
+                              </Button>
+                            )}
+                            {!k.email && k.status === "Active" && (
+                              <Button size="sm" variant="outline" disabled={busy} onClick={() => action("resetBinding", k.id)}>
+                                Reset binding
+                              </Button>
+                            )}
+                            {k.email && k.status === "Active" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={busy}
+                                onClick={() => {
+                                  const to = window.prompt("Transfer to email (this license will become bound to it):", k.email ?? "");
+                                  if (to && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to.trim())) {
+                                    action("transfer", k.id, { email: to.trim() });
+                                  }
+                                }}
+                              >
+                                Transfer
+                              </Button>
+                            )}
                             <Button size="sm" variant="outline" disabled={busy} onClick={() => action("revoke", k.id)}>
                               Revoke
                             </Button>
@@ -574,6 +662,11 @@ export function AdminKeys() {
                               Regenerate
                             </Button>
                           </>
+                        )}
+                        {k.legacy && k.status !== "Revoked" && (
+                          <Button size="sm" variant="outline" disabled={busy} onClick={() => action("regenerate", k.id)}>
+                            Regenerate
+                          </Button>
                         )}
                       </div>
                     </td>

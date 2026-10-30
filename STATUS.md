@@ -1,5 +1,35 @@
 # 📊 STATUS — Wazeo (Stage 0 audit)
 
+## Update (prompt 32b — Item 1: admin can see every key in full)
+- **Encryption at rest for access keys:** new `lib/keyEncryption.ts` (AES-256-GCM + keyed HMAC-SHA256, `KEY_ENCRYPTION_SECRET`). Generation (single/bulk/regenerate) now stores `encrypted_key` + `key_hash` + `legacy=false`.
+- **Schema v25** (`schema_v25.sql` + `ALL_IN_ONE.sql`, applied via `npm run db:setup`): `access_codes` += `encrypted_key`, `key_hash`, `legacy`; index on `key_hash`.
+- **Legacy rows:** existing hash-only keys have no `encrypted_key` → auto `legacy=true` (unrecoverable); Admin > Keys shows a Legacy badge + one-click **Regenerate** (revokes old, creates a new full key).
+- **Redeem lookup** now uses the keyed `key_hash`; legacy keys don't redeem until regenerated.
+- **Admin > Keys table** shows the full (decrypted) key in a monospace column with a copy button — admins only (Admin PIN gate), never in customer browsers or server logs. Audit `admin_keys_view` entry per list view.
+- **Docs:** KEY_ENCRYPTION_SECRET added to `.env.example`, MANUAL_STEPS.md (Vercel step), ADMIN_GUIDE.md.
+- Checks: lint 0 errors (48 warnings baseline), build pass, test:key 78 pass.
+
+## Update (project-wide audit pass — baseline + security/mobile/cleanup fixes)
+- **Baseline re-established:** `npm run lint` → 0 errors / 48 warnings (was 49); `npx tsc --noEmit` → clean; `npm run build` → green (all routes compile). Branch `master` in-sync with `origin/master`; in-flight uncommitted license-system + API-key work preserved intact.
+- **Security fix — PostgREST filter injection:** `app/api/admin/keys-api/route.ts` interpolated the raw `q` search param into a PostgREST `or()` predicate. A crafted value could inject extra predicate tokens or turn the wildcard into a match-everything query. Now sanitized: filter-metacharacters `( ) , ; ' " \ % *` stripped, whitespace collapsed, length capped at 80; the `status` filter is also bounded.
+- **Mobile responsive key tables:** `components/dashboard/CustomerApiKeys.tsx` and `components/admin/AdminApiKeys.tsx` now render stacked cards on phones (`< md`) instead of a horizontally-scrolling table; the desktop table is preserved on `md+`. Action buttons wrap; long keys truncate (no horizontal overflow).
+- **Cleanup:** removed unused `useEffect` import in `components/organic/CurveChart.tsx` (lint warning fixed).
+- **Secrets/VC:** `.env.local` is correctly gitignored (untracked); `.env.example` stays tracked; no secrets in the repo.
+
+## Update (prompt 32 — License system: invalid-key root cause + unbound email-binding flow)
+- **Root cause of "invalid/expired key":** `components/auth/AccessKeyRedeem.tsx` `formatAccessKey` mangled any key pasted/typed **with** the `WZ-` prefix (it stripped the dashes, kept the literal `WZ` as part of the first 4-char group, then re-prepended `WZ-` → e.g. `WZ-7AD7-1A2B-3C4D` became `WZ-WZ7A-D71A-2B3C`). The corrupted key never matched the stored hash → generic rejection. Fix: strip the literal leading `WZ`, format the 12 body chars into 3×4, re-prepend `WZ-`. New tests in `scripts/test-key.ts` cover paste/body/lowercase/partial.
+- **Unbound license + password-free email binding:** admin generates licenses **without** an email (unbound). Customer flow: enter key → validate → "Your key is valid!" animation → bind email (no password) → OTP verification → dashboard.
+  - `app/api/auth/key-redeem/route.ts` gained `action=bind`: validates the license, **atomically** binds the email (`UPDATE … WHERE id AND email IS NULL AND uses=0 AND active AND NOT revoked AND NOT suspended`), creates/reuses the auth account (unconfirmed), applies the grant to `profiles`, consumes the license, sends the OTP via `resend-code` mechanism, returns `needsVerify`.
+  - `verify-otp` remains the ownership check; only after OTP success does a session exist so access is actually usable.
+  - Suspended licenses are now rejected in `loadKey` (`suspended` column).
+- **Schema `supabase/schema_v24.sql`** (applied + appended to `ALL_IN_ONE.sql`): `access_codes` += `suspended`, `created_by`, `last_used_at`, `bound_at`, `permissions`, `quota`. Indexes added.
+- **Admin `app/api/admin/keys/route.ts`** new actions (all audit-logged): `suspend`, `reactivate`, `resetBinding` (full recovery reset), `transfer` (rebind to a new email), `adjustLicense` (access days/plan/expiry/features/permissions/quota/starting balance). `keyStatus` includes `Suspended`. Generation now records `created_by` (acting admin).
+- **Admin UI `components/admin/AdminKeys.tsx`:** new Plan column (plan/days/features chips), Suspended status filter + badge, per-row Suspend/Reactivate/Reset binding/Transfer/Revoke/Regenerate actions, status counter includes Suspended.
+- **Frontend `components/auth/AccessKeyRedeem.tsx`:** removed password step; added email-bind + inline OTP steps; success copy "Your key is valid!". `OtpInput` reused.
+- **Testing (real):** `npm run test:key` 41 passed; `npm run test:license` (live DB: `scripts/test-license-flow.mjs`) 9 passed — fresh unbound valid, email A binds atomically, email B cannot claim, used/suspended/expired rejected; `npm run lint` 0 errors (48 pre-existing warnings); `npm run build` passes.
+- **Deployment-critical:** a live diagnostic proved the validation logic works with the **service-role key**, but the old `createAdminClient` silently fell back to the **anon key** when `SUPABASE_SERVICE_ROLE_KEY` was missing. Because `access_codes` is RLS-protected, the anon key returns zero rows → every key appeared "invalid". Fix: `lib/supabase/admin.ts` now **requires** the service-role key (throws if absent), the redeem route returns a clear 503 configuration error instead of "invalid key", and `/api/admin/config-status` now reports a `license` health block. If you still see "invalid key" errors, **set `SUPABASE_SERVICE_ROLE_KEY` in the Vercel environment** (Admin → Settings → API → service_role) and redeploy.
+- **Manual/next:** live OTP delivery still depends on SMTP/Resend (see `docs/EMAIL_SETUP.md`); existing `redeem` (password) path preserved for compatibility.
+
 ## Update (prompt 31 — Item 1 light mode visibility, PARTIAL)
 - Tag `stable-before-prompt31` created + pushed.
 - **Light palette rebuilt** (`app/globals.css`): full semantic token set for light — surface levels, text levels, border + `--border-input`, divider, icon, chart (grid/tooltip), focus ring, overlay, status tokens. Adjusted to WCAG AA (4.5:1 text, 3:1 essential borders/icons). Light glass uses stronger tints + borders; shadows replace glow.

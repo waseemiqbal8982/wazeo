@@ -2144,3 +2144,41 @@ insert into public.settings (key, value) values
   ('admin_login_alerts_enabled', 'false'),
   ('admin_country_allowlist', '')
 on conflict (key) do nothing;
+-- ============================================================
+-- Wazeo - schema_v24 (license lifecycle enhancements)
+-- Extends access_codes with suspension, audit, and permission fields
+-- for the unbound email-binding license flow. Re-runnable.
+-- Full keys are NEVER stored - only SHA-256 hash + last 4.
+-- ============================================================
+
+-- ---- suspension & admin audit ----
+alter table public.access_codes add column if not exists suspended boolean not null default false;
+alter table public.access_codes add column if not exists created_by uuid references public.profiles(id);
+alter table public.access_codes add column if not exists last_used_at timestamptz;
+alter table public.access_codes add column if not exists bound_at timestamptz;
+
+-- ---- permission / quota metadata (stored on the license) ----
+alter table public.access_codes add column if not exists permissions jsonb not null default '[]'::jsonb;
+alter table public.access_codes add column if not exists quota jsonb not null default '{}'::jsonb;
+
+-- ---- indexes ----
+create index if not exists idx_access_codes_suspended on public.access_codes(suspended) where suspended;
+create index if not exists idx_access_codes_created_by on public.access_codes(created_by) where created_by is not null;
+create index if not exists idx_access_codes_bound_at on public.access_codes(bound_at) where bound_at is not null;
+
+-- ============================================================
+-- Wazeo - schema_v25 (access-key encryption at rest)
+-- Full keys are now stored ENCRYPTED (AES-256-GCM) via
+-- lib/keyEncryption.ts (KEY_ENCRYPTION_SECRET) so admins can show
+-- them in full to authorized staff. Lookup uses a keyed HMAC hash
+-- (key_hash). Existing hash-only rows have no encrypted_key -> legacy.
+-- Re-runnable.
+-- ============================================================
+
+alter table public.access_codes add column if not exists encrypted_key text;
+alter table public.access_codes add column if not exists key_hash text;
+alter table public.access_codes add column if not exists legacy boolean not null default true;
+
+create index if not exists idx_access_codes_key_hash on public.access_codes(key_hash) where key_hash is not null;
+create index if not exists idx_access_codes_legacy on public.access_codes(legacy) where legacy;
+

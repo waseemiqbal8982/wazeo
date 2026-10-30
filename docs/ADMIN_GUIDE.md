@@ -55,5 +55,10 @@ Active / Used / Expired / Revoked. Admin **Revoke / Regenerate** kar sakta hai.
 - Har admin action `audit_logs` me likha jata hai (Admin > System > Audit log).
 
 ## 5. Important
-- Koi bhi full key store nahi hota — sirf hash + last 4. Key kho jaye to "Regenerate" karo.
+- Full keys ab **encrypted** (AES-256-GCM, `KEY_ENCRYPTION_SECRET`) store hote hain taake admin tab "full key" dikha sake. Ye sirf admin (Admin PIN gate ke baad) dekh sakta hai; client browser ya server logs me kabhi nahi aata.
+- Puraane hash-only keys **Legacy** mark hote hain (unrecoverable) — unhe "Regenerate" button se naya full key banao (purana automatically revoke).
+- Login/dashboard me kabhi bhi full key display nahi hota. `audit_logs` me full keys kabhi nahi likhte.
+- Har keys-list view ek `admin_keys_view` audit entry banata hai.
+- **Vercel env:** `KEY_ENCRYPTION_SECRET` set karo (32+ chars). Nahi to dev fallback use hota hai — production me khatarnak.
+- Koi bhi full key plaintext me store nahi hota — sirf encrypted + keyed hash + last 4. Key kho jaye to "Regenerate" karo.
 - Deposit page abhi DEMO hai — payment details asli nahi hain, sirf jab admin real methods daale tab active hoga.
