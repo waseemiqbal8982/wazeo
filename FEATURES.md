@@ -64,3 +64,8 @@ Marking: ✅ WORKING · 🟡 PARTIAL (mock/limited) · ❌ NOT BUILT
 - ✅ Currencies: USD/INR/PKR/CNY (symbol+flag), Intl formatting (4 decimals for tiny), editable rates in Admin (auto-refresh via free API), switcher in header + landing, wallet chip shows chosen currency.
 - ✅ Mobile/animations: modal/nav safe-area, overflow-x guard, touch tap targets, glow-trail buttons, desktop card tilt, animated sidebar indicator, sliding page transitions (reduce-motion honored).
 
+## Latest updates (prompt 32b)
+- ✅ Access keys encrypted at rest (AES-256-GCM, `KEY_ENCRYPTION_SECRET`) — admin sees the full key (monospace + copy) behind the Admin PIN gate; lookup uses a keyed HMAC hash; legacy hash-only keys marked Legacy + one-click Regenerate; each list view writes an `admin_keys_view` audit entry.
+- ✅ Password-less server-side sign-in on key bind: `admin.generateLink` (magiclink, no email sent) + `verifyOtp` on the server set the normal session cookies; `STAY_SIGNED_IN_COOKIE` maxAge 400 days; OTP fallback if magic-link verification fails.
+- ✅ `key_sessions` table records per-key device/ip sessions (foundation for a per-key device cap + Admin "Reset devices").
+
