@@ -12,6 +12,16 @@
 - [x] One audit entry per keys-list view (`admin_keys_view`, no full keys in log).
 - [x] `npm run test:key` extended (encryption round-trip, keyed hash) — 78 pass; lint 0 errors; build pass.
 
+### Item 2 — Customer key experience (PARTIAL — server-side silent sign-in done)
+- [x] Server-side password-less sign-in in `POST /api/auth/key-redeem` (`action=bind`): `admin.generateLink` (magiclink, no email sent) → `verifyOtp({token_hash})` on server → normal auth cookies set; `STAY_SIGNED_IN_COOKIE` set (maxAge 400 days) on the response. Frontend already redirects to dashboard when `needsVerify=false`; OTP fallback kept if magiclink verify fails.
+- [x] Email binding: binds to the first email entered; read-only prefill when admin bound it (existing). Re-sign-in on a new device via same key+email path.
+- [x] `key_sessions` table (schema_v26) records device/session per key (ip_hash + user-agent) for future device-cap enforcement; audit `key_bind_session` event.
+- [ ] Validation animation: orbiting-ring spinner ≥1.2s → success morph (drawing checkmark, ripple/glow, shimmering "Key validated" badge, confetti on Full-effects tier, haptic on phones) — CSS/SVG, 150–1200ms, respects reduced motion. (Frontend has basic validating/validated popup; fancy animations pending.)
+- [ ] "Already activated? Enter your key and email again to sign in on this device" line.
+- [ ] Settings → "Add a password" (normal sign-in path).
+- [ ] Device cap enforcement (default 2) + oldest-session sign-out + Admin "Reset devices" button.
+- [ ] Revoke/expire ends sessions immediately; per-key history timeline UI.
+
 ## Prompt 31 — Heavy upgrade (PARTIAL — Item 1 foundation done)
 ### Item 1 — Light mode visibility (PARTIAL)
 - [x] Semantic light palette rebuilt in `app/globals.css`: separate surface levels (--surface/2/3), text levels (--text/1/2/3), border + border-input, divider, icon, chart tokens (--chart-grid, tooltip bg/text), focus ring, overlay, and status tokens (success/warning/danger text/bg/border). Light values meet WCAG AA (4.5:1 text, 3:1 input borders). Glass in light uses stronger tint + border; shadows replace glow.

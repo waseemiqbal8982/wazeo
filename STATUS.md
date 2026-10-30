@@ -8,6 +8,7 @@
 - **Admin > Keys table** shows the full (decrypted) key in a monospace column with a copy button — admins only (Admin PIN gate), never in customer browsers or server logs. Audit `admin_keys_view` entry per list view.
 - **Docs:** KEY_ENCRYPTION_SECRET added to `.env.example`, MANUAL_STEPS.md (Vercel step), ADMIN_GUIDE.md.
 - Checks: lint 0 errors (48 warnings baseline), build pass, test:key 78 pass.
+- **Item 2 (PARTIAL):** server-side password-less sign-in in bind (`admin.generateLink` magiclink + `verifyOtp` on server → cookies set, no email sent; OTP fallback kept). `key_sessions` table (schema_v26) records per-key devices; audit `key_bind_session`. Still to do: the animated validation/success UX (≥1.2s spinner, checkmark draw, confetti/haptic), device-cap enforcement + oldest-session sign-out + admin Reset devices, "Add a password" in Settings, per-key history timeline UI, revoke-ends-sessions wiring.
 
 ## Update (project-wide audit pass — baseline + security/mobile/cleanup fixes)
 - **Baseline re-established:** `npm run lint` → 0 errors / 48 warnings (was 49); `npx tsc --noEmit` → clean; `npm run build` → green (all routes compile). Branch `master` in-sync with `origin/master`; in-flight uncommitted license-system + API-key work preserved intact.

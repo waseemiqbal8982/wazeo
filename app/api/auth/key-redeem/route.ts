@@ -227,27 +227,79 @@ export async function POST(req: Request) {
       await admin.from("audit_logs").insert({ action: "key_bind_claimed", details: { email, key_id: ac.id } });
     } catch {}
 
-    // Send the OTP confirm code (same mechanism as resend-code) so the
-    // customer actually receives it.
+    // ---- Password-less server-side sign-in ----
+    // Mint a magic link on the server (admin.generateLink does NOT email), then
+    // verify its token hash via verifyOtp through the server client — this sets
+    // the normal auth cookies without sending any email or asking anything else.
+    let silentSession = false;
     try {
-      const supabase = await createClient();
-      await supabase.auth.resend({
-        type: "signup",
+      const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+        type: "magiclink",
         email,
-        options: { emailRedirectTo: `${origin}/auth/callback` },
       });
+      const tokenHash =
+        (linkData?.properties as Record<string, string> | undefined)?.token_hash ||
+        (linkData?.properties as Record<string, string> | undefined)?.email_otp ||
+        "";
+      if (!linkErr && tokenHash) {
+        const sb = await createClient();
+        const ver = await sb.auth.verifyOtp({ type: "magiclink", token_hash: tokenHash, email });
+        if (!ver.error && ver.data.user) {
+          silentSession = true;
+          // Register this device/session for the per-key device limit.
+          try {
+            await admin.from("key_sessions").insert({
+              key_id: ac.id,
+              user_id: uid,
+              ip_hash: ipHash,
+              device_label: (req.headers.get("user-agent") || "").slice(0, 120),
+            });
+          } catch {}
+          try {
+            await admin.from("audit_logs").insert({
+              action: "key_bind_session",
+              details: { email, key_id: ac.id, user_id: uid },
+            });
+          } catch {}
+        }
+      }
     } catch {}
 
-    return NextResponse.json({
+    if (!silentSession) {
+      // Fallback: send the OTP confirm code so the customer can still verify.
+      try {
+        const supabase = await createClient();
+        await supabase.auth.resend({
+          type: "signup",
+          email,
+          options: { emailRedirectTo: `${origin}/auth/callback` },
+        });
+      } catch {}
+    }
+
+    const res = NextResponse.json({
       ok: true,
       email,
-      needsVerify: true,
+      needsVerify: !silentSession,
+      session: silentSession,
       access_days: accessDays,
       permanent: accessDays == null,
       access_expires_at: accessExpiresAt,
       plan_name: ac.plan_name || "Standard",
       features: Array.isArray(ac.features) ? ac.features : [],
     });
+    if (silentSession) {
+      try {
+        const { STAY_SIGNED_IN_COOKIE } = await import("@/lib/sessionCookie");
+        res.cookies.set(STAY_SIGNED_IN_COOKIE, "1", {
+          path: "/",
+          httpOnly: true,
+          sameSite: "lax",
+          maxAge: 400 * 24 * 3600,
+        });
+      } catch {}
+    }
+    return res;
   }
 
 
